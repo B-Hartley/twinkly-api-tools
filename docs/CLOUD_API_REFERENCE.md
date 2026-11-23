@@ -361,3 +361,25 @@ The script saves a timestamped private backup under
 `cloud-preflight-backups/` before reporting the outcome. The tool may report
 `BLOCK` for a single coordinate discrepancy or partially joined local
 controller. No group, layout or installation write operations are enabled.
+
+### Missing-master local-only repair (experimental)
+
+`repair_missing_master.py --group "Office Group"` provides a dry-run
+preview for one narrowly defined state: a cloud Area object contains both
+intended controllers with correct two-dimensional coordinates, the second
+controller is a correctly joined slave, and the first controller is still
+standalone. Cloud mappings and membership must match hardware MAC addresses.
+If **any** other preflight finding appears, the tool stops before changes.
+
+The optional execution path requires separate explicit confirmations,
+two independent fresh cloud/LAN state collections and private backups,
+stable hardware identities and mapping, and a final group-role check
+after authenticating the master. It sends **one** LAN
+`POST /xled/v1/application/group` assigning `mode:"master"` using the
+existing slave group UUID. It then fetches new cloud and LAN state and
+requires a completely clean preflight. It has **no cloud writes or layout
+uploads**, does not touch the slave, and never automatically retries a
+failed or ambiguous request.
+
+The operation is **experimental and not yet verified on physical hardware**.
+Do not execute if devices have changed or the group is already functioning.
