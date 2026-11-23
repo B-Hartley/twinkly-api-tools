@@ -1,0 +1,37 @@
+save_state:
+  name: Save named Twinkly state
+  description: Capture and retain raw local controller responses and X/Y/Z LED coordinates by name. Existing named state will be replaced.
+  fields:
+    name:
+      name: State name
+      required: true
+      selector:
+        text: {}
+restore_state:
+  name: Inspect restore of named state (dry run)
+  description: Compare a saved state against the current devices and report issues. NEVER sends grouping or layout writes.
+  fields:
+    name:
+      name: State name
+      required: true
+      selector:
+        text: {}
+office_window_plan:
+  name: Propose equal-sized office windows (dry run)
+  description: Calculate an equal-width 2D two-window arrangement with a one-window-width horizontal gap. NEVER modifies lights.
+  fields:
+    name:
+      name: Source state name
+      required: true
+      selector:
+        text: {}
+    left:
+      name: Left window controller name
+      required: true
+      selector:
+        text: {}
+    right:
+      name: Right window controller name
+      required: true
+      selector:
+        text: {}
