@@ -221,3 +221,8 @@ python .\resume_regroup.py --plan private-area-plan.json
 - **Inferred:** app and cloud object state can differ from the controller's active map. Local-only PUT/POST operations need not update the app's stored geometry.
 - **Untested:** other firmware releases, generic app-facing name/effect restoration, a fully supported group-management API and effect/playlist round-trip restoration.
 - Some GET endpoints returned non-JSON data; preserve HTTP status/content type before deciding whether an endpoint is unsupported.
+
+
+## Home Assistant implementation (independent cross-check)
+
+Home Assistant Core's built-in [Twinkly integration](https://github.com/home-assistant/core/tree/dev/homeassistant/components/twinkly) uses the [`ttls` Python client](https://pypi.org/project/ttls/) and device LAN IP address, with `iot_class: local_polling`. Its config flow asks for a **host**, not Twinkly account email/password; the integration is therefore useful for local REST auth and control examples, **not** cloud bearer-token login or remote MQTT topics. The client library handles local challenge/verify. Cloud authentication remains a separate unknown.
