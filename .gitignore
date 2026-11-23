@@ -13,3 +13,6 @@ resume-regroup-results.json
 
 recovery-backups/
 restore-standalone-results.json
+
+cloud-audits/
+twinkly-login-redacted.json
