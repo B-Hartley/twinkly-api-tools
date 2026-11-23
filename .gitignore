@@ -4,3 +4,7 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .env
+
+api-probes/
+private-area-plan.json
+group-test-results.json
