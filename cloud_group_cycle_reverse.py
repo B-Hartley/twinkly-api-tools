@@ -15,7 +15,7 @@ import urllib.error
 
 import archive_3d_maps as refs
 import cloud_group_cycle as ops
-from cloud_group_preflight import FILES, objects_from, coordinates, compare_points, mac, normalized_uid
+from cloud_group_preflight import FILES, objects_from, coordinates, compare_points, mac, normalized_uid, CLOUD_LOCAL_TOLERANCE
 from cloud_group_live import collect, get_cloud_token, read_local
 from group_test import load_plan, layout_matches
 from twinkly_inspector import save_json
@@ -58,7 +58,8 @@ def standalone_objects(snapshot, plan):
             raise ValueError(desired["name"] + ": cloud 3D mapping unavailable")
         cloud_points = coordinates(obj["layout"])
         ref_layout = refs.verify_layout(local["layout"], desired["leds"])
-        if not compare_points(cloud_points, ref_layout["coordinates"])["matching"]:
+        if not compare_points(cloud_points, ref_layout["coordinates"],
+                              tolerance=CLOUD_LOCAL_TOLERANCE)["matching"]:
             raise ValueError(desired["name"] + ": cloud/local 3D geometry differs")
         found[addr] = obj
     if set(found) != set(expected):
