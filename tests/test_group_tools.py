@@ -83,11 +83,12 @@ class GroupTests(unittest.TestCase):
             path = Path(d) / "plan.json"
             path.write_text(json.dumps(plan), encoding="utf-8")
             with self.assertRaises(ValueError):
-                group_test.load_plan(path)
+                group_test.load_plan(path, require_verified=True)
 
     @patch.object(group_test, "request")
     def test_dry_run_does_not_contact_devices(self, mock_request):
         plan = sample_plan()
+        plan["preverified_backup"] = False
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / "plan.json"
             path.write_text(json.dumps(plan), encoding="utf-8")
