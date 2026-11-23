@@ -79,53 +79,100 @@ def installation_id(objects):
     return found[0]
 
 
-def archived_group_template(plan, expected_macs, roots):
-    """Find a previous 2D Area cloud object with exact membership/geometry."""
-    candidates = []
-    rejection_counts = {}
-    scanned_files = 0
-    expected_points = sum((m["area_layout"]["coordinates"] for m in plan["members"]), [])
+def archived_group_reference(plan, expected_macs, roots):
+    """Recover a verified 2D Area AND both matching local maps from ONE snapshot.
+
+    Does not trust old private-area-plan.json area coordinates. Source state must
+    pass the standard offline cloud+LAN preflight, including all 420 coordinates.
+    """
+    from cloud_group_preflight import evaluate
+    matches = []
+    scanned = 0
+    rejected = {}
     for root in roots:
         folder = Path(root)
         if not folder.is_dir():
             continue
-        paths = list(folder.rglob("cloud-objects-PRIVATE.json")) + list(
-            folder.rglob("original-area-private.json"))
+        paths = list(folder.rglob(FILES[0]))
         if len(paths) > 1500:
-            raise ValueError("Too many cloud backups: narrow search directories")
+            raise ValueError("Too many cloud archives: narrow roots")
         for path in paths:
-            scanned_files += 1
+            scanned += 1
+            directory = path.parent
             try:
-                if path.stat().st_size > ops.MAX_BODY:
+                if not all((directory / name).is_file() for name in FILES):
                     continue
-                data = json.loads(path.read_text(encoding="utf-8"))
-                objects = [data] if path.name == "original-area-private.json" else objects_from(data)
-                for obj in objects:
-                    devices = obj.get("devices")
-                    layout = obj.get("layout")
-                    if not isinstance(devices, list) or not isinstance(layout, dict):
-                        continue
-                    actual = [mac(slot.get("device", {}).get("mac"))
-                              for slot in devices if isinstance(slot, dict)]
-                    if (actual != expected_macs or obj.get("ledCount") != plan["size"]
-                            or layout.get("source") != "2d"):
-                        continue
-                    if not compare_points(coordinates(layout), expected_points)["matching"]:
-                        rejection_counts["coordinate mismatch against archived 2D plan"] = rejection_counts.get("coordinate mismatch against archived 2D plan", 0) + 1
-                        continue
-                    if not all(k in layout for k in
-                               ("coords", "uuid", "geometry", "aspectXZ", "aspectXY", "name", "synthesized")):
-                        rejection_counts["missing 2D layout metadata"] = rejection_counts.get("missing 2D layout metadata", 0) + 1
-                        continue
-                    if not all(k in obj for k in ("capacity", "fps", "ledProfile", "meta", "uuid")):
-                        rejection_counts["missing cloud object metadata"] = rejection_counts.get("missing cloud object metadata", 0) + 1
-                        continue
-                    candidates.append((path.stat().st_mtime, copy.deepcopy(obj)))
-            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+                if any((directory / name).stat().st_size > ops.MAX_BODY for name in FILES):
+                    continue
+                snapshot = {name: json.loads((directory / name).read_text(encoding="utf-8"))
+                            for name in FILES}
+                report = evaluate(snapshot)
+                if report["result"] != "PASS_READ_ONLY" or report["state"] != "grouped-cloud":
+                    continue
+                local_macs = [mac(snapshot[FILES[i + 1]]["gestalt"].get("mac"))
+                              for i in range(2)]
+                if local_macs != expected_macs:
+                    continue
+                cloud_objects = objects_from(snapshot[FILES[0]])
+                areas = [obj for obj in cloud_objects if isinstance(obj.get("devices"), list)
+                         and [mac(slot.get("device", {}).get("mac"))
+                              for slot in obj["devices"]] == expected_macs]
+                if len(areas) != 1:
+                    continue
+                area = areas[0]
+                if area.get("ledCount") != plan["size"]:
+                    continue
+                local_uid = normalized_uid(
+                    snapshot[FILES[1]]["group"]["group"].get("uid"))
+                if local_uid is None or normalized_uid(area.get("uuid")) != local_uid:
+                    continue
+                layout = area.get("layout")
+                needed = ("coords", "uuid", "geometry", "aspectXZ", "aspectXY",
+                          "name", "synthesized")
+                if not isinstance(layout, dict) or any(k not in layout for k in needed):
+                    continue
+                if any(k not in area for k in ("capacity", "fps", "ledProfile", "meta", "uuid")):
+                    continue
+                local_layouts = []
+                for i, member in enumerate(plan["members"]):
+                    v = snapshot[FILES[i + 1]]["layout"]
+                    if (v.get("source") != "2d" or
+                            len(v.get("coordinates", [])) != member["leds"] or
+                            not isinstance(v.get("synthesized"), bool)):
+                        raise ValueError("Invalid local 2D Area reference")
+                    local_layouts.append({k: copy.deepcopy(v[k])
+                                          for k in ("source", "synthesized", "coordinates")})
+                if not compare_points(coordinates(layout), sum(
+                        (v["coordinates"] for v in local_layouts), []))["matching"]:
+                    continue
+                matches.append((path.stat().st_mtime, copy.deepcopy(area), local_layouts,
+                                str(directory)))
+            except (OSError, KeyError, TypeError, ValueError, OverflowError,
+                    json.JSONDecodeError) as exc:
+                reason = type(exc).__name__
+                rejected[reason] = rejected.get(reason, 0) + 1
                 continue
-    if not candidates:
-        raise ValueError("No verified former 2D cloud Area template found in private backups. " + str(scanned_files) + " cloud archive files inspected; matching-member rejections: " + str(rejection_counts) + ". No cloud writes attempted.")
-    return max(candidates, key=lambda item: item[0])[1]
+    if not matches:
+        raise ValueError("No verified grouped cloud+LAN Area reference found in " +
+                         str(scanned) + " historical stage files. Rejections: " +
+                         str(rejected) + ". No writes attempted.")
+    _, obj, layouts, path = max(matches, key=lambda item: item[0])
+    print("Verified grouped 2D reference:", path,
+          "(Area", obj.get("id"), "; LED count", obj.get("ledCount"), ")")
+    return obj, layouts
+
+
+def apply_area_reference(plan, layouts):
+    """Use verified grouped capture for all subsequent local/cloud 2D writes."""
+    result = copy.deepcopy(plan)
+    for member, layout in zip(result["members"], layouts):
+        member["area_layout"] = copy.deepcopy(layout)
+    return result
+
+
+def archived_group_template(plan, expected_macs, roots):
+    """Compatibility helper for earlier callers."""
+    return archived_group_reference(plan, expected_macs, roots)[0]
 
 
 def reference_check(snapshot, plan, root, create=False):
@@ -247,8 +294,9 @@ def run_reverse(args):
                                        args.output, args.timeout)
         ids = reference_check(initial, plan, "3d-map-archive", create=True)
         standalones = standalone_objects(initial, plan)
-        template = archived_group_template(
+        template, area_layouts = archived_group_reference(
             plan, ids, ("cloud-preflight-backups", "cloud-audits"))
+        plan = apply_area_reference(plan, area_layouts)
         installation_id(standalones)
         validate_cloud_payload_inputs(template, standalones, plan)
         print("READY FOR REVERSE CYCLE: immutable 3D archives valid, 2 cloud objects,")
@@ -268,8 +316,9 @@ def run_reverse(args):
         ids = reference_check(original, plan, "3d-map-archive", create=True)
         reference_maps = archived_layouts(plan, ids, "3d-map-archive")
         standalones = standalone_objects(original, plan)
-        template = archived_group_template(
+        template, area_layouts = archived_group_reference(
             plan, ids, ("cloud-preflight-backups", "cloud-audits"))
+        plan = apply_area_reference(plan, area_layouts)
         installation = installation_id(standalones)
         validate_cloud_payload_inputs(template, standalones, plan)
         save_json(destination / "initial-cloud-standalones-private.json", standalones)
@@ -312,6 +361,7 @@ def run_reverse(args):
         save_json(destination / "reverse-cycle-status-private.json", journal)
         plan, grouped = ops.checkpoint("3 CHECK GROUPED", args.plan,
                                        "grouped-cloud", destination, args.timeout)
+        plan = apply_area_reference(plan, area_layouts)
         area = ops.find_area(grouped, plan)
         if not compare_points(coordinates(area["layout"]),
                               coordinates(template["layout"]))["matching"]:
