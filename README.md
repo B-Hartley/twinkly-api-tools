@@ -283,3 +283,74 @@ state may then differ. Complete private snapshots and a stage log are
 saved under ignored `cloud-preflight-backups/cloud-cycle-*/`.
 Never publish them: they can contain Twinkly device authentication
 material. The group cycle has not yet been live-tested independently.
+
+## Immutable 3D camera-map references (Office and selected lights)
+
+`archive_3d_maps.py` stores a private **reference-3d.json per physical MAC
+address** under gitignored `3d-map-archive/by-mac/`. References include ordered
+X/Y/Z coordinates, source, synthesized flag, LED count, provenance, timestamp
+and SHA-256 checksum. Existing references are never silently overwritten. They
+are not uploaded to the cloud or changed on controllers.
+
+With Office **currently ungrouped and 3D mapped**, archive it directly:
+
+```powershell
+git pull
+python -m unittest discover -s tests -p "test_archive_3d_maps.py" -v
+python .\archive_3d_maps.py --plan private-area-plan.json
+```
+
+Archive the other requested sets using the private `devices.json` names:
+
+```powershell
+python .\archive_3d_maps.py --devices devices.json `
+  --names "Light Tree" "Mid Right" "BackL Bush" "Icicles"
+```
+
+The name list is case-insensitive and deduplicated. A named device which is
+currently not mapped in 3D is **skipped**, not relabelled as a 3D reference.
+Missing names from `devices.json` cause an error. Archive only captures
+the current mapping; if it is not the desired original 3D camera map, restore
+it separately before archiving.
+
+The archive is PRIVATE (MACs and exact geometry), ignored by Git. Back it up
+securely outside the repository. To verify the Office maps against the plan
+and live hardware identity later:
+
+```powershell
+python .\archive_3d_maps.py --verify-plan private-area-plan.json
+```
+
+### Cloud cycle starting from currently UNGROUPED Office controllers
+
+The group-cycle command now supports the reverse order:
+
+**CHECK standalone → GROUP → CHECK grouped → UNGROUP → CHECK standalone**.
+
+The first read-only check captures/verifies immutable Office 3D references,
+identifies the two standalone cloud objects by MAC and searches existing
+private cloud backups for verified **2D Area metadata**. No cloud/LAN writes:
+
+```powershell
+python -m unittest discover -s tests -p "test_cloud_group_cycle_reverse.py" -v
+python .\cloud_group_cycle.py --start-ungrouped --group "Office Group"
+```
+
+Only after it prints **READY FOR REVERSE CYCLE**, an explicitly confirmed
+execution can be attempted:
+
+```powershell
+python .\cloud_group_cycle.py --start-ungrouped --group "Office Group" `
+  --execute --acknowledge-risk --confirm-group "Office Group"
+```
+
+The script pauses before GROUP (type `GROUP`), after grouping/checking to
+let you inspect the Twinkly app (type `UNGROUP`), and after restoring the
+independent 3D setups/checking (type `DONE`). Each stage reads fresh cloud
+and local state and saves private backups. It uses the chosen cloud name
+`Office Group`, even if an older Area template had a different name.
+
+**Experimental cloud writes:** Cloud object IDs change and operations are not
+atomic. On any failed or uncertain response the script stops without retry
+or automatic rollback. Do not execute unless the readiness test succeeds and
+the backup/metadata checks are satisfactory.
