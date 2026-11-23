@@ -14,11 +14,12 @@ import json
 import os
 from pathlib import Path
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
-from cloud_auth import interactive_login
+from cloud_auth import authenticate, interactive_login
 from group_test import load_plan, layout_matches
 from twinkly_inspector import save_json
 
@@ -139,6 +140,55 @@ def summarise(obj, plan):
     return info
 
 
+
+def credentials_token(credentials_file, cache_file, timeout):
+    """Reuse unexpired local access token or login from a private JSON file.
+
+    The input JSON is plaintext, so the caller is responsible for Windows ACLs.
+    Cache contains an access token only; refresh_token is never stored.
+    """
+    config_path = Path(credentials_file)
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError("Credentials JSON must be an object")
+    username, password = raw.get("username"), raw.get("password")
+    if not isinstance(username, str) or not username.strip() or not isinstance(password, str) or not password:
+        raise ValueError("Credentials JSON requires username and password strings")
+    cache_path = Path(cache_file)
+    if cache_path.is_file():
+        try:
+            cached = json.loads(cache_path.read_text(encoding="utf-8"))
+            if (isinstance(cached, dict) and cached.get("username") == username
+                    and isinstance(cached.get("access_token"), str)
+                    and isinstance(cached.get("expires_at"), (int, float))
+                    and cached["expires_at"] > time.time() + 60):
+                token = cached["access_token"]
+                if token and len(token) <= 4096 and not any(c.isspace() for c in token):
+                    print("Using locally cached Twinkly cloud access token.")
+                    return token
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            pass
+    print("Logging into Twinkly cloud using saved local credentials.")
+    session = authenticate(username, password, timeout, return_session=True)
+    token = session["access_token"]
+    lifetime = session["expires_in"]
+    if lifetime > 180:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        # An access token is a bearer secret: Windows ACLs protect local cache files.
+        content = {"username": username, "access_token": token,
+                   "expires_at": time.time() + lifetime - 120}
+        from tempfile import NamedTemporaryFile
+        with NamedTemporaryFile("w", encoding="utf-8", dir=cache_path.parent,
+                                prefix=".twinkly-auth-", suffix=".tmp",
+                                delete=False) as temporary:
+            json.dump(content, temporary)
+            temporary_path = Path(temporary.name)
+        try:
+            os.replace(temporary_path, cache_path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+    return token
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", required=True, help="Private saved local group plan")
@@ -146,16 +196,21 @@ def main():
     parser.add_argument("--timeout", type=float, default=10)
     parser.add_argument("--login", action="store_true", help="Prompt for account email/password and login in memory")
     parser.add_argument("--username", help="Email to use with --login; password is always prompted")
+    parser.add_argument("--credentials-file", help="Private JSON with username/password; auto login")
+    parser.add_argument("--token-cache", default="cloud-auth-cache.json", help="Private access-token cache location")
     args = parser.parse_args()
     try:
         if not 0 < args.timeout <= 30:
             raise ValueError("Timeout out of range")
         if args.username and not args.login:
             raise ValueError("--username requires --login")
-        token = (interactive_login(args.username, args.timeout) if args.login else
-                 os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip())
+        if args.credentials_file and args.login:
+            raise ValueError("Choose either --credentials-file or --login")
+        token = (credentials_token(args.credentials_file, args.token_cache, args.timeout)
+                 if args.credentials_file else interactive_login(args.username, args.timeout)
+                 if args.login else os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip())
         if not token or any(c.isspace() for c in token) or len(token) > 4096:
-            raise ValueError("Use --login or set TWINKLY_CLOUD_TOKEN locally to a valid token")
+            raise ValueError("Use --credentials-file, --login, or TWINKLY_CLOUD_TOKEN")
         plan, _ = load_plan(args.plan)
         now = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         dest = Path(args.output) / now
