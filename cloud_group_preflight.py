@@ -274,7 +274,12 @@ def main(argv=None):
             labels = {plan["group_name"].casefold()}
             labels.update(str(item["name"]).casefold() for item in report["matched_objects"])
             if args.group.casefold() not in labels:
-                raise ValueError("Group label not present in saved plan or matched cloud objects")
+                # Diagnostics remain useful during a partial cloud/LAN
+                # transition when the Area name may no longer exist.
+                # Don't suppress the actual state/roles behind a label error.
+                print("WARNING: Requested group label does not match the saved "
+                      "plan or current cloud object names; reporting hardware-"
+                      "matched state for diagnosis only.")
         else:
             if args.login:
                 raise ValueError("--login requires --group")
