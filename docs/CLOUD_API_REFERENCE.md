@@ -385,3 +385,40 @@ The operation is **experimental and not yet verified on physical hardware**.
 Do not execute if devices have changed or the group is already functioning.
 
 **Repair drift comparison:** The two live preflight reads compare a stable projection of the current cloud object ID, member MACs/part order, LED counts, layout source and decoded coordinates, plus each controller's MAC, LED count, group role/UUID/size/offset and coordinates. Device telemetry, changing metadata and nonessential API reply fields are deliberately excluded: a raw JSON fingerprint can differ between reads without a grouping change. Any critical state difference or mapping delta exceeding 0.0002 still blocks the single master assignment.
+
+## Experimental fully scripted cloud and LAN group cycle
+
+`cloud_group_cycle.py` implements the requested five-stage round trip:
+**Check → Ungroup → Check → Group → Check**, with the tool sending both
+LAN and cloud writes and pausing for human verification of the Twinkly app
+at each meaningful transition. It requires a known working two-controller
+Area, original saved 3D and 2D local layouts, and full standalone cloud
+3D metadata found in earlier **private** audit backups (exact match against
+the private plan). No source-code credential templates are used.
+
+Cloud ungroup: (1) send LAN `group:none`, (2) restore each standalone
+3D map, (3) perform one `PUT /v3/installations/{id}/objects`
+with `action:remove` for the **currently verified** Area only,
+(4) send two `POST /v3/objects` with metadata and original 3D
+coordinates; each device receives a fresh local challenge/response
+verification immediately before the cloud create. The two POST bodies
+are constructed/validated before removal.
+
+Cloud regroup: upload both Area 2D maps locally, assign new master/slave
+group roles and UUID, then send **one** cloud `POST /v3/objects` using
+backed-up Area layout/effect metadata plus fresh device proofs.
+A new cloud object UUID and numeric object ID are expected; old IDs are
+not reused. Each stage performs new cloud/LAN reads with identity,
+membership and **all coordinate** checks. The last check also compares
+the new Area coordinates to the initial Area.
+
+This is a **first independent-client implementation**, not a Twinkly
+supported API and not yet validated against actual cloud writes from
+this script. Risks include creation/removal of wrong objects if the
+service changes its schema, partial operations, metadata incompatibility
+and changed effect/playlist behaviour. Do not bypass a failed readiness
+check. No retries, speculative rollback or attempt to reuse stale
+cloud IDs is provided.
+
+Readiness (live GET only): `python .\\cloud_group_cycle.py --group "Office Group"`.
+Explicit execution: `python .\\cloud_group_cycle.py --group "Office Group" --execute --acknowledge-risk --confirm-group "Office Group"`.
