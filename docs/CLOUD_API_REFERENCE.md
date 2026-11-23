@@ -115,6 +115,11 @@ Authorization: Bearer <access-token>
 | Unjoin | `POST /v3/objects` for controller A | Full single-controller object definition, `layout.source: "3d"`; HTTP **201** |
 | Unjoin | `POST /v3/objects` for controller B | Full single-controller object definition, `layout.source: "3d"`; HTTP **201** |
 
+
+**Confirmed mapping packing:** In a two-controller Area, the cloud `layout.coords` decodes to the ordered concatenation of the controllers' local `coordinates[]` arrays in **group-offset order** (first member offset 0, second member offset 210). This was verified for two separate successful 420-LED Area creations, with all coordinate components matching within 0.0002. The individual 3D objects created on unjoin each contained exactly the same ordered 210 coordinates uploaded to their corresponding controller. This establishes that cloud and LAN retain equivalent geometry, even though they use different encodings.
+
+**Partial-operation caveat:** A separate Area `POST /v3/objects` succeeded (201) after multiple LAN 401 responses, while the intercepted requests contained a successful `slave` assignment but **no successful `master` assignment** in that second join. The final live state cannot be established from the proxy capture alone. The app may create a valid cloud Area object despite an incomplete local group. Require a **fresh local group/mapping readback and cloud inventory comparison** after each operation; a successful cloud 201 is insufficient.
+
 The **confirmed create request keys** are `uuid`, `name`, `ledCount`, `capacity`, `fps`, `ledProfile`, `installationId`, `devices`, `layout`, and `meta`. Within `layout`, confirmed keys are `source`, `coords`, `geometry`, `uuid`, `aspectXY`, `aspectXZ`, `name` and `synthesized`. A valid request must preserve the correct private per-device descriptors and membership; copying literal device credentials from documentation is never appropriate.
 
 **Confirmed local operation order in a complete join:** the app uploads 2D layouts to individual controllers before sending master/slave group-role updates; the cloud Area object creation follows. **Confirmed local operation order on unjoin:** the app sets both controllers' group role to `none`, uploads 3D layouts, then removes the cloud Area association and creates two individual cloud objects.
@@ -290,3 +295,14 @@ python .\\cloud_layout_update.py --plan private-area-plan.json --member "Office 
 The script performs no automatic retries or rollback and is not transactionally coordinated with the LAN. It writes private backups under `cloud-audits/layout-writes/` (Git-ignored). A success requires a fresh GET showing the same coordinate sequence; app UI and other account visibility must be checked independently.
 
 For an existing `2d` default map, **do not attempt to bypass this guard**. First validate a complete 3D cloud-layout metadata object (e.g. verified original 3D cloud object) and compare with the live object's immutable and shared-installation relationships. Only then extend the updater for source change.
+
+## Office state consistency diagnostic
+
+Run the read-only `office_cloud_status.py` check after a complete join/unjoin and **when the Twinkly app is idle**:
+
+```powershell
+git pull
+python .\\office_cloud_status.py --plan private-area-plan.json
+```
+
+This uses saved cloud authentication, checks cloud membership of the two known Office controllers, and compares against both LAN controllers' group roles and UUID agreement. It does not write group assignments, layouts or cloud objects. LAN authentication does require local login/verify requests, so do not run it during an in-progress app operation. It returns nonzero on ambiguous or mismatched states. Cloud `mine=true` visibility must still be considered when using a shared account.
