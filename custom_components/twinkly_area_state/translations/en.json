@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Twinkly Area states",
+        "description": "Enter the physical Twinkly controller names and private LAN IPv4 addresses as a JSON list.",
+        "data": {
+          "devices_json": "Controller names and IP addresses (JSON)"
+        }
+      }
+    },
+    "error": {
+      "invalid_devices": "Provide a nonempty JSON array with unique names and private IPv4 addresses."
+    },
+    "abort": {
+      "single_instance_allowed": "Already configured"
+    }
+  }
+}
