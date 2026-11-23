@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import urllib.error
 
 from cloud_audit import cloud_get, objects_from, decode_coords
 from cloud_token_store import access_token as cached_access_token
@@ -123,11 +124,41 @@ def report(first, second, third):
     print("Cloud object visibility can differ by account; inspect private backups if an object is absent.")
 
 
+def capture_until_valid(plan, token, timeout, root, prefix, phase, max_attempts=6):
+    """Keep each partial state; never assume app join/ungroup is atomic."""
+    for attempt in range(1, max_attempts + 1):
+        folder = root / f"{prefix}-attempt-{attempt:02d}"
+        if folder.exists():
+            # Preserve earlier evidence when resuming a partly completed run.
+            print(f"Previous attempt retained: {folder}")
+            try:
+                old = json.loads((folder / "summary-PRIVATE.json").read_text(encoding="utf-8"))
+                validate_phase(old, phase)
+                return old
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+        snapshot = capture(plan, token, timeout, folder)
+        try:
+            validate_phase(snapshot, phase)
+            return snapshot
+        except RuntimeError as exc:
+            print(f"INCOMPLETE: {exc}")
+            print(f"Snapshot retained at {folder}")
+            if attempt == max_attempts:
+                raise RuntimeError("Maximum observations reached; stop and inspect device state")
+            print("Wait for the app operation to finish. If it failed, resolve it in the app.")
+            answer = input("Press Enter to recheck, or type q to stop safely: ").strip().lower()
+            if answer in ("q", "quit", "stop"):
+                raise RuntimeError("User stopped; all earlier snapshots preserved")
+    raise RuntimeError("Expected state was not observed")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--plan", default="private-area-plan.json")
     p.add_argument("--output", default="cloud-audits/office-join-cycle")
     p.add_argument("--timeout", type=float, default=10)
+    p.add_argument("--resume-run", type=Path, help="Resume existing run folder containing 01-unjoined-before/summary-PRIVATE.json")
     args = p.parse_args()
     try:
         if not 0 < args.timeout <= 30:
@@ -138,19 +169,27 @@ def main():
         token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token()
         if not token:
             raise ValueError("Cloud token absent or expired; run cloud_audit.py --plan private-area-plan.json --login")
-        stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        root = Path(args.output) / stamp
-        print("Reading UNJOINED baseline (cloud GETs, LAN GETs + login/verify only).")
-        first = capture(plan, token, args.timeout, root / "01-unjoined-before")
-        validate_phase(first, "unjoined")
-        print("Baseline saved. JOIN the Office windows in the Twinkly app, wait for completion.")
-        input("Press Enter when JOINED: ")
-        second = capture(plan, token, args.timeout, root / "02-joined")
-        validate_phase(second, "joined")
-        print("Joined snapshot saved. UNJOIN the Office windows in Twinkly app, wait for completion.")
-        input("Press Enter when UNJOINED: ")
-        third = capture(plan, token, args.timeout, root / "03-unjoined-after")
-        validate_phase(third, "unjoined")
+        if args.resume_run:
+            root = args.resume_run
+            baseline = root / "01-unjoined-before" / "summary-PRIVATE.json"
+            if not baseline.is_file():
+                raise ValueError("Resume folder has no saved unjoined baseline")
+            first = json.loads(baseline.read_text(encoding="utf-8"))
+            validate_phase(first, "unjoined")
+            print("Reusing preserved UNJOINED baseline:", baseline)
+            print("Joined step may currently be partial; do not unjoin yet.")
+        else:
+            stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            root = Path(args.output) / stamp
+            print("Reading UNJOINED baseline (cloud GETs, LAN GETs + login/verify only).")
+            first = capture(plan, token, args.timeout, root / "01-unjoined-before")
+            validate_phase(first, "unjoined")
+            print("Baseline saved. JOIN the Office windows in the Twinkly app.")
+            input("Press Enter once the app reports the JOIN complete: ")
+        second = capture_until_valid(plan, token, args.timeout, root, "02-joined", "joined")
+        print("Joined state verified. UNJOIN the Office windows in the Twinkly app.")
+        input("Press Enter once the app reports the UNJOIN complete: ")
+        third = capture_until_valid(plan, token, args.timeout, root, "03-unjoined-after", "unjoined")
         report(first, second, third)
         print("\nSaved PRIVATE snapshots:", root)
         print("No cloud or LAN grouping writes were initiated by the script.")
