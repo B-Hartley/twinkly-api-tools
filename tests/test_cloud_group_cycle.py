@@ -55,13 +55,15 @@ class CycleTests(unittest.TestCase):
         cloud["installation"] = {"id": 4321}
         report = preflight.evaluate(snapshot)
         report["result"] = "PASS_READ_ONLY"
-        with patch("cloud_group_cycle.load_plan", return_value=(plan, "uid")), \\
-             patch("cloud_group_cycle.checkpoint", return_value=(plan, snapshot)), \\
-             patch("cloud_group_cycle.find_area", return_value=cloud), \\
-             patch("cloud_group_cycle.find_standalone_templates",
-                   return_value={"Office Left": {}, "Office Right": {}}), \\
-             patch("cloud_group_cycle.cloud_write") as write, \\
-             patch("cloud_group_cycle.local_write") as local:
+        with (
+            patch("cloud_group_cycle.load_plan", return_value=(plan, "uid")),
+            patch("cloud_group_cycle.checkpoint", return_value=(plan, snapshot)),
+            patch("cloud_group_cycle.find_area", return_value=cloud),
+            patch("cloud_group_cycle.find_standalone_templates",
+                  return_value={"Office Left": {}, "Office Right": {}}),
+            patch("cloud_group_cycle.cloud_write") as write,
+            patch("cloud_group_cycle.local_write") as local,
+        ):
             self.assertEqual(cycle.run(args), 0)
             write.assert_not_called()
             local.assert_not_called()
