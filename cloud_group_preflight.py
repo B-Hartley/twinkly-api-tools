@@ -18,7 +18,8 @@ import sys
 import uuid
 import zipfile
 
-TOLERANCE = 0.0002
+TOLERANCE = 0.0002  # Strict reference geometry comparison
+CLOUD_LOCAL_TOLERANCE = 0.0003  # Allow small Twinkly cloud/local coordinate quantisation
 MAX_POINTS = 100000
 FILES = ("cloud-objects-PRIVATE.json", "Office_Left-local-PRIVATE.json",
          "Office_Right-local-PRIVATE.json")
@@ -220,7 +221,7 @@ def evaluate(snapshot):
         try:
             cloud_points = coordinates(obj.get("layout"))
             ordered_local = members[0]["points"] + members[1]["points"]
-            comparison = compare_points(cloud_points, ordered_local)
+            comparison = compare_points(cloud_points, ordered_local, tolerance=CLOUD_LOCAL_TOLERANCE)
             output["mapping"] = comparison
             if not comparison["matching"]:
                 problems.append("Cloud/local mapping differs beyond tolerance")
@@ -238,7 +239,8 @@ def evaluate(snapshot):
             if (obj.get("layout") or {}).get("source") != member["source"]:
                 problems.append(member["label"] + ": cloud/local source differs")
             try:
-                comparison = compare_points(coordinates(obj.get("layout")), member["points"])
+                comparison = compare_points(coordinates(obj.get("layout")), member["points"],
+                                            tolerance=CLOUD_LOCAL_TOLERANCE)
                 output.setdefault("individual_mappings", {})[member["label"]] = comparison
                 if not comparison["matching"]:
                     problems.append(member["label"] + ": cloud/local mapping differs")
