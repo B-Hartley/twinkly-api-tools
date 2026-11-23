@@ -354,3 +354,30 @@ and local state and saves private backups. It uses the chosen cloud name
 atomic. On any failed or uncertain response the script stops without retry
 or automatic rollback. Do not execute unless the readiness test succeeds and
 the backup/metadata checks are satisfactory.
+
+## Permanent verified 2D grouped Area archives
+
+The `2d_group_archive/` directory is a private, gitignored, **immutable
+reference store**, separate from `3d-map-archive/` for original standalone
+3D geometry. Each entry is keyed by the two device MACs (ordered Left/Right)
+and the cloud/local group UUID, and includes the entire cloud Area object,
+both local 2D maps and both local group role records. Each saved component has
+a SHA-256 checksum. Existing entries are validated but never overwritten.
+
+Create a verified Area reference from the already-captured successful
+**Office Group** preflight, even if the controllers have since been ungrouped:
+
+```powershell
+git pull
+python -m unittest discover -s tests -p "test_archive_2d_group.py" -v
+python .\archive_2d_group.py --snapshot-dir ".\cloud-preflight-backups\20261123T191610558142Z"
+```
+
+No cloud/LAN access or writes occur. The archive command requires that saved
+cloud and both local snapshots jointly pass the full read-only grouped
+preflight, including identities, roles, ordered coordinates, and matching
+cloud/local group UUIDs. A later `cloud_group_cycle.py --start-ungrouped`
+readiness check will prefer this checksum-verified archive over historic
+snapshot discovery and will use its exact 2D local layouts in the script.
+The private `3d-map-archive/` remains authoritative for original standalone
+3D maps. Back up both private archive directories outside the repository.
