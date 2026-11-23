@@ -57,12 +57,11 @@ WARNING: Partial failures can leave a display partly grouped. The app also manag
 settings not fully reproduced by this script. Successful POSTs are not proof of visual restoration.
 Never attempt the live commands on an irreplaceable Area display until a disposable test succeeds.
 
-See captured-api.md for the observed API commands and grouping payloads.
+See API_REFERENCE.md for the observed API commands and grouping payloads.
 
-## Firmware indexing
+## Firmware compatibility
 
-Probe output is the evidence source for firmware-indexed documentation. Existing documentation describes
-observed traffic and remains provisional until matched to per-device firmware and replay tests.
+The tested firmware and hardware table is maintained in [the local API reference](API_REFERENCE.md).
 
 ## Partial regroup recovery (23 Nov 2026)
 
