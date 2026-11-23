@@ -86,6 +86,25 @@ def archived_group_reference(plan, expected_macs, roots):
     pass the standard offline cloud+LAN preflight, including all 420 coordinates.
     """
     from cloud_group_preflight import evaluate
+    from archive_2d_group import read_archive
+    # Explicit immutable archive is authoritative; historical snapshots are
+    # only a fallback while the initial reference has not been captured.
+    archive_root = Path("2d_group_archive")
+    archived = []
+    if archive_root.is_dir():
+        for manifest in archive_root.rglob("manifest.json"):
+            try:
+                record = read_archive(manifest.parent)
+                info = record["manifest"]
+                if (info["macs_in_order"] == expected_macs and
+                        info["led_count"] == plan["size"]):
+                    archived.append((manifest.stat().st_mtime, record, manifest.parent))
+            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+                continue
+    if archived:
+        _, chosen, folder = max(archived, key=lambda x: x[0])
+        print("Verified immutable 2D grouped reference:", folder)
+        return copy.deepcopy(chosen["area"]), copy.deepcopy(chosen["layouts"])
     matches = []
     scanned = 0
     rejected = {}
