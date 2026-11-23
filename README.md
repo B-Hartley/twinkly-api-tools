@@ -153,3 +153,7 @@ python .\cloud_audit.py --plan private-area-plan.json --forget-login
 ```
 
 Token cache: `%LOCALAPPDATA%\TwinklyApiTools\cloud-session.dpapi`, encrypted for the current Windows user via DPAPI. **The refresh-token exchange has not yet been identified**. After the access token expires you must log in again; we do not store your password or attempt an invented refresh call. Do not use plaintext username/password JSON files.
+
+### Guarded single-object cloud 3D layout preview
+
+`cloud_layout_update.py` previews a private cloud backup and a proposed existing-object PUT. It can execute a single explicitly confirmed 3D→3D coordinate replacement, but cannot yet safely turn a 2D default mapping into 3D or synchronize cloud grouping/ungrouping. See [Cloud API Reference](docs/CLOUD_API_REFERENCE.md#experimental-cloud-layout-update-tool). **No automatic cloud writes** are made during previews.
