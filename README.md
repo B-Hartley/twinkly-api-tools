@@ -122,3 +122,12 @@ Run from a machine that can reach the Twinkly controllers (e.g. a Windows PC on 
 ## Future work
 
 Once real snapshots have been reviewed, identify master/slave group metadata and discover whether Area Editor transformations are remotely retrievable. Restore/ungroup controls must remain **out of scope** until a complete test-group restore is demonstrably reliable.
+
+## Additional tools (experimental)
+
+- `python probe_api.py` — read-only firmware-indexed GET endpoint sweep over every controller in local `devices.json`.
+- `python build_group_plan.py --help` — build a private plan from grouped and standalone snapshot directories.
+- `python group_test.py ungroup --plan private-area-plan.json` — dry-run by default, **no network calls**; see safety gates before live writes.
+- See [API research](docs/captured-api.md) and [test instructions](docs/testing.md).
+
+**Do not run live group operations on your Office Area group yet.** Automated group restoration and app-visible effects/name remain experimental.
