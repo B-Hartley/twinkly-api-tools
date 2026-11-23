@@ -76,3 +76,29 @@ python .\group_status.py --plan private-area-plan.json
 The report checks both controllers' group roles and compares the live layout to the saved Area and standalone coordinates. Upload the console output and locally saved `group-test-results.json` (redact private IPs if sharing publicly). The failure could be token invalidation or competing client authentication, but its root cause is unconfirmed. Do not assume all writes completed or none completed.
 
 For complete endpoint coverage, see the [single API reference](API_REFERENCE.md).
+
+## Safely resuming a partially completed regroup
+
+For the 23-Nov-2026 interrupted Office attempt, the read-only status tool reported:
+- Office Left: mode `none`, mapping `area`
+- Office Right: mode `none`, mapping `standalone`
+
+`resume_regroup.py` recognises only exact saved mappings and expected group roles. It reads every member before changing any, refuses unknown states, and re-authenticates for each write. It NEVER automatically retries a POST after an HTTP 401 or other error.
+
+First preview the currently required steps (network GET/login only, no LED/group changes):
+
+```powershell
+git pull
+python .\resume_regroup.py --plan private-area-plan.json
+```
+
+Expected (if state is unchanged): Office Left needs ONLY `/application/group`; Office Right needs `/led/layout/full` followed by `/application/group`. This preview is based on **live controller reads**, so it will refuse mismatches.
+
+Only after reviewing the preview and accepting the remaining risk, run the explicit live command:
+
+```powershell
+python .\resume_regroup.py --plan private-area-plan.json --execute `
+  --acknowledge-risk --group-confirm "Office Windows"
+```
+
+The program rechecks each controller state before every step and reads back membership/coordinates after successful writes. It logs locally to `resume-regroup-results.json`. Even with fresh authentication, a 401 may recur; **do not rerun blindly**. The procedure does not restore app-side group names, effects or playlists.
