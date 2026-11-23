@@ -31,6 +31,25 @@ class CycleTests(unittest.TestCase):
         self.assertNotEqual(result["uuid"], layout["uuid"])
         self.assertEqual(result["layout"]["source"], "3d")
 
+    def test_group_cloud_uuid_must_equal_local_group_uuid(self):
+        group_uid = "12345678-1234-1234-1234-123456789abc"
+        layout = {"source": "2d", "coords": cycle.encoded_layout([point(1), point(2)]),
+                  "geometry": "undefined", "uuid": "old", "aspectXZ": 1.0,
+                  "aspectXY": 2.0, "name": "Office Group", "synthesized": False}
+        result = cycle.create_body(
+            {"ledProfile": "RGBW", "capacity": 1024, "fps": 25.0},
+            [{"part": 0, "device": {"ledCount": 1}},
+             {"part": 1, "device": {"ledCount": 1}}],
+            layout, name="Office Group", installation_id=4321, metadata="{}",
+            object_uuid=group_uid)
+        self.assertEqual(result["uuid"], group_uid)
+        with self.assertRaises(ValueError):
+            cycle.create_body(
+                {"ledProfile": "RGBW", "capacity": 1024, "fps": 25.0},
+                [{"part": 0, "device": {"ledCount": 1}}], layout,
+                name="Office Group", installation_id=4321, metadata="{}",
+                object_uuid="not-a-uuid")
+
     @patch("cloud_group_cycle.urllib.request.build_opener")
     def test_cloud_write_only_approved_paths(self, opener):
         with self.assertRaises(ValueError):
