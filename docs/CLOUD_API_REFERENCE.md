@@ -45,7 +45,7 @@ The cloud service at `https://api.twinkly.com` stores account, installation and 
 
 **Confirmed by corresponding controller readbacks:** the local controllers transitioned `none → master/slave → none`, with `3d → 2d → 3d` mapping sources. End-of-cycle coordinate fingerprints matched the beginning for both members; that is stronger evidence of recovery than matching an older saved plan.
 
-**Important distinction:** an HTTPS proxy capture of the same successful cycle contained successful local group/layout requests but only an object-list **cloud GET**. It did **not** capture the cloud object-create/removal requests themselves. Hence the inventory confirms the resulting cloud-object lifecycle, **not the exact write sequence or payloads for an independent cloud grouping client**. Potential proxy bypass, connection timing, and filtering remain unverified explanations. Do not replay guessed cloud create/removal bodies.
+**Confirmed protocol from a complete intercepted app join/unjoin sequence:** The client sends `POST /v3/objects` with the two controller descriptors and combined 2D layout and receives **201**, without a separate observed removal request for the two old standalone objects at join time. During unjoin, it sends `PUT /v3/installations/{installationId}/objects` with `action:"remove"` and the Area object ID, receiving **200**; it then sends two separate `POST /v3/objects` requests, each describing one controller with its standalone 3D layout, and receives **201** for each. A later second join also used `POST /v3/objects` with two devices and a 2D layout. **Inferred:** the cloud service reconciles or hides preexisting individual objects when creating a new Area; exact deletion, ownership, and rollback semantics remain unverified. Do not separately delete old objects during join on the assumption that a removal call is required.
 
 ## Objects and mappings
 
@@ -102,6 +102,24 @@ Authorization: Bearer <access-token>
 ```
 
 **Confirmed:** the ordinary object-list request can omit mapping and device details. Request `fields=layout,devices,capabilities` with `mine=true` to obtain detailed object records; a request without `fields` may return objects lacking `layout` and `devices`. Other selectors include `objectIds` (combinations and pagination not exhaustively characterised). `GET /v3/installations` retrieves installation metadata. **Inferred:** object records are an important source for the app's inventory and displayed maps; app-specific caching and refresh behaviour has not been proven.
+
+
+### Cloud Area creation / removal protocol
+
+**Confirmed application requests (not yet independently replay-tested):**
+
+| Step | Cloud operation | Request body / outcome |
+|---|---|---|
+| Join | `POST /v3/objects` | Full object definition, `installationId`, `devices[]` containing both controllers, `ledCount` for the combined Area, `layout.source: "2d"`, compressed `layout.coords`; HTTP **201** |
+| Unjoin | `PUT /v3/installations/{installationId}/objects` | `{"action":"remove","objectIds":[<area-object-id>]}`; HTTP **200** |
+| Unjoin | `POST /v3/objects` for controller A | Full single-controller object definition, `layout.source: "3d"`; HTTP **201** |
+| Unjoin | `POST /v3/objects` for controller B | Full single-controller object definition, `layout.source: "3d"`; HTTP **201** |
+
+The **confirmed create request keys** are `uuid`, `name`, `ledCount`, `capacity`, `fps`, `ledProfile`, `installationId`, `devices`, `layout`, and `meta`. Within `layout`, confirmed keys are `source`, `coords`, `geometry`, `uuid`, `aspectXY`, `aspectXZ`, `name` and `synthesized`. A valid request must preserve the correct private per-device descriptors and membership; copying literal device credentials from documentation is never appropriate.
+
+**Confirmed local operation order in a complete join:** the app uploads 2D layouts to individual controllers before sending master/slave group-role updates; the cloud Area object creation follows. **Confirmed local operation order on unjoin:** the app sets both controllers' group role to `none`, uploads 3D layouts, then removes the cloud Area association and creates two individual cloud objects.
+
+**Not established:** atomicity or rollback across LAN/cloud, whether old cloud records are deleted or merely detached, what happens if one creation fails, and how to achieve cross-account consistency. Cloud object IDs can change on every join/unjoin. Do not automatically retry an HTTP 201 create on timeout: duplicate objects may result. An authorised independent client must first back up cloud and local state, verify object/device identity and entire layouts, and stop on an ambiguous write outcome.
 
 ### Create an object — POST
 
@@ -196,7 +214,7 @@ This illustrates observed **field names**, not tested literal value types or a v
 
 - **Confirmed:** cloud create, existing-object update, installation-object removal, reconstruction submission/retrieval, encoded `layout.coords`, and separate local mapping upload.
 - **Inferred:** stale cloud or app-cached geometry may explain why app previews differ from live controller mappings.
-- **Untested:** live testing of encrypted cached login, cloud token refresh, independent programmatic object PUT, app refresh semantics, deletion/rollback behaviour, and reconstruction parameters for arbitrary devices.
+- **Untested:** cloud token refresh, independently replaying the cloud Area create/remove cycle, independent programmatic object PUT, app refresh semantics, deletion/rollback behaviour, and reconstruction parameters for arbitrary devices.
 - **Safety:** compare target object identity and decoded geometry before any write; never publish raw captures, object credentials, access tokens or identifying values.
 
 The cloud API is **not documented or guaranteed by Twinkly**. Use it at your own risk.
