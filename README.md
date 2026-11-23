@@ -381,3 +381,38 @@ readiness check will prefer this checksum-verified archive over historic
 snapshot discovery and will use its exact 2D local layouts in the script.
 The private `3d-map-archive/` remains authoritative for original standalone
 3D maps. Back up both private archive directories outside the repository.
+
+## Read-only Twinkly movie/effects inspection
+
+The inspector now captures the documented Twinkly **GET** endpoints for
+`/xled/v1/movies` (all movie metadata), `/xled/v1/playlist` (playlist
+entries), `/xled/v1/led/effects` (built-in effect catalogue), and
+`/xled/v1/led/movies/current` (currently selected movie). It also keeps
+the existing mode, movie configuration, selected built-in effect, layout,
+and controller information.
+
+To capture the current grouped Office lights (no device/cloud writes):
+
+```powershell
+python .\twinkly_inspector.py inspect --ips 192.168.21.90 192.168.21.93 --group-name office-with-effects --output snapshots
+```
+
+Copy the **exact** `Saved snapshot:` directory from the output into the
+metadata-archive command, e.g.:
+
+```powershell
+python .\archive_effects.py --snapshot-dir ".\snapshots\office-with-effects\<TIMESTAMP>"
+python -m unittest discover -s tests -p "test_effects_capture.py" -v
+```
+
+`effects-archive/` is private, gitignored, content-addressed, and
+create-only. It stores the movie catalogue, playlist, selected playback
+state, and effect metadata for each controller; a checksum detects
+tampering on repeated captures.
+
+**Not yet a fully restorable custom effect backup:** the public
+reverse-engineered Twinkly documentation describes movie frame **uploads**
+but does not identify a supported read-only endpoint for downloading
+already-stored raw frames. No undocumented or destructive movie API
+probes are attempted. Keep the group and its effects in the app
+until raw frame capture or a reliable recreation method is validated.
