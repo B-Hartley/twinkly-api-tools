@@ -8,7 +8,7 @@ Read-only snapshot and comparison tool for **Twinkly Area groups** assembled in 
 
 This repo now contains `custom_components/twinkly_area_state`, installable as a **HACS custom repository**. It supports named controller snapshots via `twinkly_area_state.save_state`, a **read-only** `restore_state` audit and an `office_window_plan` for two equally sized windows with a gap of one window width.
 
-**It cannot yet actually regroup or upload saved mappings.** The restore service deliberately performs a dry run while the Twinkly Area-group create/remove API remains unverified. Use **Office Left** and **Office Right** as the disposable test group before any attempt to modify your Front display.
+**The Home Assistant integration's restore service cannot yet actually regroup or upload saved mappings.** The restore service deliberately performs a dry run while the Twinkly Area-group create/remove API remains unverified. Use **Office Left** and **Office Right** as the disposable test group before any attempt to modify your Front display.
 
 See [Home Assistant setup and actions](docs/HOME_ASSISTANT.md).
 
@@ -121,7 +121,7 @@ Run from a machine that can reach the Twinkly controllers (e.g. a Windows PC on 
 
 ## Future work
 
-Once real snapshots have been reviewed, identify master/slave group metadata and discover whether Area Editor transformations are remotely retrievable. Restore/ungroup controls must remain **out of scope** until a complete test-group restore is demonstrably reliable.
+Improve cloud-object inventory comparison and safe reconstruction/app refresh testing. The controller regroup and individual mapping restoration workflows are experimental and require verified private backups and explicit confirmation.
 
 ## Additional tools (experimental)
 
@@ -131,8 +131,6 @@ Once real snapshots have been reviewed, identify master/slave group metadata and
 - See the **[local API reference](docs/API_REFERENCE.md)**, **[cloud API reference](docs/CLOUD_API_REFERENCE.md)**, and [test instructions](docs/testing.md).
 - `python group_status.py --plan private-area-plan.json` — **read-only** membership and layout check, useful after failed/partial writes.
 
-**Do not run live group operations on your Office Area group yet.** Automated group restoration and app-visible effects/name remain experimental.
-
-**Latest live test (23 Nov 2026):** scripted Office ungroup succeeded and fresh GETs confirmed `none` on both controllers. First scripted regroup stopped on an HTTP 401 after uploading Office Left's layout. **Do not retry live writes until `group_status.py` has assessed both controllers.**
+**Experimental:** local controller grouping and layout recovery are supported only with private verified backups, state preflight, and explicit write confirmations. App/cloud object consistency and effect/playlist restoration are separate, unverified workflows.
 
 For a controlled **overwrite** of the current Office layout with the backed-up, individual camera-mapped 3D layouts (while *ungrouped*), see [standalone layout recovery](docs/testing.md#force-restore-individual-standalone-camera-mappings-office-test-23-nov-2026). Run the read-only preview before permitting live writes.
