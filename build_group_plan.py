@@ -28,6 +28,25 @@ def group_fields(summary):
     raise ValueError("Could not locate grouping metadata in summary; inspect raw JSON manually")
 
 
+def select_members(controllers, requested):
+    """Match human-friendly names (case/space insensitive) or exact IPs."""
+    choices = list(controllers.values())
+    selected = []
+    for query in requested:
+        normalized = " ".join(query.split()).casefold()
+        found = [c for c in choices if c["ip"] == query or
+                 " ".join(str(c.get("name", "")).split()).casefold() == normalized]
+        if len(found) != 1:
+            available = ", ".join(f"{c.get('name', '?')} ({c['ip']})" for c in choices)
+            raise ValueError(
+                f"Member {query!r} matched {len(found)} controllers. "
+                f"Grouped snapshot contains: {available}")
+        if found[0]["ip"] in {c["ip"] for c in selected}:
+            raise ValueError(f"Duplicate member requested: {query}")
+        selected.append(found[0])
+    return selected
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--grouped", required=True, help="Inspector snapshot while grouped")
@@ -42,9 +61,7 @@ def main():
         s = json.loads((standalone / "manifest.json").read_text(encoding="utf-8"))
         gc = {c["ip"]: c for c in g["controllers"]}
         sc = {c["ip"]: c for c in s["controllers"]}
-        matches = [c for c in gc.values() if c["ip"] in a.members or c["name"] in a.members]
-        if len(matches) != len(a.members) or len({c["ip"] for c in matches}) != len(matches):
-            raise ValueError("Exactly one grouped controller must match every supplied member")
+        matches = select_members(gc, a.members)
         members, uid, size = [], None, None
         for c in matches:
             ip = c["ip"]
@@ -55,14 +72,14 @@ def main():
             group = group_fields(summary)
             if uid is None:
                 uid, size = group.get("uid"), group.get("size")
-            if group.get("uid") != uid or group.get("size") != size:
+            if str(group.get("uid", "")).lower() != str(uid).lower() or group.get("size") != size:
                 raise ValueError("Group UID / total size inconsistent")
             if area.get("source") != "2d" or individual.get("source") != "3d":
                 raise ValueError(f"{ip}: expected Area 2D and standalone 3D camera mappings")
             n = len(area.get("coordinates", []))
             if n == 0 or len(individual.get("coordinates", [])) != n:
                 raise ValueError(f"{ip}: coordinate counts disagree")
-            members.append({"ip": ip, "name": c["name"], "offset": group["offset"], "leds": n,
+            members.append({"ip": ip, "name": c["name"], "offset": group.get("offset", 0), "leds": n,
                             "area_layout": {k: area[k] for k in ("source", "synthesized", "coordinates")},
                             "standalone_layout": {k: individual[k] for k in ("source", "synthesized", "coordinates")}})
         members.sort(key=lambda item: item["offset"])
