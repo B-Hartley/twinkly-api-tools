@@ -7,6 +7,7 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 import group_test
+import build_group_plan
 import probe_api
 
 
@@ -37,6 +38,23 @@ class ProbeTests(unittest.TestCase):
         result = probe_api.firmware_info({"data": {"product_code": "TWW", "fw_family": "G"}},
                                          {"data": {"version": "2.11.0"}})
         self.assertEqual(result["fw_version"]["version"], "2.11.0")
+
+
+class BuilderTests(unittest.TestCase):
+    def test_case_insensitive_names_and_spaces(self):
+        controllers = {
+            "192.168.1.11": {"ip": "192.168.1.11", "name": "Office Left"},
+            "192.168.1.12": {"ip": "192.168.1.12", "name": "Office Right"},
+        }
+        selected = build_group_plan.select_members(
+            controllers, ["Office left", "  OFFICE   right  "])
+        self.assertEqual([d["ip"] for d in selected],
+                         ["192.168.1.11", "192.168.1.12"])
+
+    def test_missing_name_shows_available_controllers(self):
+        controllers = {"192.168.1.11": {"ip": "192.168.1.11", "name": "Office Left"}}
+        with self.assertRaisesRegex(ValueError, "Office Left"):
+            build_group_plan.select_members(controllers, ["Unknown"])
 
 
 class GroupTests(unittest.TestCase):
