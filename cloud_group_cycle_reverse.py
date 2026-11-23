@@ -375,6 +375,20 @@ def run_reverse(args):
                 raise RuntimeError(member["name"] + ": Area local readback failed")
         journal["stages"].append("Local Area grouped")
         save_json(destination / "reverse-cycle-status-private.json", journal)
+        # The two standalone cloud objects must be detached before creating
+        # their combined Area. Otherwise an installation can retain duplicate
+        # associations for both physical controllers.
+        cloud_fresh_standalones(standalones, token, args.timeout)
+        standalone_ids = [o["id"] for o in standalones]
+        if (len(standalone_ids) != 2 or len(set(standalone_ids)) != 2 or
+                any(type(item) is not int or item <= 0 for item in standalone_ids)):
+            raise RuntimeError("Standalone cloud IDs invalid; refusing cloud changes")
+        ops.cloud_write("PUT",
+                        "/v3/installations/" + str(installation) + "/objects",
+                        {"action": "remove", "objectIds": standalone_ids},
+                        token, 200, args.timeout)
+        journal["stages"].append("Original cloud standalone objects detached")
+        save_json(destination / "reverse-cycle-status-private.json", journal)
         reply = ops.cloud_write("POST", "/v3/objects", area_body, token, 201, args.timeout)
         journal["stages"].append("Cloud Area created; ID " + str(reply.get("id")))
         save_json(destination / "reverse-cycle-status-private.json", journal)
