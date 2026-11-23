@@ -58,6 +58,23 @@ class BuilderTests(unittest.TestCase):
 
 
 class GroupTests(unittest.TestCase):
+    def test_layout_match_tolerates_controller_rounding(self):
+        layout = sample_plan()["members"][0]["area_layout"]
+        copy = json.loads(json.dumps(layout))
+        copy["coordinates"][0]["x"] += 0.0001
+        self.assertTrue(group_test.layout_matches(copy, layout))
+        copy["coordinates"][0]["x"] += 0.01
+        self.assertFalse(group_test.layout_matches(copy, layout))
+
+    def test_layout_match_rejects_different_source_and_count(self):
+        layout = sample_plan()["members"][0]["area_layout"]
+        copy = json.loads(json.dumps(layout))
+        copy["source"] = "3d"
+        self.assertFalse(group_test.layout_matches(copy, layout))
+        copy = json.loads(json.dumps(layout))
+        copy["coordinates"].pop()
+        self.assertFalse(group_test.layout_matches(copy, layout))
+
     def test_correct_sequences(self):
         plan = sample_plan()
         actions = list(group_test.payloads(plan, "regroup", plan["uid"]))
