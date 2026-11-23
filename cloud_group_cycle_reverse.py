@@ -82,6 +82,8 @@ def installation_id(objects):
 def archived_group_template(plan, expected_macs, roots):
     """Find a previous 2D Area cloud object with exact membership/geometry."""
     candidates = []
+    rejection_counts = {}
+    scanned_files = 0
     expected_points = sum((m["area_layout"]["coordinates"] for m in plan["members"]), [])
     for root in roots:
         folder = Path(root)
@@ -92,6 +94,7 @@ def archived_group_template(plan, expected_macs, roots):
         if len(paths) > 1500:
             raise ValueError("Too many cloud backups: narrow search directories")
         for path in paths:
+            scanned_files += 1
             try:
                 if path.stat().st_size > ops.MAX_BODY:
                     continue
@@ -108,17 +111,20 @@ def archived_group_template(plan, expected_macs, roots):
                             or layout.get("source") != "2d"):
                         continue
                     if not compare_points(coordinates(layout), expected_points)["matching"]:
+                        rejection_counts["coordinate mismatch against archived 2D plan"] = rejection_counts.get("coordinate mismatch against archived 2D plan", 0) + 1
                         continue
                     if not all(k in layout for k in
                                ("coords", "uuid", "geometry", "aspectXZ", "aspectXY", "name", "synthesized")):
+                        rejection_counts["missing 2D layout metadata"] = rejection_counts.get("missing 2D layout metadata", 0) + 1
                         continue
                     if not all(k in obj for k in ("capacity", "fps", "ledProfile", "meta", "uuid")):
+                        rejection_counts["missing cloud object metadata"] = rejection_counts.get("missing cloud object metadata", 0) + 1
                         continue
                     candidates.append((path.stat().st_mtime, copy.deepcopy(obj)))
             except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
                 continue
     if not candidates:
-        raise ValueError("No verified former 2D cloud Area template found in private backups")
+        raise ValueError("No verified former 2D cloud Area template found in private backups. " + str(scanned_files) + " cloud archive files inspected; matching-member rejections: " + str(rejection_counts) + ". No cloud writes attempted.")
     return max(candidates, key=lambda item: item[0])[1]
 
 
