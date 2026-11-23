@@ -30,9 +30,11 @@ ENDPOINTS = {
     "playlist_current": "/xled/v1/playlist/current",
     "movies_current": "/xled/v1/led/movies/current",
     "network_status": "/xled/v1/network/status",
+    "mqtt_config": "/xled/v1/mqtt/config",
 }
 PUBLIC = {"gestalt", "firmware", "status"}
-SENSITIVE_KEYS = {"authentication_token", "challenge-response", "challenge", "token", "password", "secret"}
+SENSITIVE_KEYS = {"authentication_token", "challenge-response", "challenge", "token",
+                  "password", "secret", "mqtt_password", "pass", "passwd", "encryption_key"}
 
 
 def canonical(value):
@@ -202,6 +204,26 @@ def inspect(args):
                 if isinstance(data.get(key), list):
                     details["coordinate_count"] = len(data[key])
                     break
+        mqtt_entry = details["endpoints"].get("mqtt_config", {})
+        mqtt_file = folder / "responses" / "mqtt_config.json"
+        mqtt_reply = json.loads(mqtt_file.read_text(encoding="utf-8"))
+        mqtt_info = mqtt_reply.get("data") if mqtt_entry.get("ok") else None
+        if isinstance(mqtt_info, dict):
+            details["mqtt_summary"] = {
+                "available": True,
+                "host": mqtt_info.get("broker_host"),
+                "port": mqtt_info.get("broker_port"),
+                "tls_expected": mqtt_info.get("broker_port") == 8883,
+                "username_supplied": bool(mqtt_info.get("user")),
+                "password_field_present": "password" in mqtt_info,
+                "authentication_unknown": True,
+                "connection_not_tested": True,
+            }
+        else:
+            details["mqtt_summary"] = {
+                "available": False, "connection_not_tested": True,
+                "authentication_unknown": True,
+            }
         movie_catalogue = details["endpoints"].get("movies_catalogue", {})
         details["effects_capture"] = {
             "movie_catalogue_retrieved": bool(movie_catalogue.get("ok")),
