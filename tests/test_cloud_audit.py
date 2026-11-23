@@ -45,6 +45,16 @@ class CloudAuditTests(unittest.TestCase):
         self.assertNotIn("DO-NOT-LEAK", json.dumps(summary))
         self.assertNotIn("AA:BB:CC:DD:EE:FF", json.dumps(summary))
 
+    def test_installation_id_from_embedded_object(self):
+        obj = {"name": "Other", "id": 12, "installation": {"id": 45}, "ledCount": 100}
+        summary = cloud_audit.summarise(obj, {"members": []})
+        self.assertEqual(summary["installation_id"], 45)
+
+    def test_direct_installation_id(self):
+        obj = {"name": "Other", "id": 12, "installationId": 46, "ledCount": 100}
+        summary = cloud_audit.summarise(obj, {"members": []})
+        self.assertEqual(summary["installation_id"], 46)
+
 
 if __name__ == "__main__":
     unittest.main()
