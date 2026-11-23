@@ -102,3 +102,23 @@ python .\resume_regroup.py --plan private-area-plan.json --execute `
 ```
 
 The program rechecks each controller state before every step and reads back membership/coordinates after successful writes. It logs locally to `resume-regroup-results.json`. Even with fresh authentication, a 401 may recur; **do not rerun blindly**. The procedure does not restore app-side group names, effects or playlists.
+
+## Force-restore individual standalone camera mappings (Office test, 23 Nov 2026)
+
+Use this only when the user intends to **overwrite the current layout** with the backed-up standalone `3d` coordinates. The tool does **not** change group membership; it requires every member's group mode to be `none` before sending any writes. It reads the current layouts and hardware LED counts, saves a local before-image to `recovery-backups/`, re-authenticates before uploads, and verifies the original 3D coordinates on both controllers.
+
+Read-only preview (makes auth POSTs but no layout/group changes):
+
+```powershell
+git pull
+python .\restore_standalone.py --plan private-area-plan.json
+```
+
+Live **overwrite**, only after preview shows the expected controllers and backup is verified:
+
+```powershell
+python .\restore_standalone.py --plan private-area-plan.json --execute `
+  --acknowledge-risk --group-confirm "Office Windows"
+```
+
+Afterwards verify with `python .\group_status.py --plan private-area-plan.json`. Stop if any error occurs. This operation deliberately does **not** restore the Area group or app/cloud records; leave the Twinkly app closed during recovery. Private backup and logs are ignored by Git.
