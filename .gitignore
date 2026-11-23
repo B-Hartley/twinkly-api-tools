@@ -16,3 +16,7 @@ restore-standalone-results.json
 
 cloud-audits/
 twinkly-login-redacted.json
+
+cloud-auth-cache.json
+cloud-credentials.json
+*.dpapi
