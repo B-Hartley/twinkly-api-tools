@@ -233,6 +233,19 @@ def cloud_fresh_standalones(previous, token, timeout):
             raise RuntimeError("Cloud standalone map changed")
 
 
+def detach_original_standalones(standalones, installation, token, timeout):
+    """Detach exactly two fresh, distinct cloud standalone objects."""
+    if len(standalones) != 2:
+        raise ValueError("Expected exactly two cloud standalone objects")
+    ids = [obj.get("id") for obj in standalones]
+    if (len(set(ids)) != 2 or
+            any(type(item) is not int or item <= 0 for item in ids)):
+        raise ValueError("Cannot detach cloud standalones with missing/duplicate IDs")
+    cloud_fresh_standalones(standalones, token, timeout)
+    ops.cloud_write("PUT", "/v3/installations/" + str(installation) + "/objects",
+                    {"action": "remove", "objectIds": ids}, token, 200, timeout)
+
+
 def validate_cloud_payload_inputs(template, standalones, plan):
     """Check all captured create-schema fields before any controller writes."""
     if len(standalones) != 2:
@@ -378,15 +391,7 @@ def run_reverse(args):
         # The two standalone cloud objects must be detached before creating
         # their combined Area. Otherwise an installation can retain duplicate
         # associations for both physical controllers.
-        cloud_fresh_standalones(standalones, token, args.timeout)
-        standalone_ids = [o["id"] for o in standalones]
-        if (len(standalone_ids) != 2 or len(set(standalone_ids)) != 2 or
-                any(type(item) is not int or item <= 0 for item in standalone_ids)):
-            raise RuntimeError("Standalone cloud IDs invalid; refusing cloud changes")
-        ops.cloud_write("PUT",
-                        "/v3/installations/" + str(installation) + "/objects",
-                        {"action": "remove", "objectIds": standalone_ids},
-                        token, 200, args.timeout)
+        detach_original_standalones(standalones, installation, token, args.timeout)
         journal["stages"].append("Original cloud standalone objects detached")
         save_json(destination / "reverse-cycle-status-private.json", journal)
         reply = ops.cloud_write("POST", "/v3/objects", area_body, token, 201, args.timeout)
