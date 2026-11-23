@@ -58,12 +58,40 @@ class ReverseCycleTests(unittest.TestCase):
     def test_live_reference_creation_is_immutable(self):
         s = standalone()
         with tempfile.TemporaryDirectory() as temp:
+            import archive_3d_maps as refs
+            for i, address in enumerate((LEFT, RIGHT)):
+                refs.archive(temp, address.replace(":", ""), 2,
+                             s[preflight.FILES[i + 1]]["layout"],
+                             plan()["members"][i]["name"], "live-standalone")
             result = reverse.reference_check(s, plan(), temp, create=True)
             self.assertEqual(result, [LEFT.replace(":", ""), RIGHT.replace(":", "")])
             reverse.reference_check(s, plan(), temp, create=False)
             s[preflight.FILES[1]]["layout"]["coordinates"][0]["x"] += 0.5
             with self.assertRaises(ValueError):
                 reverse.reference_check(s, plan(), temp, create=False)
+
+    def test_no_reference_blocks_before_grouping(self):
+        s = standalone()
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(ValueError, "no 3D archive reference"):
+                reverse.reference_check(s, plan(), tmp)
+
+    def test_archive_is_authoritative_even_if_plan_is_stale(self):
+        import archive_3d_maps as refs
+        s = standalone()
+        stale = copy.deepcopy(plan())
+        stale["members"][0]["standalone_layout"]["coordinates"][0]["x"] += 5
+        with tempfile.TemporaryDirectory() as tmp:
+            for i, address in enumerate((LEFT, RIGHT)):
+                refs.archive(tmp, address.replace(":", ""), 2,
+                             s[preflight.FILES[i + 1]]["layout"],
+                             stale["members"][i]["name"], "live-standalone")
+            self.assertEqual(reverse.reference_check(s, stale, tmp),
+                             [LEFT.replace(":", ""), RIGHT.replace(":", "")])
+            maps = reverse.archived_layouts(
+                stale, [LEFT.replace(":", ""), RIGHT.replace(":", "")], tmp)
+            self.assertEqual(maps[0]["coordinates"],
+                             s[preflight.FILES[1]]["layout"]["coordinates"])
 
     def test_cloud_template_rejects_missing_device_fields(self):
         s = standalone()
