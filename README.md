@@ -157,3 +157,23 @@ Token cache: `%LOCALAPPDATA%\TwinklyApiTools\cloud-session.dpapi`, encrypted for
 ### Guarded single-object cloud 3D layout preview
 
 `cloud_layout_update.py` previews a private cloud backup and a proposed existing-object PUT. It can execute a single explicitly confirmed 3D→3D coordinate replacement, but cannot yet safely turn a 2D default mapping into 3D or synchronize cloud grouping/ungrouping. See [Cloud API Reference](docs/CLOUD_API_REFERENCE.md#experimental-cloud-layout-update-tool). **No automatic cloud writes** are made during previews.
+
+## Offline cloud/local grouping preflight (read-only)
+
+Use `cloud_group_preflight.py` to validate a saved stage of a cloud and local
+grouping snapshot. It matches controller MACs against nested cloud device
+identities, checks member order/part index and local master/slave roles, then
+compares **every X/Y/Z coordinate** (tolerance 0.0002). Any mismatch or
+ambiguous/partial membership fails closed. It does **not** connect to Twinkly
+or enable grouping writes.
+
+```powershell
+python .\cloud_group_preflight.py `
+  --archive "C:\TwinklyCapture\20261123T180540Z.zip" `
+  --stage "office-join-cycle/20261123T175450Z/02-joined-attempt-01"
+```
+
+Use `--snapshot-dir PATH` instead of `--archive/--stage` for extracted
+files. This is a snapshot checker, **not** a live-state guarantee: take new
+snapshots immediately before any future changes. Offline regression tests:
+`python -m unittest discover -s tests -p "test_cloud_group_preflight.py"`.
