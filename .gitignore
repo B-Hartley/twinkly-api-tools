@@ -8,3 +8,5 @@ __pycache__/
 api-probes/
 private-area-plan.json
 group-test-results.json
+
+resume-regroup-results.json
