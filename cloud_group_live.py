@@ -58,7 +58,7 @@ def read_local(member, timeout=5):
     return {"gestalt": gestalt, **responses}
 
 
-def collect(plan_path, *, login=False, timeout=10, output="cloud-preflight-backups"):
+def collect(plan_path, *, login=False, timeout=10, output="cloud-preflight-backups",\n            include_snapshot=False):
     plan, _ = load_plan(plan_path)
     if len(plan["members"]) != 2:
         raise ValueError("Live preflight currently supports exactly two controllers")
@@ -90,4 +90,4 @@ def collect(plan_path, *, login=False, timeout=10, output="cloud-preflight-backu
     print("Backup saved:", destination)
     print("Current cloud object names:", ", ".join(current_names) or "<none>")
     print("Keep this folder private. It may contain controller secrets.")
-    return report, plan
+    return (report, plan, snapshot) if include_snapshot else (report, plan)
