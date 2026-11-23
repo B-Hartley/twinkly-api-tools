@@ -38,6 +38,15 @@ The cloud service at `https://api.twinkly.com` stores account, installation and 
 
 **Cloud login:** confirmed `POST /v2/auth` with JSON `username`/`password`, returning `access_token`, `refresh_token`, `expires_in`, `token_type`. The token-refresh request is **not** established. Device `/xled/v1/login` and `/verify` exchanges are **LAN authentication**, not cloud account authentication. A preauthenticated or cached app session can make the login exchange invisible in an HTTPS proxy recording.
 
+
+### Observed object lifecycle when grouping and ungrouping
+
+**Confirmed by before/during/after authenticated cloud inventory:** joining two standalone, 210-LED objects into an Area can remove the two old object IDs from the returned inventory and introduce a newly allocated, 420-LED Area object with a 2D layout. Ungrouping can remove that Area object and create **new individual object IDs**, each representing 210 LEDs with a 3D layout. Therefore, any automation **must not assume stable object IDs across group operations**, and should re-discover objects and installation membership after each change.
+
+**Confirmed by corresponding controller readbacks:** the local controllers transitioned `none → master/slave → none`, with `3d → 2d → 3d` mapping sources. End-of-cycle coordinate fingerprints matched the beginning for both members; that is stronger evidence of recovery than matching an older saved plan.
+
+**Important distinction:** an HTTPS proxy capture of the same successful cycle contained successful local group/layout requests but only an object-list **cloud GET**. It did **not** capture the cloud object-create/removal requests themselves. Hence the inventory confirms the resulting cloud-object lifecycle, **not the exact write sequence or payloads for an independent cloud grouping client**. Potential proxy bypass, connection timing, and filtering remain unverified explanations. Do not replay guessed cloud create/removal bodies.
+
 ## Objects and mappings
 
 Cloud objects model individual controllers or compound Area installations. **Confirmed** object fields in creation and update requests include:
