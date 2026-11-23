@@ -128,7 +128,7 @@ Once real snapshots have been reviewed, identify master/slave group metadata and
 - `python probe_api.py` — read-only firmware-indexed GET endpoint sweep over every controller in local `devices.json`.
 - `python build_group_plan.py --help` — build a private plan from grouped and standalone snapshot directories.
 - `python group_test.py ungroup --plan private-area-plan.json` — dry-run by default, **no network calls**; see safety gates before live writes.
-- See the **[consolidated API reference](docs/API_REFERENCE.md)** and [test instructions](docs/testing.md).
+- See the **[local API reference](docs/API_REFERENCE.md)**, **[cloud API reference](docs/CLOUD_API_REFERENCE.md)**, and [test instructions](docs/testing.md).
 - `python group_status.py --plan private-area-plan.json` — **read-only** membership and layout check, useful after failed/partial writes.
 
 **Do not run live group operations on your Office Area group yet.** Automated group restoration and app-visible effects/name remain experimental.
