@@ -163,7 +163,7 @@ def evaluate(snapshot):
         slots = obj["devices"]
         if ids != [m["mac"] for m in members]:
             problems.append("Cloud member order differs from expected Left, Right")
-        if sorted(x.get("part") for x in slots) != [0, 1]:
+        if len(slots) != 2 or [x.get("part") for x in slots] != [0, 1]:
             problems.append("Cloud group part values must be exactly 0 and 1")
         if obj.get("ledCount") != sum(m["leds"] for m in members):
             problems.append("Cloud group LED count differs from local total")
@@ -178,7 +178,7 @@ def evaluate(snapshot):
             problems.append("Slave offset differs from master LED count")
         if any(x.get("size") != obj.get("ledCount") for x in cloud_group):
             problems.append("Local total group size differs from cloud")
-        if any(m["source"] != obj.get("layout", {}).get("source")
+        if any(m["source"] != (obj.get("layout") or {}).get("source")
                for m in members):
             problems.append("Cloud/local layout source differs")
         try:
