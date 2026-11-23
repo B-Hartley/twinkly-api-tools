@@ -226,7 +226,8 @@ def compare(args):
     bb = {c["ip"]: c for c in b["controllers"]}
     for ip in sorted(aa.keys() | bb.keys()):
         if ip not in aa or ip not in bb:
-            print(f"{ip}: {'ADDED' if ip in bb else 'REMOVED'}")
+            entry = bb.get(ip, aa.get(ip))
+            print(f"{entry.get('name', ip)} ({ip}): {'ADDED' if ip in bb else 'REMOVED'}")
             continue
         changed, unavailable = [], []
         for name in ENDPOINTS:
@@ -236,7 +237,8 @@ def compare(args):
                 unavailable.append(name)
             elif x.get("sha256") != y.get("sha256"):
                 changed.append(name)
-        print(f"{ip}: changed={changed or 'none'}; unavailable={unavailable or 'none'}")
+        name = bb[ip].get("name") or aa[ip].get("name") or ip
+        print(f"{name} ({ip}): changed={changed or 'none'}; unavailable={unavailable or 'none'}")
     return 0
 
 
