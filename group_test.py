@@ -120,7 +120,7 @@ def main():
             if not token:
                 raise RuntimeError(f"Authentication failed for {m['name']}: {error}")
             tokens[ip] = token
-            summary = request(ip, "/xled/v1/summary", token=token, timeout=args.timeout)
+            summary = request(ip, GROUP_API, token=token, timeout=args.timeout)
             if not summary.get("ok") or not isinstance(summary.get("data"), dict):
                 raise RuntimeError(f"Missing preflight summary: {m['name']}")
             group = summary["data"].get("group")
@@ -131,7 +131,7 @@ def main():
                 if (str(group.get("uid", "")).lower() != uid.lower()
                         or group.get("mode") != expected_mode
                         or group.get("size") != plan["size"]
-                        or group.get("offset") != m["offset"]):
+                        or (group.get("offset", 0) if m["offset"] == 0 else group.get("offset")) != m["offset"]):
                     raise RuntimeError(f"Not in expected group: {m['name']}")
             elif group.get("mode") != "none":
                 raise RuntimeError(f"Not standalone before regroup: {m['name']}")
@@ -153,7 +153,7 @@ def main():
                     if not response.get("ok"):
                         raise RuntimeError(f"STOPPED at {m['name']} {path}: {record}")
             for m, _ in sequences:
-                observed = request(m["ip"], "/xled/v1/summary",
+                observed = request(m["ip"], GROUP_API,
                                    token=tokens[m["ip"]], timeout=args.timeout)
                 group = observed.get("data", {}).get("group") if observed.get("ok") else None
                 expected_mode = ("none" if args.command == "ungroup" else
@@ -162,8 +162,8 @@ def main():
                 if args.command == "regroup":
                     verified = (verified and str(group.get("uid", "")).lower() == uid.lower()
                                 and group.get("size") == plan["size"]
-                                and group.get("offset") == m["offset"])
-                results["results"].append({"name": m["name"], "verification": "summary",
+                                and (group.get("offset", 0) if m["offset"] == 0 else group.get("offset")) == m["offset"])
+                results["results"].append({"name": m["name"], "verification": "application_group",
                                            "ok": verified, "group": group})
                 if not verified:
                     raise RuntimeError(f"Post-write group verification failed for {m['name']}")
