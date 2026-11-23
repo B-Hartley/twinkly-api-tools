@@ -12,7 +12,7 @@ from twinkly_inspector import authenticate, request, save_json, validate_ip
 GROUP_API = "/xled/v1/application/group"
 LAYOUT_API = "/xled/v1/led/layout/full"
 
-def load_plan(path):
+def load_plan(path, require_verified=False):
     plan = json.loads(Path(path).read_text(encoding="utf-8"))
     if plan.get("schema") != 1:
         raise ValueError("Unsupported plan schema")
@@ -56,8 +56,8 @@ def load_plan(path):
         raise ValueError("Master must be first with offset 0")
     if plan.get("size") != total:
         raise ValueError("Group size must equal sum of member LEDs")
-    if not plan.get("preverified_backup"):
-        raise ValueError("Plan must include preverified_backup=true after manual snapshot comparison")
+    if require_verified and plan.get("preverified_backup") is not True:
+        raise ValueError("Live execution requires preverified_backup=true after manual snapshot comparison")
     return plan, uid
 
 
@@ -90,7 +90,7 @@ def main():
     p.add_argument("--log", default="group-test-results.json")
     args = p.parse_args()
     try:
-        plan, uid = load_plan(args.plan)
+        plan, uid = load_plan(args.plan, require_verified=args.execute)
         if args.timeout <= 0 or args.timeout > 30:
             raise ValueError("timeout must be between 0 and 30 seconds")
         sequences = list(payloads(plan, args.command, uid))
