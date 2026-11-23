@@ -22,3 +22,6 @@ cloud-credentials.json
 *.dpapi
 
 cloud-preflight-backups/
+
+# Immutable private per-controller 3D references (contains MACs and coordinates)
+3d-map-archive/
