@@ -83,6 +83,29 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(result["result"], "PASS_READ_ONLY")
         self.assertEqual(result["state"], "ungrouped-cloud")
 
+    def test_standalone_cloud_rounding_below_0003_passes(self):
+        data = stage(False)
+        cloud_points = [point(0), point(1)]
+        cloud_points[0]["x"] += 0.00024405
+        data[preflight.FILES[0]]["objects"][0]["layout"]["coords"] = encoded(cloud_points)
+        report = preflight.evaluate(data)
+        self.assertEqual(report["result"], "PASS_READ_ONLY")
+        self.assertEqual(report["state"], "ungrouped-cloud")
+        self.assertEqual(report["individual_mappings"]["Left"]["mismatched_leds"], 0)
+
+    def test_standalone_cloud_coordinate_drift_above_0003_blocks(self):
+        data = stage(False)
+        cloud_points = [point(0), point(1)]
+        cloud_points[0]["x"] += 0.0005
+        data[preflight.FILES[0]]["objects"][0]["layout"]["coords"] = encoded(cloud_points)
+        report = preflight.evaluate(data)
+        self.assertEqual(report["result"], "BLOCK")
+        self.assertEqual(report["individual_mappings"]["Left"]["mismatched_leds"], 1)
+
+    def test_strict_reference_comparison_still_rejects_000244_delta(self):
+        self.assertFalse(preflight.compare_points(
+            [point(0.00024405)], [point(0)])["matching"])
+
     def test_single_differing_coordinate_blocks(self):
         data = stage()
         obj = data[preflight.FILES[0]]["objects"][0]
