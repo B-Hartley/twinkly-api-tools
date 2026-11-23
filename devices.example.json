@@ -1,0 +1,16 @@
+{
+  "devices": [
+    {
+      "name": "Left set",
+      "ip": "192.168.1.51"
+    },
+    {
+      "name": "Centre set",
+      "ip": "192.168.1.52"
+    },
+    {
+      "name": "Right set",
+      "ip": "192.168.1.53"
+    }
+  ]
+}
