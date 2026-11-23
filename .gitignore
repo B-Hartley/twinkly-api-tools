@@ -10,3 +10,6 @@ private-area-plan.json
 group-test-results.json
 
 resume-regroup-results.json
+
+recovery-backups/
+restore-standalone-results.json
