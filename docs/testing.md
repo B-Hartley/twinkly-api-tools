@@ -63,3 +63,16 @@ See captured-api.md for the observed API commands and grouping payloads.
 
 Probe output is the evidence source for firmware-indexed documentation. Existing documentation describes
 observed traffic and remains provisional until matched to per-device firmware and replay tests.
+
+## Partial regroup recovery (23 Nov 2026)
+
+After regroup was interrupted by HTTP 401 on the master group-assignment POST, do not repeat the operation. Instead run the fully **read-only** status check:
+
+~~~powershell
+git pull
+python .\group_status.py --plan private-area-plan.json
+~~~
+
+The report checks both controllers' group roles and compares the live layout to the saved Area and standalone coordinates. Upload the console output and locally saved `group-test-results.json` (redact private IPs if sharing publicly). The failure could be token invalidation or competing client authentication, but its root cause is unconfirmed. Do not assume all writes completed or none completed.
+
+For complete endpoint coverage, see the [single API reference](API_REFERENCE.md).
