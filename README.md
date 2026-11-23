@@ -416,3 +416,47 @@ but does not identify a supported read-only endpoint for downloading
 already-stored raw frames. No undocumented or destructive movie API
 probes are attempted. Keep the group and its effects in the app
 until raw frame capture or a reliable recreation method is validated.
+
+## Read-only MQTT diagnostics
+
+The Twinkly inspector also fetches the authenticated
+`GET /xled/v1/mqtt/config` endpoint. Its private snapshot contains the
+configured broker, port, client ID, username and keepalive when available;
+any `password` or secrets are redacted before saving. The metadata
+archive includes the scrubbed MQTT configuration. This endpoint is a
+read-only local API request: it does **not** connect to the MQTT broker.
+
+```powershell
+git pull
+python -m unittest discover -s tests -p "test_mqtt_probe.py" -v
+python .\twinkly_inspector.py inspect --ips 192.168.21.90 192.168.21.93 --group-name office-mqtt --output snapshots
+```
+
+To test broker connectivity and MQTT CONNECT authentication from your PC:
+
+```powershell
+# Check certificate-verified TLS and whether anonymous MQTT CONNECT works:
+python .\probe_mqtt_broker.py --port 8883
+
+# If the firmware's local config identifies user=twinkly32,
+# test a username-only CONNECT (no password transmitted):
+python .\probe_mqtt_broker.py --port 8883 --username twinkly32
+
+# Older devices may use plain MQTT on port 1883:
+python .\probe_mqtt_broker.py --port 1883
+```
+
+The broker probe is limited to `mqtt.twinkly.com` on ports 1883 and
+8883. It uses a random client ID so it cannot displace a light's active
+connection. It sends only MQTT CONNECT and (on acceptance) DISCONNECT:
+**never SUBSCRIBE, PUBLISH or commands**. An accepted CONNECT does not
+prove that subscribing to your own device topics is authorised or
+permitted; a refused CONNECT cannot by itself establish whether a
+password, an account-level token, broker-side ACL, or firmware-specific
+mechanism is required.
+
+The reverse-engineered API documents default usernames
+`twinkly_noauth` (D firmware) and `twinkly32` (F/G firmware), but does
+**not** establish current publicly usable broker credentials. The probe
+does not use or request passwords. Do not paste private passwords
+from controller config into public issues or chat.
