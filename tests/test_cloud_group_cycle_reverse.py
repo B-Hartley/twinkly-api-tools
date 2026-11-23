@@ -40,6 +40,23 @@ class ReverseCycleTests(unittest.TestCase):
         s[preflight.FILES[0]]["objects"][0]["name"] = "renamed"
         self.assertEqual(len(reverse.standalone_objects(s, plan())), 2)
 
+    def test_cloud_local_rounding_does_not_block_standalone(self):
+        s = standalone()
+        cloud = s[preflight.FILES[0]]["objects"][0]
+        coords = [point(0.00024405), point(1)]
+        from test_cloud_group_preflight import encoded
+        cloud["layout"]["coords"] = encoded(coords)
+        found = reverse.standalone_objects(s, plan())
+        self.assertEqual([o["id"] for o in found], [11, 12])
+
+    def test_cloud_local_geometry_drift_still_blocks_standalone(self):
+        s = standalone()
+        cloud = s[preflight.FILES[0]]["objects"][0]
+        from test_cloud_group_preflight import encoded
+        cloud["layout"]["coords"] = encoded([point(0.0005), point(1)])
+        with self.assertRaisesRegex(ValueError, "cloud/local 3D geometry differs"):
+            reverse.standalone_objects(s, plan())
+
     def test_wrong_cloud_mapping_blocks(self):
         s = standalone()
         s[preflight.FILES[0]]["objects"][0]["layout"]["source"] = "2d"
