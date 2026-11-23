@@ -51,6 +51,7 @@ class ReverseCycleTests(unittest.TestCase):
         duplicate = copy.deepcopy(s[preflight.FILES[0]]["objects"][0])
         duplicate["id"] = 55
         s[preflight.FILES[0]]["objects"].append(duplicate)
+        s[preflight.FILES[0]]["count"] = len(s[preflight.FILES[0]]["objects"])
         with self.assertRaisesRegex(ValueError, "Duplicate"):
             reverse.standalone_objects(s, plan())
 
