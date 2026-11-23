@@ -91,6 +91,10 @@ def find_area(snapshot, plan):
         and [mac(x.get("device", {}).get("mac")) for x in obj["devices"]] == expected]
     if len(matches) != 1 or matches[0].get("ledCount") != plan["size"]:
         raise ValueError("Current cloud Area not uniquely matched by both MACs")
+    local_uid = normalized_uid(snapshot[FILES[1]]["group"]["group"].get("uid"))
+    cloud_uid = normalized_uid(matches[0].get("uuid"))
+    if local_uid is None or local_uid != cloud_uid:
+        raise ValueError("Cloud Area UUID differs from the current local group UUID")
     return matches[0]
 
 
