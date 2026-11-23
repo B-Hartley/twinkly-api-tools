@@ -6,7 +6,7 @@
 
 The captures **do prove** that the iOS app creates and removes persistent cloud installation objects as it groups and ungroups Office Windows. The cloud representations include the device members, group name and complete encoded geometry. The local Python ungroup/regroup and standalone-layout restore scripts **do not** update cloud objects. That explains why the app **could** continue to show a default or outdated map even though direct LAN reads confirm the correct 3D coordinates; however, the traces alone do **not prove** whether an individual app screen is reading cloud state versus a local cache.
 
-These traces **do not contain a tested cloud endpoint for updating an existing object's layout in place**. Do not attempt a guessed `PUT` or `PATCH`, or use `POST /v3/objects` as a replacement operation: the captured POST **creates** a new object.
+**Follow-up capture (23 November 2026):** `mapping-upload.flows` confirms that Twinkly's app updates an **existing** cloud object using `PUT /v3/objects/{objectId}`. It uploaded one 210-coordinate `3d` previous mapping and subsequently a 210-coordinate `2d` default mapping to the *same* object, both HTTP 200. The route is observed, but no third-party script has yet written to the cloud. Do not use `POST /v3/objects` for an in-place edit; captured POST creates objects.
 
 ## Captured request inventory
 
@@ -17,8 +17,9 @@ These traces **do not contain a tested cloud endpoint for updating an existing o
 | `GET` | `/v3/objects` | Two traces (two calls each) | 200 | Retrieve saved objects, optionally with query selectors such as `mine`, `fields` or `objectIds` |
 | `PUT` | `/v3/installations/{installationId}/objects` | Twice | 200 | Remove an object reference from an installation using `action:"remove"` |
 | `POST` | `/v3/objects` | Five times | 201 | Create a new single-controller or combined Area object |
+| `PUT` | `/v3/objects/{objectId}` | Twice in follow-up `mapping-upload.flows` | 200 | Replace/update an existing object's data and saved mapping (same object ID) |
 
-The captures do not establish a stable public Twinkly API contract; these routes and schemas could change without notice.
+The captures do not establish a stable public Twinkly API contract; these routes and schemas could change without notice. The fifth, follow-up capture covers an existing-object update without creating a new object.
 
 ### Capture-by-capture event sequence
 
@@ -34,6 +35,23 @@ The request and response ordering is supported by the captured flows. It does no
 The captured app's cloud requests used an `Authorization: Bearer <secret>` header over HTTPS. **This is not the local Twinkly `X-Auth-Token` challenge/verify mechanism**. Tokens, account IDs, installation IDs, object IDs, MAC addresses, UUIDs, credentials and personal identifiers from the source captures must remain private. Do **not** replay an extracted mobile access token in a public script or check it into Git.
 
 The captured object payloads contain device credential-related fields including `password`, `challenge` and `challengeResponse`. Treat raw traces and original cloud payloads as **sensitive**; this page intentionally omits all values.
+
+## Cloud object update: `PUT /v3/objects/{objectId}` — confirmed in follow-up trace
+
+The newly uploaded `mapping-upload.flows` contains **two** authenticated requests to `https://api.twinkly.com/v3/objects/{objectId}`, targeting the **same** pre-existing Office object ID. Both returned HTTP **200**, and both responses contained JSON bodies (their fields are not fully characterised here). This was **app traffic**, not an action performed by our scripts.
+
+| Captured user operation | Local controller operation | Cloud object operation | Decoded geometry |
+|---|---|---|---|
+| Restore previous mapping | `POST /xled/v1/led/layout/full` → HTTP 200 | `PUT /v3/objects/{objectId}` → HTTP 200 | `layout.source: 3d`, 210 coordinates |
+| Restore default mapping | `POST /xled/v1/led/layout/full` → HTTP 200 | `PUT /v3/objects/{objectId}` → HTTP 200 | `layout.source: 2d`, 210 coordinates |
+
+Request body keys observed on both requests were `name`, `uuid`, `ledCount`, `devices`, `ledProfile`, `fps`, `capacity`, `meta`, `palette`, and `layout`. The **existing object ID is in the URL**; there is no `id` key in the submitted JSON body. Nested `layout` keys: `coords`, `source`, `geometry`, `uuid`, `aspectXZ`, `aspectXY`, `name`, `synthesized`. The `layout.coords` string decodes to a **210-element JSON array** with `x`, `y`, `z` coordinates in both requests, using the Base64+GZIP encoding described below. The captured encoded strings were different lengths, reflecting different geometry data, but their opaque values and IDs remain private.
+
+These PUT requests contain **more than a layout**: they supply object and device metadata too. Do not assume that a hypothetical minimal `{ "layout": ... }` PATCH or PUT is accepted or preserves other fields. An eventually developed client must obtain and privately back up the current cloud object, preserve the correct ownership/membership/metadata and validate the intended object before any write.
+
+**Additional observed calls around the default reset:** the trace includes `DELETE /v3/reconstruction/snapshot/{uuid}` (HTTP 404) and `DELETE /v3/effects/compiled/{uuid}` (HTTP 204). These may be app cleanup operations; the causal relationship has not been verified and they should not be included in a cloud mapping updater by assumption.
+
+**Caution:** HTTP 200 on the cloud PUT proves the server accepted the request, not yet that the Twinkly app will persistently render an externally-written map after later refresh or effect operations. No custom cloud PUT has been attempted.
 
 ## Cloud object creation: `POST /v3/objects`
 
@@ -134,10 +152,10 @@ The restored standalone coordinates on both Office controllers were independentl
 1. **Read-only cloud inventory:** obtain a *fresh*, user-authorised `GET /v3/objects` response (using the signed-in app or a permitted account session). Do not reuse stale access tokens from historical traces.
 2. Identify **existing** Office Left/Office Right objects by a combination of installation and device identity, not merely name.
 3. Save the complete original cloud object responses **privately** and compare the decoded `layout.coords` against the verified 3D layouts in the private local plan.
-4. Observe or discover a documented/supported **existing-object update** endpoint. None of the four captured flow files establishes such a write. In particular, **`POST /v3/objects` is a create, not an update**.
-5. If an update route is subsequently verified, test only on the disposable Office group with explicit confirmation, preserve identity/ownership, and immediately GET the objects again to verify cloud persistence. Stop if object IDs, membership or mappings differ unexpectedly.
+4. We now have the captured **existing-object update** method: `PUT /v3/objects/{objectId}` in `mapping-upload.flows`. Before automating it, verify a fresh signed-in cloud GET, the intended object ID, complete required body fields and successful readback. **`POST /v3/objects` is a create, not an update**.
+5. If attempting an independent PUT test later, test only on the disposable Office object with explicit confirmation, preserve identity/ownership, and immediately GET the object again to verify cloud persistence. Stop if object IDs, membership or mappings differ unexpectedly.
 6. Refresh/restart the iOS app to verify visual geometry. Independently recheck local controller state; the app might also push a layout back to a controller.
 
-**No cloud update has been executed.** The source traces remain private. This file contains only anonymised structural observations.
+**No cloud update has been executed by these Python tools.** Two cloud PUT updates were observed from the official Twinkly app. The source traces remain private. This file contains only anonymised structural observations.
 
 See also [local controller API reference](API_REFERENCE.md).
