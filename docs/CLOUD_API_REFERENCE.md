@@ -1,161 +1,181 @@
-# Twinkly cloud API — captured installation objects and layouts
+# Twinkly Cloud API Reference
 
-> **Unofficial reverse-engineering reference.** Updated 23 November 2026. Based on the user's four original mitmproxy captures: `twinkly.flows`, `twinkly(1).flows`, `twinkly(2).flows`, and `twinkly(3).flows`. This is the **cloud** API at `https://api.twinkly.com`, which is separate from the local controller API at `http://DEVICE_IP/xled/v1/`. No live cloud writes have been made by this repository.
+> **Unofficial, reverse-engineered API.** This page documents protocol behaviour, not individual captures or installations. **Confirmed** means observed in successful app requests/responses; **inferred** means a reasonable interpretation not independently proved; **untested** means no compatible external client write has been verified. The endpoints and structures may change.
 
-## Findings at a glance
+The cloud service at `https://api.twinkly.com` stores account, installation and object records. It is **separate** from the LAN controller API at `http://DEVICE_IP/xled/v1/`. See [Local API Reference](API_REFERENCE.md).
 
-The captures **do prove** that the iOS app creates and removes persistent cloud installation objects as it groups and ungroups Office Windows. The cloud representations include the device members, group name and complete encoded geometry. The local Python ungroup/regroup and standalone-layout restore scripts **do not** update cloud objects. That explains why the app **could** continue to show a default or outdated map even though direct LAN reads confirm the correct 3D coordinates; however, the traces alone do **not prove** whether an individual app screen is reading cloud state versus a local cache.
+## Authentication and response handling
 
-**Follow-up capture (23 November 2026):** `mapping-upload.flows` confirms that Twinkly's app updates an **existing** cloud object using `PUT /v3/objects/{objectId}`. It uploaded one 210-coordinate `3d` previous mapping and subsequently a 210-coordinate `2d` default mapping to the *same* object, both HTTP 200. The route is observed, but no third-party script has yet written to the cloud. Do not use `POST /v3/objects` for an in-place edit; captured POST creates objects.
+- **Confirmed:** Cloud requests use HTTPS with `Authorization: Bearer <access-token>`. This is **not** the LAN `X-Auth-Token` mechanism.
+- **Confirmed:** Successful cloud responses use conventional HTTP status codes such as **200 OK**, **201 Created** and **204 No Content**. Unlike the local controller API, a Twinkly JSON `code:1000` field is not required for cloud calls.
+- **Untested:** How an independent client should obtain/refresh a cloud token. Do not hard-code, commit or replay captured app tokens. Cloud payloads may contain account, installation and device credential fields; keep complete responses private.
 
-## Captured request inventory
+## Endpoint index
 
-| Method | Path | Captured evidence | Result | Meaning |
-|---|---|---|---|---|
-| `GET` | `/v2/users/me` | All four traces | 200 | Read authenticated account identity |
-| `GET` | `/v3/installations` | Two traces | 200 | Retrieve installations / object references |
-| `GET` | `/v3/objects` | Two traces (two calls each) | 200 | Retrieve saved objects, optionally with query selectors such as `mine`, `fields` or `objectIds` |
-| `PUT` | `/v3/installations/{installationId}/objects` | Twice | 200 | Remove an object reference from an installation using `action:"remove"` |
-| `POST` | `/v3/objects` | Five times | 201 | Create a new single-controller or combined Area object |
-| `PUT` | `/v3/objects/{objectId}` | Twice in follow-up `mapping-upload.flows` | 200 | Replace/update an existing object's data and saved mapping (same object ID) |
-
-The captures do not establish a stable public Twinkly API contract; these routes and schemas could change without notice. The fifth, follow-up capture covers an existing-object update without creating a new object.
-
-### Capture-by-capture event sequence
-
-- `twinkly.flows`: cloud `GET /v2/users/me` observed; no object-write cloud requests in that file.
-- `twinkly(1).flows`: removal of one installation object, creation of **two 210-LED standalone 3D objects**, then installation and object reads.
-- `twinkly(2).flows`: creation of **one 420-LED 2D Area object** with two device members.
-- `twinkly(3).flows`: another installation-object removal followed by **two standalone 210-LED 3D object creations**, then installation and object reads.
-
-The request and response ordering is supported by the captured flows. It does not prove which UI tap initiated each call without a synchronised user-action timeline.
-
-## Authentication
-
-The captured app's cloud requests used an `Authorization: Bearer <secret>` header over HTTPS. **This is not the local Twinkly `X-Auth-Token` challenge/verify mechanism**. Tokens, account IDs, installation IDs, object IDs, MAC addresses, UUIDs, credentials and personal identifiers from the source captures must remain private. Do **not** replay an extracted mobile access token in a public script or check it into Git.
-
-The captured object payloads contain device credential-related fields including `password`, `challenge` and `challengeResponse`. Treat raw traces and original cloud payloads as **sensitive**; this page intentionally omits all values.
-
-## Cloud object update: `PUT /v3/objects/{objectId}` — confirmed in follow-up trace
-
-The newly uploaded `mapping-upload.flows` contains **two** authenticated requests to `https://api.twinkly.com/v3/objects/{objectId}`, targeting the **same** pre-existing Office object ID. Both returned HTTP **200**, and both responses contained JSON bodies (their fields are not fully characterised here). This was **app traffic**, not an action performed by our scripts.
-
-| Captured user operation | Local controller operation | Cloud object operation | Decoded geometry |
+| Method | Relative path | Purpose | Evidence |
 |---|---|---|---|
-| Restore previous mapping | `POST /xled/v1/led/layout/full` → HTTP 200 | `PUT /v3/objects/{objectId}` → HTTP 200 | `layout.source: 3d`, 210 coordinates |
-| Restore default mapping | `POST /xled/v1/led/layout/full` → HTTP 200 | `PUT /v3/objects/{objectId}` → HTTP 200 | `layout.source: 2d`, 210 coordinates |
+| GET | `/v2/users/me` | Get authenticated account information | **Confirmed** 200 |
+| GET | `/v3/installations` | Get installations and their object references | **Confirmed** 200 |
+| GET | `/v3/objects` | Get saved light objects; supports query selectors | **Confirmed** 200 |
+| POST | `/v3/objects` | Create a saved light object | **Confirmed** 201 |
+| PUT | `/v3/objects/{objectId}` | Update an *existing* object, including layout | **Confirmed** 200 |
+| PUT | `/v3/installations/{installationId}/objects` | Modify installation-object association | **Confirmed** 200 for `action:"remove"` |
+| POST | `/v3/reconstruction` | Submit calibration/reconstruction input for processing | **Confirmed** 201 |
+| GET | `/v3/reconstruction/{id}` | Obtain reconstruction job result and status | **Confirmed** 200 |
+| GET | `/v3/reconstruction/snapshot/{uuid}` | Look up saved reconstruction snapshot | **Endpoint observed**, response can be 404 |
+| DELETE | `/v3/reconstruction/snapshot/{uuid}` | Snapshot cleanup | **Endpoint observed**, success not established |
+| DELETE | `/v3/effects/compiled/{uuid}` | Compiled effect cleanup | **Confirmed** 204; mapping dependency **unproven** |
 
-Request body keys observed on both requests were `name`, `uuid`, `ledCount`, `devices`, `ledProfile`, `fps`, `capacity`, `meta`, `palette`, and `layout`. The **existing object ID is in the URL**; there is no `id` key in the submitted JSON body. Nested `layout` keys: `coords`, `source`, `geometry`, `uuid`, `aspectXZ`, `aspectXY`, `name`, `synthesized`. The `layout.coords` string decodes to a **210-element JSON array** with `x`, `y`, `z` coordinates in both requests, using the Base64+GZIP encoding described below. The captured encoded strings were different lengths, reflecting different geometry data, but their opaque values and IDs remain private.
+## Objects and mappings
 
-These PUT requests contain **more than a layout**: they supply object and device metadata too. Do not assume that a hypothetical minimal `{ "layout": ... }` PATCH or PUT is accepted or preserves other fields. An eventually developed client must obtain and privately back up the current cloud object, preserve the correct ownership/membership/metadata and validate the intended object before any write.
+Cloud objects model individual controllers or compound Area installations. **Confirmed** object fields in creation and update requests include:
 
-**Additional observed calls around the default reset:** the trace includes `DELETE /v3/reconstruction/snapshot/{uuid}` (HTTP 404) and `DELETE /v3/effects/compiled/{uuid}` (HTTP 204). These may be app cleanup operations; the causal relationship has not been verified and they should not be included in a cloud mapping updater by assumption.
+| Field | Meaning |
+|---|---|
+| `name` | Human-readable object/group name |
+| `uuid` | Object identifier distinct from URL numeric `objectId` |
+| `installationId` | Installation association, where supplied |
+| `devices[]` | Members; nested `part` and `device` entries |
+| `ledCount` | Total LEDs represented by the object |
+| `ledProfile`, `fps`, `capacity` | Device/playback capabilities |
+| `meta`, `palette` | Object metadata and palette |
+| `layout` | Mapping description and encoded coordinates |
 
-**Caution:** HTTP 200 on the cloud PUT proves the server accepted the request, not yet that the Twinkly app will persistently render an externally-written map after later refresh or effect operations. No custom cloud PUT has been attempted.
+Some fields appear in only certain request types. **Do not assume every field is optional.** Device descriptors can include private credentials and identifiers; never copy actual `devices[]` payloads to documentation or public logs.
 
-## Cloud object creation: `POST /v3/objects`
+### Layout schema
 
-This operation was captured with HTTP **201 Created**, including a response body describing the newly created object. Representative, **illustrative only** request structure:
+**Confirmed** fields inside `layout`:
+
+| Field | Meaning |
+|---|---|
+| `source` | `2d` or `3d` mapping source |
+| `coords` | **Base64-encoded, GZIP-compressed JSON coordinate array** |
+| `geometry` | Mapping geometry classification |
+| `uuid` | Layout UUID |
+| `name` | Layout name |
+| `synthesized` | Whether marked as synthesised |
+| `aspectXY`, `aspectXZ` | Layout aspect metadata |
+
+The decoded coordinate array contains ordered objects with numeric `x`, `y`, `z` fields. Its length must equal the object LED count. **Confirmed:** 3D layouts can represent standalone devices; 2D layouts can represent Area/combined or default arrangements. **Inferred:** `source` alone is insufficient to distinguish a calibrated Area layout from a default grid.
+
+Read-only decoding example:
+
+```python
+import base64
+import gzip
+import json
+
+coords = json.loads(gzip.decompress(base64.b64decode(obj["layout"]["coords"])))
+assert len(coords) == obj["ledCount"]
+print("LEDs:", len(coords), "first point:", coords[0])
+```
+
+To produce equivalent data for an authorised update, the inverse is `base64.b64encode(gzip.compress(json.dumps(coords).encode("utf-8"))).decode("ascii")`. Exact request-body compatibility with independent clients remains **untested**.
+
+### GET objects and installations
+
+```http
+GET /v3/objects?mine=true
+Authorization: Bearer <access-token>
+```
+
+**Confirmed:** requests may use selectors such as `mine`, `fields`, `objectIds` (availability and supported combinations not exhaustively characterised). `GET /v3/installations` retrieves installation metadata. **Inferred:** object records are an important source for the app's inventory and displayed maps; app-specific caching and refresh behaviour has not been proven.
+
+### Create an object — POST
+
+```http
+POST /v3/objects
+Authorization: Bearer <access-token>
+Content-Type: application/json
+```
+
+**Confirmed:** This creates a new object (HTTP **201**). The body contains object metadata, membership and layout. A created response can include `id`, `ownerId`, `installation`, `users[]`, `devices[]`, `layout`, `created`, and `updated`. **Do not use POST to update an existing object**, as duplicates may result.
+
+### Update an existing object — PUT
+
+```http
+PUT /v3/objects/{objectId}
+Authorization: Bearer <access-token>
+Content-Type: application/json
+```
+
+**Confirmed:** PUT to the existing object's ID can update its map and returns HTTP **200**. Observed request keys: `name`, `uuid`, `ledCount`, `devices`, `ledProfile`, `fps`, `capacity`, `meta`, `palette`, `layout`. In particular the new `layout.coords`, `layout.source` and layout metadata are sent with the object's other fields. A cloud object need not be deleted or recreated for a mapping change.
+
+**Untested:** Minimal layout-only PUT, optimistic concurrency, response semantics after external-client writes, and what app refresh does after such a write. An updater should first read and privately back up the complete current object, preserve immutable/ownership fields and membership, verify the target ID, then perform a separately authorised test. This repository does not yet implement authenticated cloud writes.
+
+### Installation membership — PUT
+
+```http
+PUT /v3/installations/{installationId}/objects
+Authorization: Bearer <access-token>
+Content-Type: application/json
+
+{"objectIds":[123456],"action":"remove"}
+```
+
+The ID above is fictitious. **Confirmed:** `action:"remove"` returns HTTP **200**. **Untested:** Other actions, whether this deletes the underlying object, and effects on other members. Treat as potentially destructive.
+
+## Reconstruction / camera-mapping workflow
+
+**Confirmed** general protocol:
+
+```text
+multipart reconstruction input
+      |
+      v
+POST /v3/reconstruction  -> 201, job id and status
+      |
+      v
+GET /v3/reconstruction/{id} -> 200, job status and output
+      |
+      v
+POST /xled/v1/led/layout/full -> local controller accepts coordinates
+      |
+      v
+PUT /v3/objects/{objectId} -> cloud object stores encoded layout
+```
+
+### Submit reconstruction
+
+`POST /v3/reconstruction` uses **`multipart/form-data`**, not an ordinary JSON request. **Confirmed** multipart field names include `file` (one or more parts), `feedback`, `feedbackValidGapSize`, `uuid`. Different requests have different field combinations; not all are universally required.
+
+Successful JSON response example *shape* (identifiers redacted):
 
 ```json
 {
-  "name": "Example Office Set",
-  "installationId": 1234,
-  "ledProfile": "<captured profile>",
-  "capacity": 210,
-  "fps": 25,
-  "meta": "{}",
-  "uuid": "<object uuid>",
-  "ledCount": 210,
-  "devices": [
-    {
-      "part": 0,
-      "device": {
-        "name": "Example controller",
-        "uniqueId": "<private>",
-        "productCode": "TWW210SPP",
-        "hwVersion": "300",
-        "ledCount": 210
-      }
-    }
-  ],
-  "layout": {
-    "source": "3d",
-    "coords": "<base64-encoded gzipped JSON array of coordinates>",
-    "geometry": "<geometry type>",
-    "uuid": "<layout uuid>",
-    "aspectXZ": 1.0,
-    "aspectXY": 1.0,
-    "name": "<layout name>",
-    "synthesized": false
-  }
+  "id": "<job-id>",
+  "status": "<job-status>",
+  "input": {
+    "threads": "<value>",
+    "feedback": "<value>",
+    "rect2d": "<value>",
+    "floor": "<value>",
+    "uuid": "<value>",
+    "parallelViewsFilter": "<value>",
+    "outliersRecovering": "<value>"
+  },
+  "output": {},
+  "created": "<timestamp>",
+  "updated": "<timestamp>"
 }
 ```
 
-**Not replayable:** This is a shortened/redacted *schema illustration*, not a complete or valid substitute for the app's creation request. The genuine device objects include other required/sensitive fields. Example `fps`, `capacity`, `aspect*` values are placeholders and **not asserted as observed fixed values**.
+This illustrates observed **field names**, not tested literal value types or a valid POST body. Input options may include `feedbackValidGapSize` depending on the operation. **Inferred:** each submission can incrementally generate mapping information from captured scan inputs; the server's exact reconstruction algorithm and required number of scans are not established.
 
-Observed request object top-level fields: `name`, `installationId`, `ledProfile`, `capacity`, `devices`, `fps`, `meta`, `layout`, `uuid`, `ledCount`. Field order varied and is not significant.
+### Fetch reconstruction
 
-### `devices[]` and membership
+`GET /v3/reconstruction/{id}` returns job metadata and can yield `status:"succeeded"` plus `output.data` and `output.executionTime`. **Confirmed:** at least some successful response bodies are GZIP-compressed, so clients must decode content encoding before JSON parsing. The structure and meaning of `output.data` should be validated before turning it into an LED map; do not equate an HTTP 200 with successful calibration.
 
-`devices[]` contains records with `part` and a nested `device` description. The captured nested device keys included `name`, `fps`, `mac`, `ledProfile`, `family`, `uniqueId`, `networkMode`, `productCode`, `hwVersion`, `password`, `ip`, `capacity`, `meta`, `ledCount`, `firmware`, `prodTs`, `challenge`, and `challengeResponse`. Do not print or distribute raw values.
+### Apply resulting map
 
-A standalone object has **one** device member with `ledCount=210`; the Area object has **two** device members with `ledCount=420`. For the Area creation, the request's `layout.source` was `2d`; the standalone request's `layout.source` was `3d`.
+**Confirmed:** the app can upload the selected mapping to the LAN with `POST /xled/v1/led/layout/full` (JSON coordinates), then persist an encoded version in the cloud using `PUT /v3/objects/{objectId}`. Cloud and LAN writes are separate and may succeed independently. Consult the [Local API Reference](API_REFERENCE.md) for controller-side fields and validation.
 
-### `layout.coords` — encoding confirmed by decoding the saved captures offline
+## Confirmed vs inferred vs untested
 
-**Important difference from the local REST API:** the cloud layout stores `coords` as a **string**, not a directly embedded JSON array. The string is **base64(gzip(UTF-8 JSON array))**. Decode in this order:
+- **Confirmed:** cloud create, existing-object update, installation-object removal, reconstruction submission/retrieval, encoded `layout.coords`, and separate local mapping upload.
+- **Inferred:** stale cloud or app-cached geometry may explain why app previews differ from live controller mappings.
+- **Untested:** automated cloud login/token refresh, independent programmatic object PUT, app refresh semantics, deletion/rollback behaviour, and reconstruction parameters for arbitrary devices.
+- **Safety:** compare target object identity and decoded geometry before any write; never publish raw captures, object credentials, access tokens or identifying values.
 
-```python
-import base64, gzip, json
-coordinates = json.loads(gzip.decompress(base64.b64decode(layout["coords"])))
-```
-
-For the captured single-controller object, the decoded array had **210** objects; the captured combined Area object had **420** objects. Each decoded coordinate is a JSON object with `x`, `y`, `z` numeric fields. The encoded field is **not** a UUID or a list of device identifiers. The compressed encoding must be preserved correctly in any future cloud write. The cloud `source` label describes the geometry type even though `x`, `y`, `z` keys may all be present.
-
-When preparing a potential cloud-to-LAN comparison, independently validate the decoded coordinate count, device membership, coordinate order and numeric values. **Do not assume** that a cloud object with the same device names necessarily uses the latest layout from those physical controllers.
-
-### Successful creation response: observed schema
-
-The JSON returned on HTTP 201 includes an assigned object `id`, `name`, `ledCount`, `ledProfile`, `fps`, `capacity`, `opMode`, `ownerId`, `layout`, `users[]`, `devices[]`, `uuid`, `caps[]`, `meta`, `installation`, `palette[]`, `created`, and `updated`.
-
-The nested `layout` includes `id`, `objectId`, `name`, `geometry`, `aspectXY`, `aspectXZ`, `coords`, `source`, `synthesized`, `imageUrl`, `uuid`, `created` and `updated`. These IDs and timestamps are cloud-side metadata, distinct from local controller group membership.
-
-## Installation object removal: `PUT /v3/installations/{installationId}/objects`
-
-Observed **request shape**:
-
-```json
-{"objectIds": [123456], "action": "remove"}
-```
-
-Here the ID is **fictitious**. The two captured calls both returned HTTP 200. **This is removal of an installation object reference**, not a tested `DELETE` request and not evidence of full object deletion or automatic cleanup. The 200 responses' bodies were not fully decoded in this analysis, so their detailed schema is not asserted here.
-
-## Cloud reads: `GET /v3/objects`, `GET /v3/installations`
-
-The mobile app successfully called these GET routes (HTTP 200). It used object-list selection parameters, including observed `mine`, `fields` and `objectIds` query values in the research notes. Response bodies were not fully characterised in this page; do not infer field completeness from the creation response. The `GET /v2/users/me` request identifies the signed-in user but does not itself change grouping.
-
-## Relationship to local Twinkly controller REST API
-
-| Responsibility | Local `/xled/v1/` | Cloud `api.twinkly.com` |
-|---|---|---|
-| Membership state | `GET/POST application/group`; `none/master/slave`, shared UID, size, offsets | Object membership `devices[]`, installation and object IDs |
-| Geometry | `GET/POST led/layout/full`; raw `coordinates[]` array | Encoded `layout.coords` plus metadata |
-| Friendly group name | Not present in observed group endpoint | `object.name` captured |
-| Authentication | Challenge, verify, `X-Auth-Token` | App bearer authorization |
-| Verified Python operations | Local group round trip and standalone 3D map restoration on Office devices (FW 2.11.0) | **No Python cloud writes verified or attempted** |
-
-The restored standalone coordinates on both Office controllers were independently verified by local GET. That **does not** update the captured cloud objects.
-
-## A cautious path to fixing an out-of-date app map
-
-1. **Read-only cloud inventory:** obtain a *fresh*, user-authorised `GET /v3/objects` response (using the signed-in app or a permitted account session). Do not reuse stale access tokens from historical traces.
-2. Identify **existing** Office Left/Office Right objects by a combination of installation and device identity, not merely name.
-3. Save the complete original cloud object responses **privately** and compare the decoded `layout.coords` against the verified 3D layouts in the private local plan.
-4. We now have the captured **existing-object update** method: `PUT /v3/objects/{objectId}` in `mapping-upload.flows`. Before automating it, verify a fresh signed-in cloud GET, the intended object ID, complete required body fields and successful readback. **`POST /v3/objects` is a create, not an update**.
-5. If attempting an independent PUT test later, test only on the disposable Office object with explicit confirmation, preserve identity/ownership, and immediately GET the object again to verify cloud persistence. Stop if object IDs, membership or mappings differ unexpectedly.
-6. Refresh/restart the iOS app to verify visual geometry. Independently recheck local controller state; the app might also push a layout back to a controller.
-
-**No cloud update has been executed by these Python tools.** Two cloud PUT updates were observed from the official Twinkly app. The source traces remain private. This file contains only anonymised structural observations.
-
-See also [local controller API reference](API_REFERENCE.md).
+The cloud API is **not documented or guaranteed by Twinkly**. Use it at your own risk.
