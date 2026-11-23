@@ -234,7 +234,12 @@ def cloud_fresh_standalones(previous, token, timeout):
 
 
 def detach_original_standalones(standalones, installation, token, timeout):
-    """Detach exactly two fresh, distinct cloud standalone objects."""
+    """Detach two independently verified cloud standalones using one-ID writes.
+
+    The allowlisted Twinkly cloud writer intentionally permits only one
+    removal per request. Check both identities before the first write; check
+    that each removal took effect before proceeding to the next one.
+    """
     if len(standalones) != 2:
         raise ValueError("Expected exactly two cloud standalone objects")
     ids = [obj.get("id") for obj in standalones]
@@ -242,8 +247,16 @@ def detach_original_standalones(standalones, installation, token, timeout):
             any(type(item) is not int or item <= 0 for item in ids)):
         raise ValueError("Cannot detach cloud standalones with missing/duplicate IDs")
     cloud_fresh_standalones(standalones, token, timeout)
-    ops.cloud_write("PUT", "/v3/installations/" + str(installation) + "/objects",
-                    {"action": "remove", "objectIds": ids}, token, 200, timeout)
+    route = "/v3/installations/" + str(installation) + "/objects"
+    for obj_id in ids:
+        # Do not issue a batch request: cloud_write explicitly rejects it.
+        ops.cloud_write("PUT", route, {"action": "remove", "objectIds": [obj_id]},
+                        token, 200, timeout)
+        remaining = objects_from(ops.cloud_get(ops.CLOUD_SELECTOR, token, timeout))
+        if any(item.get("id") == obj_id for item in remaining):
+            raise RuntimeError("Cloud standalone removal not confirmed for object " +
+                               str(obj_id) + "; stop without retry")
+
 
 
 def validate_cloud_payload_inputs(template, standalones, plan):
