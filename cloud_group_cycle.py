@@ -176,7 +176,8 @@ def encoded_layout(points):
     )).decode("ascii")
 
 
-def create_body(template, members, layout, *, name, installation_id, metadata):
+def create_body(template, members, layout, *, name, installation_id, metadata,
+                object_uuid=None):
     """Build the captured POST /v3/objects shape, without copying server-owned IDs."""
     if any(k not in template for k in ("capacity", "fps", "ledProfile")):
         raise ValueError("Cloud template missing capacity, fps or ledProfile")
@@ -189,7 +190,8 @@ def create_body(template, members, layout, *, name, installation_id, metadata):
         "ledProfile": template["ledProfile"], "capacity": template["capacity"],
         "devices": members, "fps": template["fps"], "meta": metadata,
         "layout": {k: copy.deepcopy(layout[k]) for k in required},
-        "uuid": str(uuid.uuid4()), "ledCount": sum(
+        "uuid": str(uuid.UUID(str(object_uuid))) if object_uuid else str(uuid.uuid4()),
+        "ledCount": sum(
             int(item["device"]["ledCount"]) for item in members),
     }
 
@@ -362,7 +364,8 @@ def run(args):
                                          member["ip"], args.timeout),
             })
         body = create_body(original, group_members, layout, name=original["name"],
-                           installation_id=installation, metadata=original["meta"])
+                           installation_id=installation, metadata=original["meta"],
+                           object_uuid=group_uid)
         reply = cloud_write("POST", "/v3/objects", body, token, 201, args.timeout)
         log["stages"].append("Cloud Area created")
         save_json(dest / "cycle-status-private.json", log)
