@@ -11,6 +11,7 @@ Read-only snapshot and comparison tool for **Twinkly Area groups** assembled in 
 - Explicit device IPs: no network-wide scan, no cloud account, no HA token.
 - Raw device responses, including IDs, IPs, MACs and geometry, remain on your machine and are ignored by Git. Do not commit your snapshot folders.
 - Unavailable endpoints are recorded as errors rather than silently treated as valid empty configurations.
+- Unreachable controllers are skipped after a single initial connection probe. Reachable controllers with authentication or layout problems remain in the report as warnings.
 
 ## Quick start (PowerShell / Windows)
 
@@ -19,15 +20,16 @@ Python 3.10+; no third-party dependencies.
 ```powershell
 git clone https://github.com/B-Hartley/twinkly-api-tools.git
 cd twinkly-api-tools
-python .\twinkly_inspector.py inspect --ips 192.168.1.51 192.168.1.52 192.168.1.53 --output .\snapshots
+Copy-Item devices.example.json devices.json
+# Edit devices.json with your actual controller IPs, then run:
+python .\twinkly_inspector.py inspect
 ```
 
 Include **every physical controller** in the Area group, especially its master. Use the individual device IPs from Home Assistant's Twinkly device entries or your router, not the HA entity IDs. No devices are switched on/off by this script.
 
-Optional named configuration (copy the sample file, substitute actual local IPs):
+The inspector automatically reads `devices.json` from the current working directory. Unreachable sets are skipped; the final console summary and `report.txt` list skipped sets and reasons. If every controller fails, the command exits non-zero. For a different config file:
 ```powershell
-Copy-Item devices.example.json devices.json
-python .\twinkly_inspector.py inspect --config .\devices.json --output .\snapshots
+python .\twinkly_inspector.py inspect --config .\my-other-devices.json
 ```
 
 Compare snapshots (e.g. before and after a normal effect change, **without ungrouping**):
