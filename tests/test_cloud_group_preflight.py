@@ -77,6 +77,17 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(result["mapping"]["mismatched_leds"], 1)
         self.assertEqual(result["mapping"]["examples"][0]["index_zero_based"], 3)
 
+    def test_diagnostics_show_roles_without_raw_group_uuid(self):
+        data = stage()
+        data[preflight.FILES[1]]["group"]["group"].update(
+            {"mode": "none", "uid": None, "size": 0})
+        report = preflight.evaluate(data)
+        self.assertEqual(report["result"], "BLOCK")
+        self.assertEqual(report["local_members"][0]["mode"], "none")
+        self.assertEqual(report["local_members"][1]["mode"], "slave")
+        self.assertFalse(report["local_uids_match"])
+        self.assertNotIn("group-uuid", json.dumps(report))
+
     def test_partial_local_join_blocks(self):
         data = stage()
         data[preflight.FILES[1]]["group"]["group"]["mode"] = "none"
