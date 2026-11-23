@@ -105,7 +105,7 @@ def main():
             raise ValueError("Live write requires --acknowledge-risk and --group-confirm matching group_name")
         if not Path(args.log).resolve().parent.exists():
             raise ValueError("Log directory does not exist")
-        # Preflight all members before any writes. Avoid continuing on a partial failure.
+        # Preflight expected group state on every controller before any writes.
         tokens = {}
         for m, _ in sequences:
             ip = m["ip"]
@@ -120,6 +120,21 @@ def main():
             if not token:
                 raise RuntimeError(f"Authentication failed for {m['name']}: {error}")
             tokens[ip] = token
+            summary = request(ip, "/xled/v1/summary", token=token, timeout=args.timeout)
+            if not summary.get("ok") or not isinstance(summary.get("data"), dict):
+                raise RuntimeError(f"Missing preflight summary: {m['name']}")
+            group = summary["data"].get("group")
+            if not isinstance(group, dict):
+                raise RuntimeError(f"Unrecognised group state: {m['name']}")
+            if args.command == "ungroup":
+                expected_mode = "master" if m["offset"] == 0 else "slave"
+                if (str(group.get("uid", "")).lower() != uid.lower()
+                        or group.get("mode") != expected_mode
+                        or group.get("size") != plan["size"]
+                        or group.get("offset") != m["offset"]):
+                    raise RuntimeError(f"Not in expected group: {m['name']}")
+            elif group.get("mode") != "none":
+                raise RuntimeError(f"Not standalone before regroup: {m['name']}")
         results = {"command": args.command, "group_name": plan["group_name"], "results": [],
                    "warning": "A successful HTTP response is not proof of restored Area app geometry"}
         print("Preflight passed. Sending controller writes. Do not interrupt.")
@@ -140,8 +155,18 @@ def main():
             for m, _ in sequences:
                 observed = request(m["ip"], "/xled/v1/summary",
                                    token=tokens[m["ip"]], timeout=args.timeout)
+                group = observed.get("data", {}).get("group") if observed.get("ok") else None
+                expected_mode = ("none" if args.command == "ungroup" else
+                                 "master" if m["offset"] == 0 else "slave")
+                verified = isinstance(group, dict) and group.get("mode") == expected_mode
+                if args.command == "regroup":
+                    verified = (verified and str(group.get("uid", "")).lower() == uid.lower()
+                                and group.get("size") == plan["size"]
+                                and group.get("offset") == m["offset"])
                 results["results"].append({"name": m["name"], "verification": "summary",
-                                           "response": observed.get("data") if observed.get("ok") else observed})
+                                           "ok": verified, "group": group})
+                if not verified:
+                    raise RuntimeError(f"Post-write group verification failed for {m['name']}")
         finally:
             # Logs can contain identifiers: keep locally and never commit.
             save_json(Path(args.log), results)
