@@ -43,17 +43,21 @@ def inspect(plan, timeout, root):
         movie = data.get("movie") or {}
         group = data.get("group") or {}
         role = group.get("group") if isinstance(group, dict) else {}
-        rows.append((member["name"],
-                     mode.get("mode") if isinstance(mode, dict) else None,
-                     effect.get("name") if isinstance(effect, dict) else None,
-                     role.get("mode") if isinstance(role, dict) else None))
-        print(member["name"] + ": role=" + str(rows[-1][3]) +
-              ", LED mode=" + str(rows[-1][1]) +
-              ", current effect=" + str(rows[-1][2]))
-        if isinstance(effect, dict):
-            print("  Effect fields:", ", ".join(sorted(effect)))
+        led_mode = mode.get("mode") if isinstance(mode, dict) else None
+        effect_uid = effect.get("unique_id") if isinstance(effect, dict) else None
+        preset = effect.get("preset_id") if isinstance(effect, dict) else None
+        role_mode = role.get("mode") if isinstance(role, dict) else None
+        rows.append((member["name"], led_mode, preset, effect_uid, role_mode))
+        print(member["name"] + ": role=" + str(role_mode) +
+              ", playback=" + str(led_mode) +
+              ", selected preset=" + str(preset) +
+              ", effect ID=" + str(effect_uid))
+        if led_mode == "off":
+            print("  Selected effect is retained, but active playback is OFF.")
         if isinstance(movie, dict):
-            print("  Movie fields:", ", ".join(sorted(movie)))
+            print("  Movie frames=" + str(movie.get("frames_number")) +
+                  ", delay_ms=" + str(movie.get("frame_delay")) +
+                  ", sync=" + str((movie.get("sync") or {}).get("mode")))
     print("Private read-only effect snapshot:", folder)
     print("No lights or cloud state changed.")
     return rows
