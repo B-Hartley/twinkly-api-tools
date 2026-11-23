@@ -1,8 +1,16 @@
-# Twinkly Area Group Inspector
+# Twinkly Area Group Inspector + Home Assistant integration
 
 Read-only snapshot and comparison tool for **Twinkly Area groups** assembled in the Area Editor from independently camera-mapped sets.
 
 **Important:** This is an investigation tool, **not a confirmed backup/restore solution**. The group's Area Editor transforms (position, scale, rotation and ordering) may not be exposed by documented local API endpoints. Do **not** delete or ungroup your working display on the strength of a snapshot.
+
+## HACS Home Assistant integration (experimental)
+
+This repo now contains `custom_components/twinkly_area_state`, installable as a **HACS custom repository**. It supports named controller snapshots via `twinkly_area_state.save_state`, a **read-only** `restore_state` audit and an `office_window_plan` for two equally sized windows with a gap of one window width.
+
+**It cannot yet actually regroup or upload saved mappings.** The restore service deliberately performs a dry run while the Twinkly Area-group create/remove API remains unverified. Use **Office Left** and **Office Right** as the disposable test group before any attempt to modify your Front display.
+
+See [Home Assistant setup and actions](docs/HOME_ASSISTANT.md).
 
 ## Safety
 
