@@ -8,14 +8,17 @@ The cloud service at `https://api.twinkly.com` stores account, installation and 
 
 - **Confirmed:** Cloud requests use HTTPS with `Authorization: Bearer <access-token>`. This is **not** the LAN `X-Auth-Token` mechanism.
 - **Confirmed:** Successful cloud responses use conventional HTTP status codes such as **200 OK**, **201 Created** and **204 No Content**. Unlike the local controller API, a Twinkly JSON `code:1000` field is not required for cloud calls.
-- **Untested:** How an independent client should obtain/refresh a cloud token. Do not hard-code, commit or replay captured app tokens. Cloud payloads may contain account, installation and device credential fields; keep complete responses private.
+- **Confirmed:** `POST /v2/auth` accepts JSON `username` and `password` and responds with `access_token`, `refresh_token`, `expires_in`, `token_type` (HTTP 200). The included interactive `cloud_auth.py` implements this exchange but has **not yet been tested against a live account**. **Untested:** token refresh endpoint and renewal. Do not hard-code or commit credentials. Cloud payloads may contain account, installation and device credential fields; keep complete responses private.
 
 ## Endpoint index
 
 | Method | Relative path | Purpose | Evidence |
 |---|---|---|---|
+| POST | `/v2/auth` | Authenticate with JSON `username` and `password`; receive bearer and refresh tokens | **Confirmed** 200 |
+| PUT | `/v2/users/me` | Update user profile and preferences | **Confirmed** 200 |
 | GET | `/v2/users/me` | Get authenticated account information | **Confirmed** 200 |
 | GET | `/v3/installations` | Get installations and their object references | **Confirmed** 200 |
+| GET | `/v4/effects/source` | Retrieve effect source definitions | **Confirmed** 200 |
 | GET | `/v3/objects` | Get saved light objects; supports query selectors | **Confirmed** 200; conditional request can return **304** |
 | GET | `/v3/runtime/objects/{objectId}` | Retrieve per-object runtime information | **Confirmed** 200; full response fields not yet characterised |
 | POST | `/v3/objects` | Create a saved light object | **Confirmed** 201 |
@@ -33,7 +36,7 @@ The cloud service at `https://api.twinkly.com` stores account, installation and 
 
 **Remote access / MQTT:** the local `/xled/v1/mqtt/config` route is readable on tested controllers, but **no MQTT broker connection or subscription is demonstrated by HTTPS proxy traces alone**. A packet capture that includes MQTT traffic, device-side MQTT configuration or official protocol documentation would be needed to verify the broker, topics and credentials. Do not assume `/v3/runtime/objects` itself is MQTT.
 
-**Cloud login:** the observed requests include bearer-authenticated API calls, but a complete initial cloud account-login or token-refresh flow has **not** been established. Device `/xled/v1/login` and `/verify` exchanges are **LAN authentication**, not cloud account authentication. A preauthenticated or cached app session can make the login exchange invisible in an HTTPS proxy recording.
+**Cloud login:** confirmed `POST /v2/auth` with JSON `username`/`password`, returning `access_token`, `refresh_token`, `expires_in`, `token_type`. The token-refresh request is **not** established. Device `/xled/v1/login` and `/verify` exchanges are **LAN authentication**, not cloud account authentication. A preauthenticated or cached app session can make the login exchange invisible in an HTTPS proxy recording.
 
 ## Objects and mappings
 
@@ -193,7 +196,14 @@ The cloud API is **not documented or guaranteed by Twinkly**. Use it at your own
 
 The repository includes **`cloud_audit.py`**, a strictly allowlisted HTTPS GET client for `/v3/objects?mine=true` and `/v3/installations`. It has **no PUT/POST/DELETE methods** and never sends your cloud token to another hostname. The code is experimental: cloud object-list response shapes are not completely established.
 
-You must obtain a valid bearer token by a legitimate account/session mechanism, not by publishing intercepted credentials. When one is available, set it for the **current PowerShell process only** without echoing the value:
+The captured login contract is implemented for **interactive local use**. The access token is held in process memory, not written to disk. For a read-only inventory of installations and objects, run:
+
+```powershell
+git pull
+python .\cloud_audit.py --plan private-area-plan.json --login
+```
+
+You will be prompted for your email and password (password entry is hidden). The implementation is **not yet live-account-tested**, and no cloud changes are made beyond the authentication POST. Alternatively, if you already have a legitimate short-lived bearer token, set it in the **current PowerShell process only** without echoing the value:
 
 ```powershell
 $secret = Read-Host "Twinkly cloud access token" -AsSecureString
@@ -202,7 +212,7 @@ python .\cloud_audit.py --plan private-area-plan.json
 Remove-Item Env:TWINKLY_CLOUD_TOKEN
 ```
 
-The script writes **private account/device object backups** to `cloud-audits/<timestamp>/`. Those backups are ignored by Git and **must not** be shared publicly. A cloud `GET` is read-only, but login to the API is not yet automated; no cloud changes are made.
+The script writes **private account/device object backups** to `cloud-audits/<timestamp>/`. Those backups are ignored by Git and **must not** be shared publicly. The audit's inventory requests are GET-only; interactive authentication performs **one POST to `/v2/auth`**, not an object/installation mutation. It does not write login or refresh tokens to disk. Successful login requires valid account credentials and access to the relevant installation.
 
 ### Capture login flow safely
 
@@ -214,4 +224,4 @@ python .\redact_login_trace.py C:\TwinklyCapture\twinkly-login.flows --output C:
 
 This reports **only** the HTTP method, hostname-filtered path (without query), response status, content-type-derived JSON **key names**, and whether an authorization header is present; it never prints token values, passwords, request/response JSON values, headers or cookies. **Review even the redacted file before sharing**, since a URL path or JSON key name may still disclose information. The `.flows` source is sensitive and should not be uploaded or committed.
 
-**Next prerequisites for cloud sync writes:** confirm supported authentication/renewal, identify cloud object IDs for the intended controllers, validate complete PUT/create/remove payload schemas, back up all relevant cloud records, and test guarded writes against a disposable group with explicit approval. A cloud/physical atomic transaction cannot be assumed; partial failures must be reported rather than blindly rolled back.
+**Next prerequisites for cloud sync writes:** verify live login and refresh behaviour, identify cloud object IDs for the intended controllers, validate complete PUT/create/remove payload schemas, back up all relevant cloud records, and test guarded writes against a disposable group with explicit approval. A cloud/physical atomic transaction cannot be assumed; partial failures must be reported rather than blindly rolled back.
