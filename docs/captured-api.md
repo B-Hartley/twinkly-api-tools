@@ -2,6 +2,10 @@
 
 Status: **experimental, not vendor-supported**. Based on the Office two-controller traffic observed 23 November 2026, cross-checked with the read-only inspector. Examples are anonymised. Do not send commands from this document to a live group without verifying your local backup first.
 
+## Observed firmware baseline (23 November 2026)
+
+The provided inspector snapshot included **11 responding controllers**, and **all 11 reported firmware version 2.11.0** from `GET /xled/v1/fw/version`. The documented Office Area group create/delete protocol was observed alongside this device fleet. This does **not** establish compatibility for other firmware or controller families. Run `python probe_api.py` to produce a new per-controller firmware-indexed endpoint matrix before expanding the reference.
+
 ## Authentication
 
 Requests are local HTTP to each controller:
