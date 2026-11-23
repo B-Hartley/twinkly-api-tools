@@ -209,7 +209,7 @@ def evaluate(snapshot):
             problems.append("Local roles are not master/slave")
         if (normalized_uid(uids[0]) is None or
                 normalized_uid(uids[0]) != normalized_uid(uids[1])):
-            problems.append("Local group UUIDs missing, invalid or different")
+            problems.append("Local group UUIDs missing or different")
         if cloud_group[1].get("offset") != members[0]["leds"]:
             problems.append("Slave offset differs from master LED count")
         if any(x.get("size") != obj.get("ledCount") for x in cloud_group):
