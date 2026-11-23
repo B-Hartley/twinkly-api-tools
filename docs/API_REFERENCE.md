@@ -233,3 +233,29 @@ python .\resume_regroup.py --plan private-area-plan.json
 ## Home Assistant implementation (independent cross-check)
 
 Home Assistant Core's built-in [Twinkly integration](https://github.com/home-assistant/core/tree/dev/homeassistant/components/twinkly) uses the [`ttls` Python client](https://pypi.org/project/ttls/) and device LAN IP address, with `iot_class: local_polling`. Its config flow asks for a **host**, not Twinkly account email/password; the integration is therefore useful for local REST auth and control examples, **not** cloud bearer-token login or remote MQTT topics. The client library handles local challenge/verify. Cloud authentication remains a separate unknown.
+
+
+### Grouped effect playback validation
+
+A confirmed, working two-controller Area was inspected while the **Scanner** movie
+was running (23 November 2026). Both controllers returned `led/mode` with
+`mode:"movie"`, the same movie identity/name, and `led/movie/config` with
+`frames_number:80`, `frame_delay:111`, `leds_number:210`, and
+`loop_type:0`. The left controller's movie configuration reported
+`sync.mode:"master"` and `sync.master_id`; the right reported
+`sync.mode:"slave"` and `sync.slave_id`. These two IDs were the same
+UUID after case normalization. Their separate group roles also agreed:
+left master, right slave, total size 420 and right offset 210.
+
+**Recommended read-only validation when a grouped movie is running:**
+compare `GET /xled/v1/application/group` roles/UUID/size/offset;
+`GET /xled/v1/led/mode` movie identities; and
+`GET /xled/v1/led/movie/config` movie timing, frame count,
+per-controller LED count, and synchronization mode/UUID (compare IDs as
+canonical UUIDs). The movie `sync.master_id` and `sync.slave_id`
+fields must not be confused with individual device IDs or assumed to
+match the cloud object ID. The captured sync IDs matched the group UUID
+in this working example, but behavior across other firmwares is not
+yet established. **An API match alone does not prove physical timing;**
+visual confirmation of both windows operating together remains useful.
+No private identifiers are included in this reference.
