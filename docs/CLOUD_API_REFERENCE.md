@@ -92,7 +92,7 @@ GET /v3/objects?mine=true
 Authorization: Bearer <access-token>
 ```
 
-**Confirmed:** requests may use selectors such as `mine`, `fields`, `objectIds` (availability and supported combinations not exhaustively characterised). `GET /v3/installations` retrieves installation metadata. **Inferred:** object records are an important source for the app's inventory and displayed maps; app-specific caching and refresh behaviour has not been proven.
+**Confirmed:** the ordinary object-list request can omit mapping and device details. Request `fields=layout,devices,capabilities` with `mine=true` to obtain detailed object records; a request without `fields` may return objects lacking `layout` and `devices`. Other selectors include `objectIds` (combinations and pagination not exhaustively characterised). `GET /v3/installations` retrieves installation metadata. **Inferred:** object records are an important source for the app's inventory and displayed maps; app-specific caching and refresh behaviour has not been proven.
 
 ### Create an object — POST
 
@@ -194,7 +194,7 @@ The cloud API is **not documented or guaranteed by Twinkly**. Use it at your own
 
 ## Read-only cloud inventory and login research
 
-The repository includes **`cloud_audit.py`**, a strictly allowlisted HTTPS GET client for `/v3/objects?mine=true` and `/v3/installations`. It has **no PUT/POST/DELETE methods** and never sends your cloud token to another hostname. The code is experimental: cloud object-list response shapes are not completely established.
+The repository includes **`cloud_audit.py`**, a strictly allowlisted HTTPS GET client for `/v3/objects?mine=true&fields=layout,devices,capabilities` and `/v3/installations`. It has **no PUT/POST/DELETE methods** and never sends your cloud token to another hostname. The code is experimental: cloud object-list response shapes are not completely established.
 
 The captured login contract is implemented for **interactive local use**. The access token is held in process memory, not written to disk. For a read-only inventory of installations and objects, run:
 
