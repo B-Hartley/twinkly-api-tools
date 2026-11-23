@@ -7,12 +7,11 @@ a correctly configured slave. Reuses the right controller's existing group
 UUID. Never changes cloud objects, either layout or the right controller.
 """
 import argparse
-import json
 import sys
 import uuid
 
 from cloud_group_live import collect
-from cloud_group_preflight import FILES, mac, objects_from
+from cloud_group_preflight import FILES, mac, objects_from, coordinates, compare_points
 from twinkly_inspector import authenticate, request
 
 GROUP_ENDPOINT = "/xled/v1/application/group"
@@ -68,11 +67,47 @@ def repair_candidate(report, plan, snapshot):
         raise ValueError("Unexpected cloud member part order")
     payload = {"group": {"mode": "master", "size": plan["size"],
                          "offset": 0, "uid": target_uid, "compat_mode": 0}}
-    fingerprint = json.dumps({
-        "object_id": cloud["id"], "cloud_layout": cloud["layout"],
-        "cloud_members": cloud["devices"], "left": left, "right": right,
-    }, sort_keys=True, separators=(",", ":"))
-    return payload, fingerprint
+    # Compare only safety-critical state. Full device/gestalt API replies contain
+    # changing telemetry and cloud metadata; byte-for-byte JSON comparison
+    # caused false drift alarms even when the group state was unchanged.
+    evidence = {
+        "cloud_id": cloud["id"],
+        "cloud_members": [(slot["part"], mac(slot["device"].get("mac")))
+                          for slot in cloud["devices"]],
+        "cloud_led_count": cloud["ledCount"],
+        "cloud_source": cloud["layout"]["source"],
+        "cloud_coords": coordinates(cloud["layout"]),
+        "local": [
+            {
+                "mac": mac(data["gestalt"].get("mac")),
+                "led_count": data["gestalt"].get("number_of_led"),
+                "group": {key: data["group"]["group"].get(key)
+                          for key in ("mode", "uid", "size", "offset", "compat_mode")},
+                "source": data["layout"].get("source"),
+                "coords": data["layout"]["coordinates"],
+            }
+            for data in (left, right)
+        ],
+    }
+    return payload, evidence
+
+
+def critical_drift(baseline, current):
+    """Return changes in safety-critical identity, roles, or mapping only."""
+    problems = []
+    for key in ("cloud_id", "cloud_members", "cloud_led_count", "cloud_source"):
+        if baseline[key] != current[key]:
+            problems.append("cloud " + key + " changed")
+    if not compare_points(baseline["cloud_coords"], current["cloud_coords"])["matching"]:
+        problems.append("cloud LED coordinates changed")
+    for index, label in enumerate(("Left", "Right")):
+        before, after = baseline["local"][index], current["local"][index]
+        for key in ("mac", "led_count", "group", "source"):
+            if before[key] != after[key]:
+                problems.append(label + " " + key + " changed")
+        if not compare_points(before["coords"], after["coords"])["matching"]:
+            problems.append(label + " LED coordinates changed")
+    return problems
 
 
 def validate_group_label(label, report, plan):
@@ -106,8 +141,11 @@ def run(group, plan_path, *, execute=False, acknowledged=False,
                                                output=backup_root, include_snapshot=True)
     validate_group_label(group, second, second_plan)
     latest_payload, latest_fingerprint = repair_candidate(second, second_plan, second_snap)
-    if fingerprint != latest_fingerprint or payload != latest_payload:
-        raise RuntimeError("Live cloud or LAN state changed between audits; no write attempted")
+    drift = critical_drift(fingerprint, latest_fingerprint)
+    if payload != latest_payload or drift:
+        raise RuntimeError("Safety-critical cloud/LAN state changed: " +
+                           ", ".join(drift or ["proposed payload changed"]) +
+                           "; no write attempted")
     master_ip = plan["members"][0]["ip"]
     token, _ = authenticate(master_ip, timeout)
     if not token:
