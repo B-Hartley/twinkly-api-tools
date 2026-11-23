@@ -19,7 +19,7 @@ ROOT = "effects-archive"
 LABELS = (
     "gestalt", "led_mode", "led_movie_config", "current_effect",
     "effects_catalogue", "movies_catalogue", "movies_current", "playlist",
-    "playlist_current",
+    "playlist_current", "mqtt_config",
 )
 
 
