@@ -28,3 +28,6 @@ cloud-preflight-backups/
 
 # Private verified grouped cloud+LAN 2D reference snapshots
 2d_group_archive/
+
+# Private, immutable effect/movie catalogue snapshots (not raw movie frames)
+effects-archive/
