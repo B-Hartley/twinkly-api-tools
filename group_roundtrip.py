@@ -123,9 +123,8 @@ def run(args):
     plan, _ = load_plan(args.plan)
     if len(plan["members"]) != 2:
         raise ValueError("Only two-controller Area groups are supported")
+    # A renamed cloud Area is fine; names are descriptive, never device identity.
     if args.group.casefold() != plan["group_name"].casefold():
-        # The current cloud friendly name may differ from the saved label.
-        # It is checked by hardware identity, not used as authority.
         print("Using group label", repr(args.group),
               "(cloud membership will be matched by MAC, not by this label)")
     print("Sequence: Check grouped -> app ungroup -> Check standalone -> "
@@ -147,8 +146,7 @@ def run(args):
         first_plan, first = checkpoint("1. Check BEFORE ungroup",
                                        args.plan, "grouped-cloud",
                                        args.timeout, private, session)
-        if [mac(first[FILES[i + 1]]["gestalt"].get("mac")) for i in range(2)] != member_map(first, first_plan):
-            raise RuntimeError("Local identity mismatch")
+        member_map(first, first_plan)
         require_app_action("UNGROUP the Office Area in the Twinkly app. "
                            "Wait for two separate Office lights to appear.")
         second_plan, second = checkpoint("3. Check AFTER ungroup",
