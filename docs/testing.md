@@ -121,3 +121,23 @@ python .\restore_standalone.py --plan private-area-plan.json --execute `
 ```
 
 Afterwards verify with `python .\group_status.py --plan private-area-plan.json`. Stop if any error occurs. This operation deliberately does **not** restore the Area group or app/cloud records; leave the Twinkly app closed during recovery. Private backup and logs are ignored by Git.
+
+## Unfiltered Office join capture (post-filtered)
+
+To identify cloud create/remove requests reliably, record **one short Office join** without an in-capture host filter. This also avoids losing requests if the app uses a new cloud hostname. The original capture is preserved privately, and a second Twinkly-only copy is generated afterwards. **Both files can contain authentication secrets; filtering is not credential redaction.**
+
+With the iPhone configured to use the Windows PC as its Wi-Fi HTTP proxy on port 8080, run in the repository directory:
+
+```powershell
+git pull
+.\\Scripts\\Start-OfficeJoinCapture.ps1
+```
+
+Start capture first, then open Twinkly, **join the two Office windows once** and wait for completion. Press **Ctrl+C** in the PowerShell capture window to stop; the script creates two files under `C:\\TwinklyCapture`:
+
+- `office-join-<UTC>-RAW-PRIVATE.flows`: original unfiltered source; keep locally and never commit or share.
+- `office-join-<UTC>-twinkly-PRIVATE.flows`: filtered Twinkly domains and Office controller IPs; useful for private analysis but **still contains credentials**, and should not be posted publicly.
+
+Turn off the iPhone manual proxy after capture. If the PowerShell session is interrupted before filtering finishes, run `python .\\filter_twinkly_flows.py <raw-file> <filtered-file>` on the saved file. This does not include the Windows script's own direct cloud requests unless the PC itself also uses the proxy.
+
+If possible, don't run the LAN audit while the app is joining. The local login/verify calls can conflict with the app's controller session; run the read-only status check only after the join completes.
