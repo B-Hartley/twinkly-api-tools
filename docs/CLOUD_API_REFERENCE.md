@@ -383,3 +383,5 @@ failed or ambiguous request.
 
 The operation is **experimental and not yet verified on physical hardware**.
 Do not execute if devices have changed or the group is already functioning.
+
+**Repair drift comparison:** The two live preflight reads compare a stable projection of the current cloud object ID, member MACs/part order, LED counts, layout source and decoded coordinates, plus each controller's MAC, LED count, group role/UUID/size/offset and coordinates. Device telemetry, changing metadata and nonessential API reply fields are deliberately excluded: a raw JSON fingerprint can differ between reads without a grouping change. Any critical state difference or mapping delta exceeding 0.0002 still blocks the single master assignment.
