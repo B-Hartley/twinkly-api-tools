@@ -39,6 +39,34 @@ python .\twinkly_inspector.py compare .\snapshots\SNAPSHOT_A .\snapshots\SNAPSHO
 
 `manifest.json` summarizes the run; `controllers/<ip-safe>/responses/*.json` contains full raw responses; `report.txt` highlights available coordinates, group-related clues and failures. Each snapshot is timestamped.
 
+## Visualise the Area layout
+
+Install the one optional plotting dependency:
+
+```powershell
+python -m pip install matplotlib
+```
+
+Plot a saved snapshot (no Twinkly devices are contacted):
+
+```powershell
+python .\\visualize.py .\\snapshots\\YOUR_TIMESTAMP
+```
+
+To plot **only the Front Area group** using its master/slave group UUID prefix:
+
+```powershell
+python .\\visualize.py .\\snapshots\\YOUR_TIMESTAMP --group BCA8AAE9
+```
+
+Or select explicit named controllers as recorded in the snapshot:
+
+```powershell
+python .\\visualize.py .\\snapshots\\YOUR_TIMESTAMP --names "BackR Bush Bottom" "BackR Bush Top" "Front Left Bottom" "Front Left Top" "Front Right"
+```
+
+The command writes `layout.png` inside the snapshot directory by default. Use `--output my-layout.png` to choose another path. Each string has a different colour and label, plotted at the original API X/Y coordinates with an equal-scale aspect ratio. **This is a visual investigation, not a guaranteed restore backup.**
+
 ## Interpreting results
 
 1. Inspect `report.txt`. Confirm all expected controllers responded, the individual LED coordinate counts appear plausible, and group-related responses were captured.
