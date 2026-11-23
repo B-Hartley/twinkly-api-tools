@@ -37,6 +37,37 @@ class MasterRepairTests(unittest.TestCase):
                                               "offset": 0, "uid": UID, "compat_mode": 0}})
         self.assertTrue(fingerprint)
 
+    def test_volatile_cloud_and_gestalt_fields_are_ignored(self):
+        report, plan, snap = candidate()
+        _, baseline = repair.repair_candidate(report, plan, snap)
+        changed = copy.deepcopy(snap)
+        changed[preflight.FILES[1]]["gestalt"]["uptime"] = 12345
+        changed[preflight.FILES[2]]["gestalt"]["rssi"] = -70
+        changed[preflight.FILES[0]]["objects"][0]["updated"] = "different"
+        changed[preflight.FILES[0]]["objects"][0]["devices"][0]["device"]["status"] = "online"
+        changed_report = preflight.evaluate(changed)
+        _, current = repair.repair_candidate(changed_report, plan, changed)
+        self.assertEqual(repair.critical_drift(baseline, current), [])
+
+    def test_critical_group_change_is_detected(self):
+        report, plan, snap = candidate()
+        _, baseline = repair.repair_candidate(report, plan, snap)
+        changed = copy.deepcopy(snap)
+        changed[preflight.FILES[2]]["group"]["group"]["uid"] = (
+            "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+        changed_report = preflight.evaluate(changed)
+        _, current = repair.repair_candidate(changed_report, plan, changed)
+        self.assertIn("Right group changed", repair.critical_drift(baseline, current))
+
+    def test_geometry_drift_is_detected(self):
+        report, plan, snap = candidate()
+        _, baseline = repair.repair_candidate(report, plan, snap)
+        changed = copy.deepcopy(snap)
+        changed[preflight.FILES[1]]["layout"]["coordinates"][0]["x"] += 0.4
+        # Critical comparison works independently of full preflight acceptance.
+        _, other = repair.repair_candidate(report, plan, changed)
+        self.assertIn("Left LED coordinates changed", repair.critical_drift(baseline, other))
+
     def test_group_label_is_not_identity(self):
         report, plan, snap = candidate()
         repair.validate_group_label("Office Windows", report, plan)
