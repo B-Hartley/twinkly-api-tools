@@ -111,7 +111,10 @@ def summarise(obj, plan):
     info = {"id": obj.get("id"), "name": str(obj.get("name", "")),
             "led_count": obj.get("ledCount"), "member_count": len(devices),
             "members": descriptions, "layout_source": None,
-            "coordinate_count": None, "coordinate_state": "unavailable"}
+            "coordinate_count": None, "coordinate_state": "unavailable",
+            "installation_id": (obj.get("installationId") or
+                                (obj.get("installation") or {}).get("id")
+                                if isinstance(obj.get("installation"), dict) else obj.get("installationId"))}
     if isinstance(layout, dict):
         info["layout_source"] = layout.get("source")
         if layout.get("coords") is not None:
@@ -197,15 +200,19 @@ def main():
             raise ValueError("Cloud object count disagrees with returned records; private backup saved.")
         result = [summarise(obj, plan) for obj in entries]
         save_json(dest / "summary-private.json", {"objects": result, "total_objects": len(entries)})
-        print(f"Cloud objects: {len(entries)}. Private backup: {dest}")
-        for item in result:
-            if (item["led_count"] == plan["size"] or
-                item["led_count"] in [m["leds"] for m in plan["members"]] or
-                any(m["name"].casefold() in item["name"].casefold()
-                    for m in plan["members"])):
-                print(f"Object id={item['id']} name={item['name']!r} "
-                      f"LEDs={item['led_count']} members={item['member_count']} "
-                      f"layout={item['layout_source']} mapping={item['coordinate_state']}")
+        print(f"Cloud API returned {len(entries)} object records. Private backup: {dest}")
+        print("Displaying EVERY returned object (not just Office matches).")
+        print("Note: mine=true may not include all objects shared through an installation.")
+        for item in sorted(result, key=lambda x: (str(x["installation_id"] or ""), str(x["name"]))):
+            office_match = (item["led_count"] == plan["size"] or
+                            item["led_count"] in [m["leds"] for m in plan["members"]] or
+                            any(m["name"].casefold() in item["name"].casefold()
+                                for m in plan["members"]))
+            print(f"{'[OFFICE CANDIDATE] ' if office_match else ''}"
+                  f"Installation={item['installation_id'] or '?'} "
+                  f"Object={item['id']} name={item['name']!r} "
+                  f"LEDs={item['led_count']} members={item['member_count']} "
+                  f"layout={item['layout_source']} mapping={item['coordinate_state']}")
         print("READ ONLY: no cloud objects or controller mappings were modified.")
         print("Raw backups include private account/device information; do NOT commit or upload publicly.")
         return 0
