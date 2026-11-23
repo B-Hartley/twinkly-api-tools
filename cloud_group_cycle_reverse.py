@@ -188,7 +188,7 @@ def validate_cloud_payload_inputs(template, standalones, plan):
             raise ValueError(member["name"] + ": cloud device LED count mismatch")
 
 
-def new_area_body(template, standalone, plan, installation, uid, timeout):
+def new_area_body(template, standalone, plan, installation, uid, timeout, name=None):
     layout = copy.deepcopy(template["layout"])
     layout["uuid"] = str(uuid.uuid4())
     layout["coords"] = ops.encoded_layout(
@@ -201,7 +201,7 @@ def new_area_body(template, standalone, plan, installation, uid, timeout):
         devices.append({"part": i, "device": ops.device_payload(
             d, member["ip"], timeout)})
     return ops.create_body(template, devices, layout,
-                           name=template["name"], installation_id=installation,
+                           name=name or template["name"], installation_id=installation,
                            metadata=template["meta"], object_uuid=uid)
 
 
@@ -269,7 +269,7 @@ def run_reverse(args):
         # Construct cloud object BEFORE controller modifications.
         uid = str(uuid.uuid4())
         area_body = new_area_body(template, standalones, plan, installation, uid,
-                                  args.timeout)
+                                  args.timeout, name=args.group)
         for i, member in enumerate(plan["members"]):
             state = read_local(member, args.timeout)
             if state["group"]["group"].get("mode") != "none":
