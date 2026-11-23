@@ -10,5 +10,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Compile Home Assistant integration source
+        run: python -m compileall -q custom_components
+      - name: Validate integration JSON
+        run: python -c "import json,pathlib; [json.loads(p.read_text()) for p in pathlib.Path('custom_components').rglob('*.json')]; json.loads(pathlib.Path('hacs.json').read_text())"
       - name: Run offline tests
         run: python -m unittest discover -s tests -v
