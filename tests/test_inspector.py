@@ -38,6 +38,34 @@ class InspectorTests(unittest.TestCase):
         self.assertEqual(err, {})
         self.assertEqual(mock_request.call_args.kwargs["payload"], {"challenge-response": "proof"})
 
+    def test_auto_loads_default_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "devices.json").write_text(json.dumps(
+                {"devices": [{"name": "Tree", "ip": "192.168.1.9"}]}), encoding="utf-8")
+            import os
+            old = os.getcwd()
+            try:
+                os.chdir(tmp)
+                devices = inspector.get_devices(SimpleNamespace(ips=None, config=None))
+                self.assertEqual(devices, [{"name": "Tree", "ip": "192.168.1.9"}])
+            finally:
+                os.chdir(old)
+
+    @patch.object(inspector, "request")
+    def test_unreachable_device_skipped_and_reported(self, mock_request):
+        mock_request.return_value = {"ok": False, "error": "timed out"}
+        with tempfile.TemporaryDirectory() as tmp:
+            rc = inspector.inspect(SimpleNamespace(ips=["192.168.1.9"],
+                                                    config=None, output=tmp, timeout=0.2))
+            self.assertEqual(rc, 2)
+            snapshots = list(Path(tmp).glob("*/manifest.json"))
+            self.assertEqual(len(snapshots), 1)
+            data = json.loads(snapshots[0].read_text(encoding="utf-8"))
+            self.assertEqual(data["summary"]["skipped"], 1)
+            self.assertEqual(data["controllers"][0]["status"], "skipped")
+            self.assertEqual(mock_request.call_count, 1)
+
     def test_compare_snapshots(self):
         with tempfile.TemporaryDirectory() as tmp:
             roots = [Path(tmp) / "before", Path(tmp) / "after"]
