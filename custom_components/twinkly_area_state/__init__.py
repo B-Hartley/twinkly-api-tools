@@ -135,6 +135,7 @@ def restore_plan(source, live):
     before = {d["ip"]: device_summary(d) for d in source["devices"]}
     after = {d["ip"]: device_summary(d) for d in live["devices"]}
     issues = []
+    changes = []
     for ip, old in before.items():
         new = after.get(ip)
         if not new:
@@ -148,8 +149,12 @@ def restore_plan(source, live):
             issues.append(f"{old['name']}: controller identity changed")
         if old["led_count"] and new["led_count"] and old["led_count"] != new["led_count"]:
             issues.append(f"{old['name']}: LED count changed")
+        if old["layout_sha256"] and new["layout_sha256"] and old["layout_sha256"] != new["layout_sha256"]:
+            changes.append(f"{old['name']}: coordinates changed")
+        if old["group_id"] != new["group_id"] or old["role"] != new["role"]:
+            changes.append(f"{old['name']}: group membership/role changed")
     return {"source_name": source["name"], "controllers": list(before.values()),
-            "current": list(after.values()), "issues": issues,
+            "current": list(after.values()), "issues": issues, "changes": changes,
             "restore_supported": False,
             "reason": "No verified Twinkly Area group creation or geometry restore API exists in this integration. No device writes performed."}
 
@@ -231,11 +236,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if not state:
                 raise ValueError(f"No saved state named {call.data['name']}")
             plan = window_plan(state, call.data["left"], call.data["right"])
+            snapshots[f"{state['name']}_office_proposal"] = {
+                "name": f"{state['name']}_office_proposal",
+                "captured_utc": datetime.now(timezone.utc).isoformat(),
+                "kind": "geometry_proposal_only", "plan": plan,
+            }
+            await store.async_save(snapshots)
             summary = ", ".join(f"{w['name']}: {w['led_count']} LEDs" for w in plan["windows"])
             async_create(hass, "Created a non-destructive equal-size, one-width-gap "
                          f"2D proposal for {summary}. Nothing was written to Twinkly. "
-                         "The proposed coordinates are calculated in memory only; "
-                         "group construction is not implemented.",
+                         f"Proposed geometry saved as {state['name']}_office_proposal "
+                         "in Home Assistant local storage. Group construction is not implemented.",
                          title="Twinkly office window test plan",
                          notification_id=f"{DOMAIN}_office")
 
