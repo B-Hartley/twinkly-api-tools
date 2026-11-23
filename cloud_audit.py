@@ -29,7 +29,7 @@ MAX_DECOMPRESSED = 8 * 1024 * 1024
 
 def cloud_get(path, token, timeout=10):
     """Fixed-path HTTPS GET only, no caller-controlled domains or redirects."""
-    if path not in ("/v3/objects?mine=true", "/v3/installations"):
+    if path not in ("/v3/objects?mine=true&fields=layout,devices,capabilities", "/v3/installations"):
         raise ValueError("Only allowlisted cloud GET paths supported")
     request = urllib.request.Request(BASE + path, headers={
         "Accept": "application/json",
@@ -162,13 +162,17 @@ def main():
         if dest.exists():
             raise ValueError("Audit folder already exists")
         print("Reading cloud objects and installations over HTTPS (GET only).")
-        objects = cloud_get("/v3/objects?mine=true", token, args.timeout)
+        objects = cloud_get("/v3/objects?mine=true&fields=layout,devices,capabilities", token, args.timeout)
         installations = cloud_get("/v3/installations", token, args.timeout)
         dest.mkdir(parents=True)
         # Preserve full original content privately before attempting to parse anything.
         save_json(dest / "objects-private.json", objects)
         save_json(dest / "installations-private.json", installations)
         entries = objects_from(objects)
+        if isinstance(objects, dict) and objects.get("next_page") is not None:
+            raise ValueError("Cloud results are paginated; refusing incomplete inventory. Private backup saved.")
+        if isinstance(objects, dict) and isinstance(objects.get("count"), int) and objects["count"] != len(entries):
+            raise ValueError("Cloud object count disagrees with returned records; private backup saved.")
         result = [summarise(obj, plan) for obj in entries]
         save_json(dest / "summary-private.json", {"objects": result, "total_objects": len(entries)})
         print(f"Cloud objects: {len(entries)}. Private backup: {dest}")
