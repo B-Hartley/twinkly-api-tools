@@ -306,3 +306,38 @@ python .\\office_cloud_status.py --plan private-area-plan.json
 ```
 
 This uses saved cloud authentication, checks cloud membership of the two known Office controllers, and compares against both LAN controllers' group roles and UUID agreement. It does not write group assignments, layouts or cloud objects. LAN authentication does require local login/verify requests, so do not run it during an in-progress app operation. It returns nonzero on ambiguous or mismatched states. Cloud `mine=true` visibility must still be considered when using a shared account.
+
+## Cloud/local grouping preflight (read-only)
+
+`cloud_group_preflight.py` independently compares a cloud inventory snapshot
+with two LAN controller snapshots. It **never contacts devices or cloud
+services** and cannot make changes. It accepts an extracted directory or a
+ZIP stage via `--archive` and `--stage`.
+
+The preflight requires cloud membership to match the **two local controller
+MAC addresses**, not names or LED counts. For a grouped Area it requires one
+cloud object containing the two members in the expected order (`part:0`,
+`part:1`), local `master`/`slave` with matching group UUIDs and correct
+offset/size, and equal layout source and all coordinate components within
+absolute tolerance **0.0002**. For standalone devices it requires exactly
+two distinct single-controller cloud objects and local mode `none`, and
+checks each mapping separately. It fails closed for duplicate membership,
+missing data, incomplete inventory, mismatched geometry, or partial joins.
+
+A `PASS_READ_ONLY` result means **only that the supplied saved snapshots
+are internally consistent**. It must not authorise writes on its own:
+re-read cloud and local state before changing anything; preserve complete
+backups and explicitly gate each potentially destructive action.
+
+Example (from the private snapshot archive; do not commit the archive):
+
+```powershell
+python .\cloud_group_preflight.py `
+  --archive "C:\TwinklyCapture\20261123T180540Z.zip" `
+  --stage "office-join-cycle/20261123T175450Z/02-joined-attempt-01"
+```
+
+The preflight prints mismatch count, maximum X/Y/Z delta and a small list
+of **zero-based and one-based LED indexes**; it does not print MAC addresses,
+device credentials or raw coordinate arrays. The output may include object
+names and IDs. Store any optional JSON report privately.
