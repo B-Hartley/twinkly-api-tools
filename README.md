@@ -177,3 +177,31 @@ Use `--snapshot-dir PATH` instead of `--archive/--stage` for extracted
 files. This is a snapshot checker, **not** a live-state guarantee: take new
 snapshots immediately before any future changes. Offline regression tests:
 `python -m unittest discover -s tests -p "test_cloud_group_preflight.py"`.
+
+### Live cloud/local preflight
+
+The recommended command reads the **current** cloud and LAN state and does not
+require exporting or zipping snapshots:
+
+```powershell
+git pull
+python .\cloud_group_preflight.py --group "Office Windows"
+```
+
+`--group` accepts either the saved plan's `group_name` or the current matching
+cloud object name (which may have been renamed). Device selection is based on
+the two controller IPs in ignored `private-area-plan.json` followed by MAC
+identity verification, **not** the group name. For example,
+`--group "Office resiE group"` also works when that is the current object
+name and its membership matches. If the encrypted cloud session has expired,
+append `--login`.
+
+Full raw cloud and local responses and a report are privately saved under
+ignored `cloud-preflight-backups/`. Never commit or publicly share these
+backups: Twinkly device objects may contain credentials. Offline snapshot
+modes remain available for testing.
+
+The preflight performs no grouping or layout writes. `BLOCK` (exit code 2)
+is expected when the cloud and local maps disagree, including a single LED;
+`PASS_READ_ONLY` (exit code 0) checks consistency, **not permission** to
+execute any future write.
