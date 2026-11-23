@@ -58,7 +58,8 @@ def read_local(member, timeout=5):
     return {"gestalt": gestalt, **responses}
 
 
-def collect(plan_path, *, login=False, timeout=10, output="cloud-preflight-backups",\n            include_snapshot=False):
+def collect(plan_path, *, login=False, timeout=10, output="cloud-preflight-backups",
+            include_snapshot=False):
     plan, _ = load_plan(plan_path)
     if len(plan["members"]) != 2:
         raise ValueError("Live preflight currently supports exactly two controllers")
