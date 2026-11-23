@@ -123,21 +123,28 @@ def archived_group_template(plan, expected_macs, roots):
 
 
 def reference_check(snapshot, plan, root, create=False):
+    """Compare live standalone geometry exclusively with immutable 3D archive."""
     ids = identities(snapshot, plan)
     for i, member in enumerate(plan["members"]):
-        local = snapshot[FILES[i + 1]]
-        layout = refs.verify_layout(local["layout"], member["leds"])
-        saved = refs.verify_layout(member["standalone_layout"], member["leds"])
-        if not compare_points(layout["coordinates"], saved["coordinates"])["matching"]:
-            raise ValueError(member["name"] + ": current 3D layout differs from saved original plan")
-        if create:
-            refs.archive(root, ids[i], member["leds"], layout, member["name"],
-                         "captured-live-standalone-3d-verified-against-plan")
+        layout = refs.verify_layout(snapshot[FILES[i + 1]]["layout"], member["leds"])
+        if create and not refs.reference_path(root, ids[i]).exists():
+            raise ValueError(member["name"] +
+                             ": no 3D archive reference exists. Capture and review it first.")
         reference = refs.read_reference(root, ids[i], member["leds"])
-        if not compare_points(reference["layout"]["coordinates"],
-                              layout["coordinates"])["matching"]:
-            raise ValueError(member["name"] + ": live 3D mapping differs from immutable reference")
+        comparison = compare_points(reference["layout"]["coordinates"],
+                                    layout["coordinates"])
+        if not comparison["matching"] or (
+                reference["layout"]["synthesized"] != layout["synthesized"]):
+            raise ValueError(member["name"] +
+                             ": live 3D differs from immutable archive; refusing writes")
+        print(member["name"] + ": verified live 3D against immutable archive (" +
+              str(member["leds"]) + " LEDs)")
     return ids
+
+
+def archived_layouts(plan, ids, root):
+    return [copy.deepcopy(refs.read_reference(root, ids[i], m["leds"])["layout"])
+            for i, m in enumerate(plan["members"])]
 
 
 def cloud_fresh_standalones(previous, token, timeout):
@@ -205,13 +212,13 @@ def new_area_body(template, standalone, plan, installation, uid, timeout, name=N
                            metadata=template["meta"], object_uuid=uid)
 
 
-def standalone_create_bodies(original, plan, installation, timeout):
+def standalone_create_bodies(original, plan, installation, timeout, layouts):
     bodies = []
     for index, member in enumerate(plan["members"]):
         template = original[index]
         layout = copy.deepcopy(template["layout"])
         layout["uuid"] = str(uuid.uuid4())
-        layout["coords"] = ops.encoded_layout(member["standalone_layout"]["coordinates"])
+        layout["coords"] = ops.encoded_layout(layouts[index]["coordinates"])
         device = template["devices"][0]["device"]
         member_payload = ops.device_payload(device, member["ip"], timeout)
         body = ops.create_body(template, [{"part": 0, "device": member_payload}],
@@ -228,7 +235,7 @@ def run_reverse(args):
     if len(plan["members"]) != 2 or not 0 < args.timeout <= 30:
         raise ValueError("Only two-controller Area with timeout 0-30 is supported")
     if not args.execute:
-        print("READ-ONLY CHECK: verify both standalone Office lights, archive their 3D maps,")
+        print("READ-ONLY CHECK: verify both standalone Office lights against existing 3D archives,")
         print("and locate a verified archived 2D cloud Area template.")
         plan, initial = ops.checkpoint("1 CHECK STANDALONE", args.plan, "ungrouped-cloud",
                                        args.output, args.timeout)
@@ -253,6 +260,7 @@ def run_reverse(args):
         plan, original = ops.checkpoint("1 CHECK STANDALONE", args.plan,
                                          "ungrouped-cloud", destination, args.timeout)
         ids = reference_check(original, plan, "3d-map-archive", create=True)
+        reference_maps = archived_layouts(plan, ids, "3d-map-archive")
         standalones = standalone_objects(original, plan)
         template = archived_group_template(
             plan, ids, ("cloud-preflight-backups", "cloud-audits"))
@@ -306,17 +314,17 @@ def run_reverse(args):
                     "If correct, proceed to ungroup.", "UNGROUP")
         # Build standalone requests before removing cloud Area.
         prepared = standalone_create_bodies(standalones, plan, installation,
-                                             args.timeout)
+                                             args.timeout, reference_maps)
         for i, member in enumerate(plan["members"]):
             current = read_local(member, args.timeout)
             if (current["group"]["group"].get("mode") !=
                     ("master" if i == 0 else "slave")):
                 raise RuntimeError("Current grouped role changed; refusing ungroup")
-        for member in plan["members"]:
+        for i, member in enumerate(plan["members"]):
             ops.local_write(member, ops.GROUP_API,
                             {"group": {"mode": "none", "size": 0, "offset": 0}},
                             args.timeout)
-            ops.local_write(member, ops.LAYOUT_API, member["standalone_layout"],
+            ops.local_write(member, ops.LAYOUT_API, reference_maps[i],
                             args.timeout)
             restored = read_local(member, args.timeout)
             if restored["group"]["group"].get("mode") != "none":
