@@ -134,3 +134,5 @@ Once real snapshots have been reviewed, identify master/slave group metadata and
 **Do not run live group operations on your Office Area group yet.** Automated group restoration and app-visible effects/name remain experimental.
 
 **Latest live test (23 Nov 2026):** scripted Office ungroup succeeded and fresh GETs confirmed `none` on both controllers. First scripted regroup stopped on an HTTP 401 after uploading Office Left's layout. **Do not retry live writes until `group_status.py` has assessed both controllers.**
+
+For a controlled **overwrite** of the current Office layout with the backed-up, individual camera-mapped 3D layouts (while *ungrouped*), see [standalone layout recovery](docs/testing.md#force-restore-individual-standalone-camera-mappings-office-test-23-nov-2026). Run the read-only preview before permitting live writes.
