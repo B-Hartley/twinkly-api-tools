@@ -15,6 +15,7 @@ import json
 import math
 from pathlib import Path
 import sys
+import uuid
 import zipfile
 
 TOLERANCE = 0.0002
@@ -28,6 +29,16 @@ def mac(value):
         return None
     clean = "".join(c for c in value.lower() if c in "0123456789abcdef")
     return clean if len(clean) == 12 and len(value.replace(":", "").replace("-", "")) == 12 else None
+
+
+def normalized_uid(value):
+    """Canonical UUID for comparison; invalid/missing IDs never match."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        return str(uuid.UUID(value.strip()))
+    except (ValueError, AttributeError):
+        return None
 
 
 def read_stage(directory=None, archive=None, stage=None):
@@ -160,9 +171,21 @@ def evaluate(snapshot):
                    "layout_source": m["source"]}
                   for m in members
               ],
-              "local_uids_match": bool(members[0]["role"].get("uid") and
-                                       members[0]["role"].get("uid") ==
-                                       members[1]["role"].get("uid"))}
+              "local_uids_match": bool(
+                  normalized_uid(members[0]["role"].get("uid")) and
+                  normalized_uid(members[0]["role"].get("uid")) ==
+                  normalized_uid(members[1]["role"].get("uid"))),
+              "uid_diagnostics": {
+                  "left_valid_uuid": normalized_uid(members[0]["role"].get("uid")) is not None,
+                  "right_valid_uuid": normalized_uid(members[1]["role"].get("uid")) is not None,
+                  "raw_strings_match": bool(members[0]["role"].get("uid") and
+                                            members[0]["role"].get("uid") ==
+                                            members[1]["role"].get("uid")),
+                  "canonical_uuids_match": bool(
+                      normalized_uid(members[0]["role"].get("uid")) and
+                      normalized_uid(members[0]["role"].get("uid")) ==
+                      normalized_uid(members[1]["role"].get("uid"))),
+              }}
     if not selected:
         problems.append("No cloud objects contain either intended controller MAC")
         return output
@@ -184,8 +207,9 @@ def evaluate(snapshot):
         uids = [x.get("uid") for x in cloud_group]
         if cloud_group[0].get("mode") != "master" or cloud_group[1].get("mode") != "slave":
             problems.append("Local roles are not master/slave")
-        if not uids[0] or uids[0] != uids[1]:
-            problems.append("Local group UUIDs missing or different")
+        if (normalized_uid(uids[0]) is None or
+                normalized_uid(uids[0]) != normalized_uid(uids[1])):
+            problems.append("Local group UUIDs missing, invalid or different")
         if cloud_group[1].get("offset") != members[0]["leds"]:
             problems.append("Slave offset differs from master LED count")
         if any(x.get("size") != obj.get("ledCount") for x in cloud_group):
@@ -267,7 +291,13 @@ def main(argv=None):
                   "uid_present=" + str(member["uid_present"]),
                   "layout=" + str(member["layout_source"]),
                   "LEDs=" + str(member["leds"]))
-        print("  Local group UUIDs match:", report.get("local_uids_match", False))
+        print("  Local group UUIDs match (canonical):", report.get("local_uids_match", False))
+        diagnostics = report.get("uid_diagnostics", {})
+        print("  UUID diagnostics:",
+              "Left valid=" + str(diagnostics.get("left_valid_uuid")),
+              "Right valid=" + str(diagnostics.get("right_valid_uuid")),
+              "raw equal=" + str(diagnostics.get("raw_strings_match")),
+              "canonical equal=" + str(diagnostics.get("canonical_uuids_match")))
         for issue in report["issues"]:
             print("  BLOCK:", issue)
         if report["mapping"]:
