@@ -20,7 +20,7 @@ def point(x):
     return {"x": float(x), "y": 0.0, "z": 0.0}
 
 
-def local(mac, role, source, points, uid="group-uuid"):
+def local(mac, role, source, points, uid="12345678-1234-1234-1234-123456789abc"):
     return {
         "gestalt": {"mac": mac, "number_of_led": len(points)},
         "group": {"group": {"mode": role, "uid": uid if role != "none" else None,
@@ -55,6 +55,23 @@ def stage(grouped=True):
 
 
 class PreflightTests(unittest.TestCase):
+    def test_uuid_case_and_braces_are_equivalent(self):
+        data = stage()
+        data[preflight.FILES[1]]["group"]["group"]["uid"] = (
+            "{12345678-1234-1234-1234-123456789ABC}")
+        report = preflight.evaluate(data)
+        self.assertEqual(report["result"], "PASS_READ_ONLY")
+        self.assertTrue(report["uid_diagnostics"]["canonical_uuids_match"])
+        self.assertFalse(report["uid_diagnostics"]["raw_strings_match"])
+
+    def test_real_uuid_difference_blocks(self):
+        data = stage()
+        data[preflight.FILES[1]]["group"]["group"]["uid"] = (
+            "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+        report = preflight.evaluate(data)
+        self.assertEqual(report["result"], "BLOCK")
+        self.assertFalse(report["uid_diagnostics"]["canonical_uuids_match"])
+
     def test_grouped_exact_match(self):
         result = preflight.evaluate(stage())
         self.assertEqual(result["result"], "PASS_READ_ONLY")
@@ -86,7 +103,7 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(report["local_members"][0]["mode"], "none")
         self.assertEqual(report["local_members"][1]["mode"], "slave")
         self.assertFalse(report["local_uids_match"])
-        self.assertNotIn("group-uuid", json.dumps(report))
+        self.assertNotIn("12345678-1234-1234-1234-123456789abc", json.dumps(report))
 
     def test_partial_local_join_blocks(self):
         data = stage()
