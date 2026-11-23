@@ -105,8 +105,11 @@ def find_standalone_templates(plan, identity, roots):
         base = Path(root)
         if not base.is_dir():
             continue
-        paths = list(base.glob("*/objects-private.json")) + list(
-            base.glob("*/cloud-objects-PRIVATE.json"))
+        # Private archives may contain one or several nested snapshot stages.
+        paths = list(base.rglob("objects-private.json")) + list(
+            base.rglob("cloud-objects-PRIVATE.json"))
+        if len(paths) > 1000:
+            raise ValueError("Too many historical cloud snapshots; narrow the archive roots")
         for path in paths:
             try:
                 if path.stat().st_size > MAX_BODY:
@@ -249,7 +252,7 @@ def run(args):
         original = find_area(current, current_plan)
         identities = [mac(current[FILES[i + 1]]["gestalt"]["mac"]) for i in range(2)]
         templates = find_standalone_templates(
-            current_plan, identities, ("cloud-audits", "cloud-preflight-backups"))
+            current_plan, identities, ("cloud-audits", "cloud-preflight-backups", "office-join-cycle"))
         print("READY FOR CONTROLLED TEST: verified", len(templates),
               "standalone 3D templates; Area object", original["id"])
         print("Dry run: no cloud/LAN writes. Use --execute with confirmations.")
