@@ -179,3 +179,30 @@ This illustrates observed **field names**, not tested literal value types or a v
 - **Safety:** compare target object identity and decoded geometry before any write; never publish raw captures, object credentials, access tokens or identifying values.
 
 The cloud API is **not documented or guaranteed by Twinkly**. Use it at your own risk.
+
+## Read-only cloud inventory and login research
+
+The repository includes **`cloud_audit.py`**, a strictly allowlisted HTTPS GET client for `/v3/objects?mine=true` and `/v3/installations`. It has **no PUT/POST/DELETE methods** and never sends your cloud token to another hostname. The code is experimental: cloud object-list response shapes are not completely established.
+
+You must obtain a valid bearer token by a legitimate account/session mechanism, not by publishing intercepted credentials. When one is available, set it for the **current PowerShell process only** without echoing the value:
+
+```powershell
+$secret = Read-Host "Twinkly cloud access token" -AsSecureString
+$env:TWINKLY_CLOUD_TOKEN = [System.Net.NetworkCredential]::new("", $secret).Password
+python .\cloud_audit.py --plan private-area-plan.json
+Remove-Item Env:TWINKLY_CLOUD_TOKEN
+```
+
+The script writes **private account/device object backups** to `cloud-audits/<timestamp>/`. Those backups are ignored by Git and **must not** be shared publicly. A cloud `GET` is read-only, but login to the API is not yet automated; no cloud changes are made.
+
+### Capture login flow safely
+
+To discover authentication endpoints without exposing your password or tokens, save a new app login mitmproxy `.flows` recording **locally**, then run:
+
+```powershell
+python .\redact_login_trace.py C:\TwinklyCapture\twinkly-login.flows --output C:\TwinklyCapture\twinkly-login-redacted.json
+```
+
+This reports **only** the HTTP method, hostname-filtered path (without query), response status, content-type-derived JSON **key names**, and whether an authorization header is present; it never prints token values, passwords, request/response JSON values, headers or cookies. **Review even the redacted file before sharing**, since a URL path or JSON key name may still disclose information. The `.flows` source is sensitive and should not be uploaded or committed.
+
+**Next prerequisites for cloud sync writes:** confirm supported authentication/renewal, identify cloud object IDs for the intended controllers, validate complete PUT/create/remove payload schemas, back up all relevant cloud records, and test guarded writes against a disposable group with explicit approval. A cloud/physical atomic transaction cannot be assumed; partial failures must be reported rather than blindly rolled back.
