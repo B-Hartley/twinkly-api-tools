@@ -128,6 +128,9 @@ Once real snapshots have been reviewed, identify master/slave group metadata and
 - `python probe_api.py` — read-only firmware-indexed GET endpoint sweep over every controller in local `devices.json`.
 - `python build_group_plan.py --help` — build a private plan from grouped and standalone snapshot directories.
 - `python group_test.py ungroup --plan private-area-plan.json` — dry-run by default, **no network calls**; see safety gates before live writes.
-- See [API research](docs/captured-api.md) and [test instructions](docs/testing.md).
+- See the **[consolidated API reference](docs/API_REFERENCE.md)** and [test instructions](docs/testing.md).
+- `python group_status.py --plan private-area-plan.json` — **read-only** membership and layout check, useful after failed/partial writes.
 
 **Do not run live group operations on your Office Area group yet.** Automated group restoration and app-visible effects/name remain experimental.
+
+**Latest live test (23 Nov 2026):** scripted Office ungroup succeeded and fresh GETs confirmed `none` on both controllers. First scripted regroup stopped on an HTTP 401 after uploading Office Left's layout. **Do not retry live writes until `group_status.py` has assessed both controllers.**
