@@ -150,7 +150,19 @@ def evaluate(snapshot):
         if expected_set.intersection(ids):
             selected.append((obj, ids))
     output = {"result": "BLOCK", "state": "unknown", "matched_objects": [],
-              "issues": problems, "mapping": None}
+              "issues": problems, "mapping": None,
+              "local_members": [
+                  {"label": m["label"], "leds": m["leds"],
+                   "mode": m["role"].get("mode"),
+                   "size": m["role"].get("size"),
+                   "offset": m["role"].get("offset"),
+                   "uid_present": bool(m["role"].get("uid")),
+                   "layout_source": m["source"]}
+                  for m in members
+              ],
+              "local_uids_match": bool(members[0]["role"].get("uid") and
+                                       members[0]["role"].get("uid") ==
+                                       members[1]["role"].get("uid"))}
     if not selected:
         problems.append("No cloud objects contain either intended controller MAC")
         return output
@@ -247,6 +259,15 @@ def main(argv=None):
         for obj in report["matched_objects"]:
             print("  Cloud object", obj["id"], repr(obj["name"]),
                   "LEDs", obj["led_count"], "members", obj["member_count"])
+        for member in report.get("local_members", []):
+            print("  Local", member["label"] + ":",
+                  "role=" + str(member["mode"]),
+                  "size=" + str(member["size"]),
+                  "offset=" + str(member["offset"]),
+                  "uid_present=" + str(member["uid_present"]),
+                  "layout=" + str(member["layout_source"]),
+                  "LEDs=" + str(member["leds"]))
+        print("  Local group UUIDs match:", report.get("local_uids_match", False))
         for issue in report["issues"]:
             print("  BLOCK:", issue)
         if report["mapping"]:
