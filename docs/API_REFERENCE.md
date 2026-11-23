@@ -300,3 +300,6 @@ Following an app effect-save operation, both Office controllers returned `group.
 | Office Right | TWW210SPP, 2.11.0 | POST `/led/layout/full`: HTTP 200 | All 210 coordinates matched backup; group `none` |
 
 A **separate** `python group_status.py --plan private-area-plan.json` check immediately afterward confirmed `layout=standalone`, `source=3d`, `LEDs=210` and `mode=none` on **both** controllers. This verifies a successful device-side overwrite and readback, not persistence following a future effect change, device reboot, or cloud reconciliation. The locally saved pre-overwrite backup is `recovery-backups/before-standalone-restore-20261123T154305758209Z.json` and must remain private.
+
+
+For the separately captured account/installation object API on `api.twinkly.com`, including exact object schemas and base64+gzip coordinate encoding discovered in the original network traces, see the [cloud API reference](CLOUD_API_REFERENCE.md). The cloud API has **not** been modified by our tools.
