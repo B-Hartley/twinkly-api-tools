@@ -204,6 +204,13 @@ Content-Type: application/json
 
 The example has just one point and **must not be copied to a real multi-LED device**. A real body needs the full ordered coordinates. Validate LED count, source and every coordinate before and after uploading. Layout writes can overwrite calibrated mappings; retain private backups of both individual and Area geometry.
 
+
+### Area transformations and the `synthesized` flag
+
+**Confirmed on firmware 2.11.0:** Standalone 3D layouts can switch to 2D coordinate sets when two controllers are joined into an Area, even with no manual resize. Resizing and rotation in the Area editor can change the ordered per-device coordinates and layout UUIDs while `synthesized=false` remains unchanged. Therefore, `synthesized=false` does **not** mean the mapping is an unmodified camera reconstruction, and `synthesized=true` is **not by itself** evidence of lost mapping data. Compare source, actual coordinate arrays, saved mapping UUIDs and group roles.
+
+**Confirmed:** Ungrouping can restore previously saved standalone 3D UUIDs and coordinates; tiny float differences may occur in the recovered coordinates. **Caution:** Capturing during a group transition can yield a `master` controller paired with a controller still reporting `none`, while both already hold Area-style coordinate arrays. Treat such a state as **incomplete**, and check all members again before modifying the cloud or local configurations.
+
 ## Utilities for independent verification
 
 ```powershell
