@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Twinkly Area states",
+        "description": "Enter the physical Twinkly controller names and local IP addresses as a JSON list. This integration initially performs read-only snapshots.",
+        "data": {
+          "devices_json": "Controller names and IPs (JSON)"
+        }
+      }
+    },
+    "error": {
+      "invalid_devices": "Enter a valid nonempty list with unique names and private IPv4 addresses."
+    },
+    "abort": {
+      "single_instance_allowed": "Already configured"
+    }
+  }
+}
