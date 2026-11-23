@@ -134,3 +134,7 @@ Improve cloud-object inventory comparison and safe reconstruction/app refresh te
 **Experimental:** local controller grouping and layout recovery are supported only with private verified backups, state preflight, and explicit write confirmations. App/cloud object consistency and effect/playlist restoration are separate, unverified workflows.
 
 For a controlled **overwrite** of the current Office layout with the backed-up, individual camera-mapped 3D layouts (while *ungrouped*), see [standalone layout recovery](docs/testing.md#force-restore-individual-standalone-camera-mappings-office-test-23-nov-2026). Run the read-only preview before permitting live writes.
+
+## Cloud inventory auditing (experimental; read-only)
+
+`cloud_audit.py` can read the signed-in account's object and installation inventory using a bearer token supplied **locally** in `TWINKLY_CLOUD_TOKEN`. No cloud write methods are implemented; the raw responses are saved privately under ignored `cloud-audits/`. To understand how the app logs in **without disclosing credentials**, use `redact_login_trace.py` against a local `.flows` file; it emits method/path/status and top-level JSON key names only. See [cloud API usage](docs/CLOUD_API_REFERENCE.md#read-only-cloud-inventory-and-login-research).
