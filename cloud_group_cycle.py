@@ -413,8 +413,13 @@ def main(argv=None):
     p.add_argument("--execute", action="store_true")
     p.add_argument("--acknowledge-risk", action="store_true")
     p.add_argument("--confirm-group")
+    p.add_argument("--start-ungrouped", action="store_true",
+                   help="Check standalone -> group -> check -> ungroup -> check")
     args = p.parse_args(argv)
     try:
+        if args.start_ungrouped:
+            from cloud_group_cycle_reverse import run_reverse
+            return run_reverse(args)
         return run(args)
     except (RuntimeError, ValueError, TypeError, KeyError, OSError) as exc:
         print("BLOCK:", exc, file=sys.stderr)
