@@ -1,305 +1,223 @@
-# Twinkly local REST API — consolidated reference
+# Twinkly Local Controller REST API Reference
 
-> **Unofficial; reverse-engineered. Updated 23 November 2026.** This is the canonical API reference for observed GET/POST calls, firmware and hardware coverage, sample requests and response meanings. All identifiers and addresses in examples are fictitious. Group lifecycle operations are experimental.
+> **Unofficial, reverse-engineered protocol**, with firmware-indexed compatibility and representative request/response examples. **Confirmed** = tested GET or observed app POST, specified where relevant; **inferred** = interpretation not fully proved; **untested** = operation not verified outside the observed app. No private captures or device identifiers are included. See the separate [Cloud API Reference](CLOUD_API_REFERENCE.md).
 
-## 1. Evidence and firmware/hardware versions
+## Transport, authentication, error handling
 
-The 23-Nov-2026 14:50 UTC read-only sweep attempted 31 GET endpoints on **11 controllers**. Every controller returned firmware **2.11.0**. The 15:04 follow-up sweep returned different overall endpoint counts by product (usually 22/31, Icicles 16/31, Mid Right 23/31); compare its raw per-route matrix before interpreting that difference. The detailed table below refers to the **14:50** sweep.
+Base URL: `http://DEVICE_IP/xled/v1/` (LAN HTTP). Do not expose controllers directly to the internet.
 
-| Product code | FW family | Hardware versions tested | Number | Firmware |
-|---|---|---|---:|---|
-| `TWS400SPP` | G | 100, 300, 308 | 6 | 2.11.0 |
-| `TWS600SPP1` | AB | 308 | 1 | 2.11.0 |
-| `TWI190SPP` | G | 100 | 1 | 2.11.0 |
-| `TWP500SPP` | R | 400 | 1 | 2.11.0 |
-| `TWW210SPP` | G | 300, 302 | 2 | 2.11.0 |
+1. `POST /login` with `{"challenge":"<base64-random-challenge>"}`. **Confirmed** fields in success response include `authentication_token`, `challenge-response`, `code`.
+2. `POST /verify` with header `X-Auth-Token: <token>` and `{"challenge-response":"<returned-challenge-response>"}`.
+3. Supply `X-Auth-Token` on subsequent authenticated calls. Some identity/status GETs can be requested without authentication.
 
-**Evidence grades:** `GET confirmed` means a successful JSON read in the 14:50 sweep. `POST captured` means observed in the Twinkly iPhone app's intercepted HTTP traffic. `POST tested` means replayed via Python against the two Office window controllers. `404 GET` does *not* prove that the corresponding POST is unsupported. A non-JSON reply means that our JSON-only reader could not decode it; do not interpret that as definite API absence.
+For normal JSON success, `{"code":1000,...}` denotes application success. Check **both** HTTP status and Twinkly `code`; HTTP 200 alone is insufficient. A **401** indicates unauthorised access (token validity/session contention are possible explanations, not proven causes). A **404** on GET establishes absence of that GET route in the tested configuration, **not** absence of a corresponding POST. Non-JSON responses must not be classified as unsupported without checking status/body.
 
-**Confirmed live group test:** The Python `ungroup` operation on the Office controllers completed on 23-Nov-2026, and a subsequent independently authenticated GET returned `mode: none` on both. The later `regroup` test uploaded the Area layout to Office Left, then received **HTTP 401** on its `POST /application/group` and stopped before writing Office Right. A subsequent guarded `resume_regroup.py` run **succeeded**: Office Left `/application/group`, Office Right `/led/layout/full`, and Office Right `/application/group` each returned HTTP 200 and Twinkly JSON `code:1000`. Fresh read-back checks confirmed both controllers' saved Area layouts and expected shared group membership. This establishes a **successful local-controller ungroup/regroup round trip on this two-controller Office group with firmware 2.11.0**, not proof that the app retains its original name, playlists, or effects. Investigate current state and authentication before repeating any writes.
-
-## 2. Base URL and authentication
-
-Twinkly controllers are accessed on the LAN using `http://DEVICE_IP/xled/v1/<route>` (port 80). This is **HTTP**, not HTTPS. Do not expose it to the internet.
-
-Authentication flow (POSTs observed and implemented):
+Example authenticated read:
 
 ```http
-POST /xled/v1/login
-Content-Type: application/json
-
-{"challenge":"<base64-encoded 32 random bytes>"}
+GET /xled/v1/application/group
+X-Auth-Token: <token>
+Accept: application/json
 ```
 
-Successful reply includes `authentication_token` (opaque secret), `challenge-response` (opaque proof) and `code:1000`. Next:
+## Firmware and hardware compatibility
 
-```http
-POST /xled/v1/verify
-X-Auth-Token: <authentication_token>
-Content-Type: application/json
+**Confirmed tested firmware:** `2.11.0` across **11 controllers**. No other firmware versions are verified.
 
-{"challenge-response":"<challenge-response returned by login>"}
-```
+| Product code | FW family | Hardware revisions tested | Controllers |
+|---|---|---|---:|
+| `TWS400SPP` | G | 100, 300, 308 | 6 |
+| `TWS600SPP1` | AB | 308 | 1 |
+| `TWI190SPP` | G | 100 | 1 |
+| `TWP500SPP` | R | 400 | 1 |
+| `TWW210SPP` | G | 300, 302 | 2 |
+| **Total** | | | **11** |
 
-For subsequent authenticated GET and POST calls include `X-Auth-Token: <token>`. An HTTP **401** means the request was not authorised; it can indicate an expired/invalidated token, competing app session or another authentication issue. The cause in the failed Office regroup attempt has **not** been established. Do **not** retry state-changing writes just because you see 401.
+Hardware revision is a controller hardware identifier, not a firmware version. Availability may depend on model, firmware, mode and authentication. The compatibility table below is a **fleet-wide GET result**, not guaranteed per-model capability.
 
-Typical successful JSON response contains `"code":1000`. **HTTP 200 is not by itself proof of application success**. Unknown Twinkly application codes should be logged and treated as errors. Some endpoints can return empty or non-JSON bodies.
+### Read-only GET compatibility matrix — firmware 2.11.0
 
-## 3. GET endpoint compatibility matrix (14:50 sweep)
+Values indicate **successful JSON / HTTP 404 / non-JSON** across the 11-device compatibility test.
 
-Columns show **successful JSON / HTTP 404 / non-JSON** among 11 controllers. For a quick request example, after authentication: `GET http://DEVICE_IP/xled/v1/application/group` with `X-Auth-Token`. Endpoints here are only proven for firmware 2.11.0 and the listed hardware.
-
-| GET path (prefix `/xled/v1/`) | OK | 404 | Non-JSON | Meaning / action |
+| GET route (append to `/xled/v1/`) | OK | 404 | Non-JSON | Purpose |
 |---|---:|---:|---:|---|
-| `gestalt` | 11 | 0 | 0 | Identity, product and LED count |
+| `gestalt` | 11 | 0 | 0 | Hardware identity, model, LED count |
 | `fw/version` | 11 | 0 | 0 | Firmware version |
 | `status` | 11 | 0 | 0 | Device status |
-| `device_name` | 11 | 0 | 0 | Physical controller name |
-| `summary` | 11 | 0 | 0 | Aggregated current state and grouping |
-| `application/group` | 11 | 0 | 0 | Group membership and role |
-| `application/mode` | 0 | 11 | 0 | Route absent in this GET test |
-| `led/layout/full` | 11 | 0 | 0 | Complete mapped LED coordinates |
-| `led/mode` | 11 | 0 | 0 | Current playback/power mode |
+| `device_name` | 11 | 0 | 0 | Physical device name |
+| `summary` | 11 | 0 | 0 | Aggregated state |
+| `application/group` | 11 | 0 | 0 | Group role, UID and offsets |
+| `application/mode` | 0 | 11 | 0 | No GET route observed |
+| `led/layout/full` | 11 | 0 | 0 | Full LED mapping |
+| `led/mode` | 11 | 0 | 0 | Current LED mode |
 | `led/config` | 11 | 0 | 0 | LED string configuration |
-| `led/movie/config` | 11 | 0 | 0 | Movie playback settings |
-| `led/effects` | 11 | 0 | 0 | Available effects/IDs |
-| `led/effects/current` | 11 | 0 | 0 | Selected effect |
-| `led/out/brightness` | 11 | 0 | 0 | Brightness mode and level |
-| `led/color` | 11 | 0 | 0 | RGBW and HSV color state |
-| `led/out/saturation` | 11 | 0 | 0 | Saturation state |
-| `led/movies` | 0 | 11 | 0 | Route absent in this GET test |
-| `led/movies/current` | 0 | 11 | 0 | Route absent in this GET test |
-| `led/driver_params` | 11 | 0 | 0 | LED signal timing configuration |
-| `movies/current` | 1 | 0 | 10 | State-specific/non-JSON responses |
-| `playlist/current` | 0 | 0 | 11 | Non-JSON; content unknown |
-| `playlist` | 11 | 0 | 0 | Playlist metadata |
-| `timer` | 11 | 0 | 0 | Device timer state |
-| `network/status` | 11 | 0 | 0 | Connected station and local AP metadata |
-| `network/scan_results` | 11 | 0 | 0 | Last known Wi-Fi scan results |
-| `network/station` | 0 | 11 | 0 | Route absent in this GET test |
-| `network/ap` | 0 | 11 | 0 | Route absent in this GET test |
-| `mic/config` | 0 | 11 | 0 | Route absent in this GET test |
-| `mic/sample` | 0 | 11 | 0 | Route absent in this GET test |
-| `music/drivers/sets/current` | 11 | 0 | 0 | Current music driver set ID |
-| `mqtt/config` | 11 | 0 | 0 | MQTT configuration (may include private data) |
+| `led/movie/config` | 11 | 0 | 0 | Playback configuration |
+| `led/effects` | 11 | 0 | 0 | Effects enumeration |
+| `led/effects/current` | 11 | 0 | 0 | Current effect |
+| `led/out/brightness` | 11 | 0 | 0 | Brightness |
+| `led/color` | 11 | 0 | 0 | Color channels |
+| `led/out/saturation` | 11 | 0 | 0 | Saturation |
+| `led/movies` | 0 | 11 | 0 | No GET route observed |
+| `led/movies/current` | 0 | 11 | 0 | No GET route observed |
+| `led/driver_params` | 11 | 0 | 0 | LED driver timing |
+| `movies/current` | 1 | 0 | 10 | Current movie; often non-JSON |
+| `playlist/current` | 0 | 0 | 11 | Playlist current; non-JSON |
+| `playlist` | 11 | 0 | 0 | Playlist information |
+| `timer` | 11 | 0 | 0 | Timer |
+| `network/status` | 11 | 0 | 0 | Station/AP status |
+| `network/scan_results` | 11 | 0 | 0 | Last scan results |
+| `network/station` | 0 | 11 | 0 | No GET route observed |
+| `network/ap` | 0 | 11 | 0 | No GET route observed |
+| `mic/config` | 0 | 11 | 0 | No GET route observed |
+| `mic/sample` | 0 | 11 | 0 | No GET route observed |
+| `music/drivers/sets/current` | 11 | 0 | 0 | Music driver-set ID |
+| `mqtt/config` | 11 | 0 | 0 | MQTT client configuration |
 
-**Total: 243 OK / 77 HTTP 404 / 21 non-JSON = 341 attempts.** `network/scan` was deliberately not probed: triggering a fresh scan might affect Wi-Fi operation.
+**Totals:** 243 valid JSON successes; 77 HTTP 404; 21 non-JSON = 341 GET attempts. `GET /network/scan` was deliberately **not** tested because it might trigger a scan. The differing success counts seen on other passes mean this matrix is observational; avoid treating it as a universal firmware contract.
 
-## 4. Interpreting representative GET responses
+## Response structures and meanings
 
-These examples are intentionally abbreviated and/or illustrative. The **field names** were observed in the probe; values marked as examples are not literal captures. Not all fields exist on all models or in all modes.
+The following examples are abbreviated and illustrative, but field names derive from observed responses.
 
-### Hardware identification — `GET /gestalt` and `GET /fw/version`
+### `GET /gestalt`, `GET /fw/version`, `GET /device_name`
 
 ```json
 {"code":1000,"product_code":"TWW210SPP","fw_family":"G","hardware_version":"300","number_of_led":210}
 ```
+
 ```json
 {"code":1000,"version":"2.11.0"}
 ```
 
-`product_code` identifies the product family, `hardware_version` the controller hardware revision, `fw_family` the firmware family and `number_of_led` the number of LEDs physically driven by this controller. The hardware version is **not** the firmware version. The `gestalt` response may contain stable identifiers: keep raw results private.
+`product_code` identifies hardware family; `hardware_version` hardware revision; `number_of_led` the physical controller's LED count; `device_name` returns the individual controller name, **not** an Area group's friendly name.
 
-### Names — `GET /device_name`
+### `GET /application/group`
 
-Returns the physical device's name. There is **no group-friendly-name field** in the observed local group response. A group named in the Twinkly app may be cached locally or held in account/cloud state; the tests do **not** establish which.
-
-### Membership — `GET /application/group`
-
-Ungrouped (illustrative, extra sync fields may be present):
+Standalone:
 
 ```json
 {"code":1000,"group":{"mode":"none","compat_mode":0}}
 ```
 
-Grouped master:
+Grouped master / slave:
 
 ```json
-{"code":1000,"group":{"mode":"master","size":420,"uid":"00000000-0000-4000-8000-000000000001","compat_mode":0}}
+{"code":1000,"group":{"mode":"master","uid":"<group-uuid>","size":420,"compat_mode":0}}
 ```
-
-Grouped slave:
 
 ```json
-{"code":1000,"group":{"mode":"slave","size":420,"offset":210,"uid":"00000000-0000-4000-8000-000000000001","compat_mode":0}}
+{"code":1000,"group":{"mode":"slave","uid":"<same-group-uuid>","size":420,"offset":210,"compat_mode":0}}
 ```
 
-`mode=master` identifies the lead controller; `slave` follows it. `uid` must match **across all members**. `size` is the *total* group LED count, **not** each controller's count. `offset` is the starting LED index within the concatenated group sequence. Master may omit `offset`; interpret its effective offset as zero. Ungrouped devices can omit `size`, `uid`, and `offset`. Other observed group flags include `sync_on_time` and `time_sync`.
+`mode` is `none`, `master` or `slave`. `uid` ties members together. `size` means **total group LEDs**; `offset` gives that controller's first LED in the combined sequence. A master's `offset` may be omitted and effectively equals zero. Ungrouped devices may omit UID, size and offset. Other observed flags include `sync_on_time` and `time_sync`. **Confirmed:** this GET is the strongest local indicator of physical group membership; an app tile alone is insufficient.
 
-Practical Office example: Left drives LEDs 0–209, Right drives LEDs 210–419. A successful group verification must read every member and compare roles, UUID, LED counts and offsets, not merely see a group in the app.
-
-### Aggregated summary — `GET /summary`
-
-Observed response structure contains `code`, `group`, `layout` (with `uuid`), `led_mode`, `timer`, `music`, `filters`, and `color`. Use it for a convenient overview; prefer `GET /application/group` for authoritative local membership preflight.
-
-### Coordinates — `GET /led/layout/full`
+### `GET /led/layout/full`
 
 ```json
-{"code":1000,"source":"3d","synthesized":false,"uuid":"<layout-uuid>","coordinates":[{"x":0.12,"y":0.55,"z":-0.31},{"x":0.17,"y":0.61,"z":-0.25}]}
+{
+  "code":1000,
+  "source":"3d",
+  "synthesized":false,
+  "uuid":"<layout-uuid>",
+  "coordinates":[{"x":0.12,"y":0.55,"z":-0.31},{"x":0.17,"y":0.61,"z":-0.25}]
+}
 ```
 
-`source` was observed as `3d` for standalone camera mappings and `2d` for the Office Area-wide grouped layouts. This is **how the firmware labelled the data**, not a guarantee that an unused coordinate axis is always zero. `coordinates` is ordered by physical LED index, each point with x/y/z. `synthesized` describes firmware-generated mapping status; `uuid` is a layout identifier, and need not be reused when POSTing. Each controller returns *its own* coordinates; a full reversible backup requires every controller's **both** grouped and standalone layouts.
+`coordinates[]` is an **ordered array per controller**, each with `x`, `y`, `z` floats. `source` is commonly `3d` for individual camera mapping and `2d` for Area/default mapped layouts; **inferred:** source alone does not establish the mapping's provenance or quality. `uuid` is layout identity and `synthesized` a firmware-provided generation flag. Validate coordinate count against `gestalt.number_of_led`, plus the full coordinate sequence (allowing modest numeric rounding) when restoring a backup.
 
-### LED mode / effects / movie / playlist
+**Confirmed:** `POST /led/layout/full` can restore both saved 2D Area and 3D standalone coordinates on firmware 2.11.0; subsequent GET verifies acceptance. Successful upload does not update cloud layout automatically. A separate app/cloud update may later overwrite displayed geometry or physical coordinates.
 
-- `GET /led/mode`: current display mode; writing mode is an app-captured action, but mode-string values should be taken from a real response, not invented.
-- `GET /led/config`: contains `strings[]`; useful for physical string configuration.
-- `GET /led/movie/config`: playback configuration; state dependent.
-- `GET /led/effects`: `effects_number` and `unique_ids[]` enumerate effects. `GET /led/effects/current` reports selection.
-- `GET /movies/current`: one JSON response and ten non-JSON responses in this fleet, so inspect content type/body before attributing meanings.
-- `GET /playlist`: usable JSON; `GET /playlist/current` returned non-JSON on all 11 in the archived sweep. Neither proves the presence of a playable playlist.
+### `GET /summary`
 
-### Brightness, color, saturation and drivers
+Contains observed `code`, `group`, `layout{uuid}`, `led_mode`, `timer`, `music`, `filters[]` and `color`. Use as a quick overview, but use the direct group endpoint for member role validation.
 
-- `GET /led/out/brightness`: observed `code`, `mode`, `value`. Interpret `value` together with its reported `mode`, not as a fixed universal percentage without checking.
-- `GET /led/color`: observed `red`, `green`, `blue`, `white`, `hue`, `saturation`, `value`; may expose both RGBW and HSV state.
-- `GET /led/out/saturation`: saturation information, successful JSON on all 11.
-- `GET /led/driver_params`: observed `t0h`, `t0l`, `t1h`, `t1l`, `tendh`, `tendl`; hardware signal timing; **do not alter casually**.
+### Other confirmed GET response fields
 
-### Timers, networks, MQTT and music
+| Route | Observed fields or meaning |
+|---|---|
+| `led/mode` | Current LED display mode |
+| `led/config` | `strings[]` |
+| `led/movie/config` | Playback configuration |
+| `led/effects` | `effects_number`, `unique_ids[]` |
+| `led/effects/current` | Selected effect |
+| `led/out/brightness` | `mode`, `value` |
+| `led/color` | `red`, `green`, `blue`, `white`, `hue`, `saturation`, `value` |
+| `led/out/saturation` | Saturation setting |
+| `led/driver_params` | `t0h`, `t0l`, `t1h`, `t1l`, `tendh`, `tendl`; hardware signal timing |
+| `movies/current` | State-dependent; non-JSON possible |
+| `playlist/current` | Non-JSON on tested devices; exact body uncharacterised |
+| `playlist` | Playlist metadata |
+| `timer` | Timer state |
+| `network/status` | `mode`, `station{ip,mask,gw,ssid,rssi,connected_bssid,monitor_enabled}`, `ap{ip,ssid,enc,channel,max_connections,ssid_hidden}` |
+| `network/scan_results` | Stored Wi-Fi scan results |
+| `music/drivers/sets/current` | `driverset_id` |
+| `mqtt/config` | `broker_host`, `broker_port`, `client_id`, `keep_alive_interval`, `user`; may be sensitive |
+| `status` | Device status (model/mode dependent) |
 
-- `GET /timer`: configured timer state. The app also made timer-related calls around grouping; no complete write contract is established.
-- `GET /network/status`: contains `mode`, `station{ip,mask,gw,ssid,rssi,connected_bssid,monitor_enabled}`, `ap{ip,ssid,enc,channel,max_connections,ssid_hidden}`. Treat SSID and IP as private.
-- `GET /network/scan_results`: stored scan results, **not** an instruction to initiate a scan.
-- `GET /mqtt/config`: may contain `broker_host`, `broker_port`, `client_id`, `keep_alive_interval`, `user`. **Do not publish live values**.
-- `GET /music/drivers/sets/current`: `driverset_id` identifies the selected driver set.
-- `GET /status`: device status; specific content varies with model and current mode.
+Never alter driver timing or MQTT/network parameters without a separate, validated procedure.
 
-## 5. Captured POST operations
+## State-changing controller calls
 
-| POST path | Observed use | Evidence | Safety |
-|---|---|---|---|
-| `/login` | Request auth token with random challenge | App and Python | Auth-related state |
-| `/verify` | Verify challenge response | App and Python | Auth-related state |
-| `/application/group` | Set `none`, `master`, `slave` | Twinkly app; Python ungroup succeeded | Destructive / may partially fail |
-| `/led/layout/full` | Upload camera or Area layout | Twinkly app; Python upload in regroup accepted | Replaces mapping |
-| `/led/mode` | Display/power state change | Twinkly app on/off capture | Changes lights |
+| Method/path | Purpose | Status |
+|---|---|---|
+| `POST /login`, `POST /verify` | Authenticate | **Confirmed** |
+| `POST /application/group` | Set group role `none/master/slave` | **Confirmed** from app and local tests |
+| `POST /led/layout/full` | Upload coordinates | **Confirmed** from app and local tests |
+| `POST /led/mode` | Change mode/power state | **Observed app call**; no complete write contract here |
+| Effect/movie/playlist/timer writes | Additional app operations | **Observed**, not fully characterised |
 
-**Additional effect/movie/playlist/timer calls were present** around Twinkly app group changes, but their exact full payloads and sequencing are not sufficiently documented for safe reproduction here. The GET matrix must not be mistaken for a tested catalogue of write operations.
-
-## 6. Grouping and ungrouping: exact known payloads
-
-### Remove group membership
-
-Send to **each** controller:
+### Ungroup (each controller)
 
 ```http
 POST /xled/v1/application/group
+X-Auth-Token: <token>
 Content-Type: application/json
-X-Auth-Token: <verified-token>
 
 {"group":{"mode":"none","size":0,"offset":0}}
 ```
 
-The mobile app also uploaded each controller's *standalone 3D* layout. Group removal without restoring separate mappings may leave a controller displaying the old Area coordinates. In the **23-Nov-2026 Python test**, ungroup completed on both Office devices and a fresh independent GET showed `group.mode=none` on both.
+**Confirmed:** local ungroup updates membership. To restore individual mapping, upload that controller's separately saved 3D layout. Ungrouping alone does not ensure its original camera geometry survives.
 
-### Create the same two-controller Area group
+### Group (all members, using same UUID)
 
-First, the app uploaded each controller's *saved 2D Area layout*:
+For example, two 210-LED controllers, first master then slave:
+
+```json
+{"group":{"mode":"master","size":420,"offset":0,"uid":"<same-group-uuid>","compat_mode":0}}
+```
+
+```json
+{"group":{"mode":"slave","size":420,"offset":210,"uid":"<same-group-uuid>","compat_mode":0}}
+```
+
+**Confirmed workflow:** upload each saved Area layout with `POST /led/layout/full` before assigning its group role. Use a **fresh authentication token for each write**, then read back membership and coordinates. No automatic retry after HTTP 401 or other failed writes: a partially completed sequence needs a fresh audit first. Group member roles and 2D maps can be restored independently of the app; app/cloud object metadata remains separate.
+
+### Upload saved layout
 
 ```http
 POST /xled/v1/led/layout/full
+X-Auth-Token: <token>
 Content-Type: application/json
-X-Auth-Token: <verified-token>
 
-{"source":"2d","synthesized":false,"coordinates":[{"x":0.1,"y":0.2,"z":0.3}]}
+{"source":"3d","synthesized":false,"coordinates":[{"x":0.12,"y":0.55,"z":-0.31}]}
 ```
 
-**Important:** the single coordinate above is only an example. A real Office upload must contain **210 ordered coordinates for each controller**. Do not copy the sample body onto a device.
+The example has just one point and **must not be copied to a real multi-LED device**. A real body needs the full ordered coordinates. Validate LED count, source and every coordinate before and after uploading. Layout writes can overwrite calibrated mappings; retain private backups of both individual and Area geometry.
 
-Then the app sent group assignments on each controller with the **same** group UID:
-
-```json
-// Office Left master: illustrative UUID
-{"group":{"mode":"master","size":420,"offset":0,"uid":"00000000-0000-4000-8000-000000000001","compat_mode":0}}
-```
-
-```json
-// Office Right slave: same illustrative UUID
-{"group":{"mode":"slave","size":420,"offset":210,"uid":"00000000-0000-4000-8000-000000000001","compat_mode":0}}
-```
-
-These are request-body examples: remove the comment lines when sending JSON. The firmware may omit master `offset` in subsequent GET output.
-
-### First live Python regroup failure (important!)
-
-After a successful preflight, `group_test.py regroup` performed the **Office Left** `POST /led/layout/full`, then received **HTTP 401** on `POST /application/group`; the script stopped **before** touching Office Right. The script log contains the per-step responses. A 401 is an authentication error, **not** proof the group payload is incompatible. Reasons may include token invalidation, a concurrent Twinkly-app session, or something else. Do not rerun writes until a fresh read-only status check establishes actual group modes and layout contents for both devices. A further tested write sequence is not yet available.
-
-### Group friendly name and Twinkly app
-
-Local group metadata contains shared UUID/role/size/offset but **no friendly name**. The app retaining an Office group tile while the controllers report `none` supports app-side persistence/caching, **but cannot distinguish local app cache from cloud/account records**. Only live group reads establish controller membership. App-visible name restoration remains unverified.
-
-## 7. Using the Python tools (safe workflow)
-
-From repository root on Windows:
+## Utilities for independent verification
 
 ```powershell
-git pull
 python .\probe_api.py
-python .\twinkly_inspector.py inspect
+python .\group_status.py --plan private-area-plan.json
+python .\restore_standalone.py --plan private-area-plan.json
+python .\resume_regroup.py --plan private-area-plan.json
 ```
 
-Read-only GET probe writes `api-probes/<timestamp>/api-matrix.json` and `report.md`, and JSON per endpoint per controller. Inspector writes complete snapshot folders. Do not commit those private files.
+`probe_api.py` runs GET compatibility checks. `group_status.py` verifies live membership and layouts. The latter two default to read-only previews, requiring explicit additional flags for potentially destructive writes. See [testing and recovery procedures](testing.md).
 
-For a saved plan with **both** grouped and standalone snapshots:
+## Known limits
 
-```powershell
-python .\build_group_plan.py --grouped .\snapshots\GROUPED `
-  --standalone .\snapshots\STANDALONE `
-  --members "Office Left" "Office Right" `
-  --name "Office Windows" --out private-area-plan.json
-python .\group_test.py ungroup --plan private-area-plan.json
-python .\group_test.py regroup --plan private-area-plan.json
-```
-
-These `group_test.py` invocations are **offline dry runs by default**. Live commands require a verified backup plus `--execute --acknowledge-risk --group-confirm '<group_name>'`. Because the **first live regroup failed partway**, **do not run more live writes** on this group until the state and authentication problem are assessed.
-
-### Fiddler / HTTP clients
-
-Use any Fiddler Composer request (or another HTTP client) with URL `http://DEVICE_IP/xled/v1/<path>`, correct HTTP verb and `X-Auth-Token` header. For POST requests supply `Content-Type: application/json` and the JSON request body. Authentication tokens are short-lived, cannot be safely hardcoded and may be invalidated by another session. **No reusable Fiddler Composer collection has yet been validated**; the snippets here are the supported manually reproducible request format.
-
-## 8. Unknowns and testing principles
-
-- The source snapshot tests cover only firmware **2.11.0**; other firmware versions are untested.
-- The 15:04 probe's changed success counts require comparison of its full `api-matrix.json`, not speculation.
-- `HTTP 401`: do not assume retry is safe after a partial sequence. Inspect each controller with fresh authentication first.
-- `HTTP 404` on GET: route not present for that GET on tested firmware; not a universal API verdict.
-- `JSONDecodeError`: response may be empty, binary or non-JSON; use an improved metadata probe to distinguish cases.
-- Group names, cloud persistence, effects, playlists and exact Area Editor UI restoration are not fully characterised.
-- Never commit private controller IPs, MAC addresses, tokens, raw flows or coordinate backups to this public repository.
-
-Community references: [scrool/xled](https://github.com/scrool/xled) and [xled REST API](https://xled-docs.readthedocs.io/en/latest/rest_api.html).
-
-## 9. Twinkly app/cloud installation-object API (observed in iPhone captures)
-
-**Important correction:** The original mitmproxy network captures did contain cloud-side **mutating requests**, not merely local controller requests. These requests target **`https://api.twinkly.com`**, not the LAN `/xled/v1/` REST API. The recordings show the app updating cloud installation-object records while ungrouping/regrouping. All example identifiers below are placeholders.
-
-| Cloud method and path | Recorded request | Recorded outcome | Interpretation |
-|---|---|---|---|
-| `PUT /v3/installations/{installationId}/objects` | `{"objectIds":[<object-id>],"action":"remove"}` | HTTP 200 | Remove an Area/group object from an installation; observed both when deleting the two-controller Area and when deleting it again |
-| `POST /v3/objects` | New object with `installationId`, `name`, `devices[]`, `layout`, `uuid`, `ledCount` | HTTP 201 | App-created installation object; separate single-device objects had `ledCount:210`, `source:"3d"`; combined Office object had `ledCount:420`, `source:"2d"`, two device members |
-| `GET /v3/objects` | `mine=true` plus optional `fields`/`objectIds` selectors | HTTP 200 | Retrieve stored objects, layouts and members for app rendering |
-| `GET /v3/installations` | Installation collection | HTTP 200 | Retrieve installations, including object references |
-| `GET /v2/users/me` | User info request | HTTP 200 | Account/app identity; not a controller grouping call |
-
-The app's **grouped** cloud object contained **two TWW210SPP controllers, 420 LEDs, a shared 2D layout, a friendly name, member order and `meta`**. After deleting the group, the app created separate **single-controller 3D** objects. The captured objects also contain **sensitive device/account data** (including IDs and credential-related material), so full POST bodies and response dumps must **not** be copied to a public repository or replayed.
-
-**Implications for the Python tool:** `group_test.py`/`resume_regroup.py` change the controllers' **local** membership and mapping only. They do **not** mutate `/v3/objects` or `/v3/installations/.../objects`. Consequently, an app group tile can remain visible after the controllers report `mode:none`; the UI may be reflecting persistent cloud installation state rather than the live LAN state. This observation establishes a cloud-side object store and app mutation traffic; it does not establish precisely how/when each app instance refreshes or reconciles those objects.
-
-**Do not attempt direct cloud sync writes yet.** The cloud API is undocumented for this purpose, and replaying captured requests can create duplicate installation objects or remove the wrong objects; the traces also contain sensitive authentication/ownership data. If app/cloud consistency becomes essential, investigate a read-only cloud inventory comparison first, or use the official Twinkly app's supported group editor. No generic authenticated cloud client has been implemented in this repository.
-
-**For Home Assistant:** when the local group is present, use the master to control the group and avoid sending conflicting commands to the slave. When the group is absent, target both controllers separately. App/cloud inventory consistency is a separate concern.
-
-## Verified standalone-layout restoration (23 November 2026)
-
-Following an app effect-save operation, both Office controllers returned `group.mode=none` but reported replacement 2D layouts that matched neither original backup. The dedicated `restore_standalone.py` tool completed its guarded live restoration with the locally preserved 3D mappings:
-
-| Controller | Product / firmware | Upload response | Verification |
-|---|---|---|---|
-| Office Left | TWW210SPP, 2.11.0 | POST `/led/layout/full`: HTTP 200 | All 210 coordinates matched backup; group `none` |
-| Office Right | TWW210SPP, 2.11.0 | POST `/led/layout/full`: HTTP 200 | All 210 coordinates matched backup; group `none` |
-
-A **separate** `python group_status.py --plan private-area-plan.json` check immediately afterward confirmed `layout=standalone`, `source=3d`, `LEDs=210` and `mode=none` on **both** controllers. This verifies a successful device-side overwrite and readback, not persistence following a future effect change, device reboot, or cloud reconciliation. The locally saved pre-overwrite backup is `recovery-backups/before-standalone-restore-20261123T154305758209Z.json` and must remain private.
-
-
-For the separately captured account/installation object API on `api.twinkly.com`, including exact object schemas and base64+gzip coordinate encoding discovered in the original network traces, see the [cloud API reference](CLOUD_API_REFERENCE.md). The cloud API has **not** been modified by our tools.
+- **Confirmed:** independent two-controller ungroup/regroup and standalone 3D layout restoration succeeded on the tested firmware/hardware, with full read-back of saved coordinates.
+- **Inferred:** app and cloud object state can differ from the controller's active map. Local-only PUT/POST operations need not update the app's stored geometry.
+- **Untested:** other firmware releases, generic app-facing name/effect restoration, a fully supported group-management API and effect/playlist round-trip restoration.
+- Some GET endpoints returned non-JSON data; preserve HTTP status/content type before deciding whether an endpoint is unsupported.
