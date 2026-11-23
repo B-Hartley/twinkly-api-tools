@@ -45,6 +45,7 @@ class RecoveryTests(unittest.TestCase):
         duplicate = copy.deepcopy(self.data[FILES[0]]["objects"][0])
         duplicate["id"] = 99
         self.data[FILES[0]]["objects"].append(duplicate)
+        self.data[FILES[0]]["count"] = len(self.data[FILES[0]]["objects"])
         with self.assertRaisesRegex(ValueError, "count/identity changed"):
             self.check()
 
