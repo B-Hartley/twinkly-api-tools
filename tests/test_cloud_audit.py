@@ -26,6 +26,11 @@ class CloudAuditTests(unittest.TestCase):
             cloud_audit.cloud_get("https://evil.example/token", "secret")
         opener.assert_not_called()
 
+    def test_object_query_requires_full_detail_selector(self):
+        from inspect import getsource
+        source = getsource(cloud_audit.main)
+        self.assertIn("/v3/objects?mine=true&fields=layout,devices,capabilities", source)
+
     def test_summary_does_not_expose_sensitive_device_fields(self):
         member = {"name": "Controller", "standalone_layout": {
             "source": "3d", "synthesized": False,
