@@ -187,16 +187,16 @@ This illustrates observed **field names**, not tested literal value types or a v
 
 - **Confirmed:** cloud create, existing-object update, installation-object removal, reconstruction submission/retrieval, encoded `layout.coords`, and separate local mapping upload.
 - **Inferred:** stale cloud or app-cached geometry may explain why app previews differ from live controller mappings.
-- **Untested:** automated cloud login/token refresh, independent programmatic object PUT, app refresh semantics, deletion/rollback behaviour, and reconstruction parameters for arbitrary devices.
+- **Untested:** live testing of encrypted cached login, cloud token refresh, independent programmatic object PUT, app refresh semantics, deletion/rollback behaviour, and reconstruction parameters for arbitrary devices.
 - **Safety:** compare target object identity and decoded geometry before any write; never publish raw captures, object credentials, access tokens or identifying values.
 
 The cloud API is **not documented or guaranteed by Twinkly**. Use it at your own risk.
 
 ## Read-only cloud inventory and login research
 
-The repository includes **`cloud_audit.py`**, a strictly allowlisted HTTPS GET client for `/v3/objects?mine=true&fields=layout,devices,capabilities` and `/v3/installations`. It has **no PUT/POST/DELETE methods** and never sends your cloud token to another hostname. The code is experimental: cloud object-list response shapes are not completely established.
+The repository includes **`cloud_audit.py`**, a strictly allowlisted HTTPS GET client for `/v3/objects?mine=true&fields=layout,devices,capabilities` and `/v3/installations`. Its inventory calls are GET-only; authentication performs POST `/v2/auth`, and it does not implement cloud object/installation writes and never sends your cloud token to another hostname. The code is experimental: cloud object-list response shapes are not completely established.
 
-The captured login contract is implemented for **interactive local use**. The access token is held in process memory, not written to disk. For a read-only inventory of installations and objects, run:
+The captured login contract is implemented for **interactive local use**. The new `--login` command saves a Windows DPAPI-encrypted access/refresh token cache after successful login; the password is never saved. For a read-only inventory of installations and objects, run:
 
 ```powershell
 git pull
@@ -212,7 +212,7 @@ python .\cloud_audit.py --plan private-area-plan.json
 Remove-Item Env:TWINKLY_CLOUD_TOKEN
 ```
 
-The script writes **private account/device object backups** to `cloud-audits/<timestamp>/`. Those backups are ignored by Git and **must not** be shared publicly. The audit's inventory requests are GET-only; interactive authentication performs **one POST to `/v2/auth`**, not an object/installation mutation. It does not write login or refresh tokens to disk. Successful login requires valid account credentials and access to the relevant installation.
+The script writes **private account/device object backups** to `cloud-audits/<timestamp>/`. Those backups are ignored by Git and **must not** be shared publicly. The audit's inventory requests are GET-only; interactive authentication performs **one POST to `/v2/auth`**, not an object/installation mutation. It stores login tokens only in Windows DPAPI-encrypted form under `%LOCALAPPDATA%/TwinklyApiTools/cloud-session.dpapi`. Successful login requires valid account credentials and access to the relevant installation.
 
 ### Capture login flow safely
 
@@ -225,3 +225,18 @@ python .\redact_login_trace.py C:\TwinklyCapture\twinkly-login.flows --output C:
 This reports **only** the HTTP method, hostname-filtered path (without query), response status, content-type-derived JSON **key names**, and whether an authorization header is present; it never prints token values, passwords, request/response JSON values, headers or cookies. **Review even the redacted file before sharing**, since a URL path or JSON key name may still disclose information. The `.flows` source is sensitive and should not be uploaded or committed.
 
 **Next prerequisites for cloud sync writes:** verify live login and refresh behaviour, identify cloud object IDs for the intended controllers, validate complete PUT/create/remove payload schemas, back up all relevant cloud records, and test guarded writes against a disposable group with explicit approval. A cloud/physical atomic transaction cannot be assumed; partial failures must be reported rather than blindly rolled back.
+
+### Token persistence and expiry (Windows)
+
+The first `--login` prompts for account email and a hidden password, uses `POST /v2/auth` and encrypts the returned access and refresh tokens using **Windows DPAPI tied to the current Windows account**. It stores the encrypted data at `%LOCALAPPDATA%\\TwinklyApiTools\\cloud-session.dpapi`; neither the password nor plaintext tokens are saved. Subsequent runs without `--login` reuse the access token **until shortly before expiry**.
+
+```powershell
+# Initial interactive login
+python .\\cloud_audit.py --plan private-area-plan.json --login
+# Repeat audit without typing credentials, while token valid
+python .\\cloud_audit.py --plan private-area-plan.json
+# Clear saved access/refresh tokens
+python .\\cloud_audit.py --plan private-area-plan.json --forget-login
+```
+
+**Important limitation:** the API endpoint and payload for redeeming `refresh_token` have **not yet been verified**. We save it encrypted for later support, but **cannot renew access indefinitely yet**. When the access token expires, you must run `--login` again. The new encrypted cache workflow remains untested on a live Windows account. Do not use plaintext password JSON or commit any token files.
