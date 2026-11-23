@@ -39,6 +39,33 @@ python .\twinkly_inspector.py compare .\snapshots\SNAPSHOT_A .\snapshots\SNAPSHO
 
 `manifest.json` summarizes the run; `controllers/<ip-safe>/responses/*.json` contains full raw responses; `report.txt` highlights available coordinates, group-related clues and failures. Each snapshot is timestamped.
 
+## Capture and compare named group states
+
+**Before deleting your Front group**, take a fresh named snapshot and preserve your Area Editor screenshot:
+
+```powershell
+python .\\twinkly_inspector.py inspect --group-name frontgroup
+```
+
+The snapshot is saved under `snapshots/frontgroup/<UTC timestamp>/`. If **any of the five Front controllers fails to capture its layout, stop**. Keep a separate copy of the snapshot directory before experimenting. Existing snapshots are never overwritten.
+
+After **you choose** to delete/ungroup the Area group using the Twinkly app, capture the new state:
+
+```powershell
+python .\\twinkly_inspector.py inspect --group-name ungrouped
+```
+
+Compare the two latest named snapshots and produce a restoration readiness report:
+
+```powershell
+python .\\state_manager.py compare --from-state frontgroup --to-state ungrouped --group-id BCA8AAE9 --output .\\restore-plan.json
+python .\\state_manager.py restore --from-state frontgroup --to-state ungrouped --group-id BCA8AAE9
+```
+
+**The `restore` command is deliberately a dry-run plan only. It will NOT regroup or upload layouts.** Twinkly does not publish a supported group-creation API, and the reverse-engineered commands are not verified. If you delete the current group, recreating its precise Area Editor arrangement may still require manual work. Run the two captures now only if you accept that risk; preferably test with a spare disposable group first. Keep any offline or missing device reports.
+
+`--group-id` is essential if your captured controllers report more than one group (your earlier snapshot did). The plan checks membership, original master, controller IDs, LED counts, reachable devices and coordinate snapshot hashes. If the ungrouped state still shows any original members in groups, it flags that instead of treating them as independent.
+
 ## Visualise the Area layout
 
 Install the one optional plotting dependency:
