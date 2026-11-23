@@ -2,8 +2,8 @@
 """Interactive Twinkly cloud password login (unofficial, experimental).
 
 POSTs only to the fixed HTTPS endpoint https://api.twinkly.com/v2/auth.
-Returns the short-lived access token in memory only; never logs credentials,
-returns the refresh token, follows redirects or saves tokens to disk.
+Never logs credentials or follows redirects. The caller may explicitly
+store access and refresh tokens in the Windows DPAPI-protected token cache.
 """
 import getpass
 import json
@@ -46,20 +46,23 @@ def authenticate(username, password, timeout=10, return_session=False):
     token = data.get("access_token")
     if not isinstance(token, str) or not token or len(token) > 4096 or any(c.isspace() for c in token):
         raise RuntimeError("Cloud login did not return valid access token")
-    # Deliberately discard refresh_token: endpoint for refresh is unverified.
+    # Refresh endpoint is unverified; token may be retained securely for future support.
     if return_session:
         lifetime = data.get('expires_in')
         if not isinstance(lifetime, (int, float)) or isinstance(lifetime, bool) or not 0 < lifetime <= 2592000:
             lifetime = 0
-        return {'access_token': token, 'expires_in': lifetime}
+        refresh = data.get('refresh_token')
+        if refresh is not None and (not isinstance(refresh, str) or len(refresh) > 4096):
+            raise RuntimeError('Invalid cloud refresh token')
+        return {'access_token': token, 'refresh_token': refresh, 'expires_in': lifetime}
     return token
 
 
-def interactive_login(username=None, timeout=10):
+def interactive_login(username=None, timeout=10, return_session=False):
     username = username or input("Twinkly account email: ").strip()
     password = getpass.getpass("Twinkly password (not displayed): ")
     try:
-        return authenticate(username, password, timeout)
+        return authenticate(username, password, timeout, return_session=return_session)
     finally:
         # Python cannot guarantee erasure of immutable strings from memory.
         del password
