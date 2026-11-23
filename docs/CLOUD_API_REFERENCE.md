@@ -422,3 +422,5 @@ cloud IDs is provided.
 
 Readiness (live GET only): `python .\\cloud_group_cycle.py --group "Office Group"`.
 Explicit execution: `python .\\cloud_group_cycle.py --group "Office Group" --execute --acknowledge-risk --confirm-group "Office Group"`.
+
+**UUID identity discovered from original app creates:** When the app creates a compound Area, the `POST /v3/objects` body `uuid` is the **same UUID as the local master/slave group role** (modulo case), while `layout.uuid` is distinct. The experimental `cloud_group_cycle.py` now deliberately assigns one new controller group UUID and uses that exact UUID for the cloud Area object. Individual cloud objects receive their own newly generated UUIDs. Never assign an unrelated cloud Area UUID.
