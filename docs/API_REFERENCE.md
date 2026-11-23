@@ -269,3 +269,23 @@ Use any Fiddler Composer request (or another HTTP client) with URL `http://DEVIC
 - Never commit private controller IPs, MAC addresses, tokens, raw flows or coordinate backups to this public repository.
 
 Community references: [scrool/xled](https://github.com/scrool/xled) and [xled REST API](https://xled-docs.readthedocs.io/en/latest/rest_api.html).
+
+## 9. Twinkly app/cloud installation-object API (observed in iPhone captures)
+
+**Important correction:** The original mitmproxy network captures did contain cloud-side **mutating requests**, not merely local controller requests. These requests target **`https://api.twinkly.com`**, not the LAN `/xled/v1/` REST API. The recordings show the app updating cloud installation-object records while ungrouping/regrouping. All example identifiers below are placeholders.
+
+| Cloud method and path | Recorded request | Recorded outcome | Interpretation |
+|---|---|---|---|
+| `PUT /v3/installations/{installationId}/objects` | `{"objectIds":[<object-id>],"action":"remove"}` | HTTP 200 | Remove an Area/group object from an installation; observed both when deleting the two-controller Area and when deleting it again |
+| `POST /v3/objects` | New object with `installationId`, `name`, `devices[]`, `layout`, `uuid`, `ledCount` | HTTP 201 | App-created installation object; separate single-device objects had `ledCount:210`, `source:"3d"`; combined Office object had `ledCount:420`, `source:"2d"`, two device members |
+| `GET /v3/objects` | `mine=true` plus optional `fields`/`objectIds` selectors | HTTP 200 | Retrieve stored objects, layouts and members for app rendering |
+| `GET /v3/installations` | Installation collection | HTTP 200 | Retrieve installations, including object references |
+| `GET /v2/users/me` | User info request | HTTP 200 | Account/app identity; not a controller grouping call |
+
+The app's **grouped** cloud object contained **two TWW210SPP controllers, 420 LEDs, a shared 2D layout, a friendly name, member order and `meta`**. After deleting the group, the app created separate **single-controller 3D** objects. The captured objects also contain **sensitive device/account data** (including IDs and credential-related material), so full POST bodies and response dumps must **not** be copied to a public repository or replayed.
+
+**Implications for the Python tool:** `group_test.py`/`resume_regroup.py` change the controllers' **local** membership and mapping only. They do **not** mutate `/v3/objects` or `/v3/installations/.../objects`. Consequently, an app group tile can remain visible after the controllers report `mode:none`; the UI may be reflecting persistent cloud installation state rather than the live LAN state. This observation establishes a cloud-side object store and app mutation traffic; it does not establish precisely how/when each app instance refreshes or reconciles those objects.
+
+**Do not attempt direct cloud sync writes yet.** The cloud API is undocumented for this purpose, and replaying captured requests can create duplicate installation objects or remove the wrong objects; the traces also contain sensitive authentication/ownership data. If app/cloud consistency becomes essential, investigate a read-only cloud inventory comparison first, or use the official Twinkly app's supported group editor. No generic authenticated cloud client has been implemented in this repository.
+
+**For Home Assistant:** when the local group is present, use the master to control the group and avoid sending conflicting commands to the slave. When the group is absent, target both controllers separately. App/cloud inventory consistency is a separate concern.
