@@ -85,11 +85,13 @@ def validate_group_label(label, report, plan):
 def run(group, plan_path, *, execute=False, acknowledged=False,
         group_confirm=None, master_confirm=None, timeout=10,
         backup_root="cloud-preflight-backups"):
-    if execute and (not acknowledged or group_confirm != group or master_confirm != "Office Left"):
-        raise ValueError("Execution requires --acknowledge-risk, exact --group-confirm, and --master-confirm 'Office Left'")
+    if execute and (not acknowledged or group_confirm != group or not master_confirm):
+        raise ValueError("Execution requires --acknowledge-risk, exact --group-confirm, and --master-confirm")
     report, plan, snap = collect(plan_path, timeout=timeout, output=backup_root,
                                  include_snapshot=True)
     validate_group_label(group, report, plan)
+    if execute and master_confirm != plan["members"][0]["name"]:
+        raise ValueError("Master confirmation does not match the first controller in the private plan")
     payload, fingerprint = repair_candidate(report, plan, snap)
     print("Candidate: cloud group", report["matched_objects"][0]["id"],
           "| local Left=none, Right=slave | mapping=matching")
