@@ -25,3 +25,6 @@ cloud-preflight-backups/
 
 # Immutable private per-controller 3D references (contains MACs and coordinates)
 3d-map-archive/
+
+# Private verified grouped cloud+LAN 2D reference snapshots
+2d_group_archive/
