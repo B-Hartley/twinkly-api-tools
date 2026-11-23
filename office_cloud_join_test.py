@@ -73,11 +73,12 @@ def capture(plan, token, timeout, folder):
             raise ValueError(f"{m['name']}: controller LED count mismatch")
         expected_role = "master" if m["offset"] == 0 else "slave"
         is_joined = (group.get("mode") == expected_role and
-                     str(group.get("uid", "")).lower() == plan["uid"].lower() and
+                     bool(group.get("uid")) and
                      group.get("size") == plan["size"] and
                      group.get("offset", 0) == m["offset"])
         state = "joined" if is_joined else ("unjoined" if group.get("mode") == "none" else "unexpected")
         local.append({"name": m["name"], "state": state,
+                      "group_uid": group.get("uid"),
                       "source": layout.get("source"), "synthesized": layout.get("synthesized"),
                       "layout_uuid": layout.get("uuid"), "leds": len(coords),
                       "fingerprint": digest(coords),
@@ -94,6 +95,8 @@ def validate_phase(snapshot, phase):
     if not all(m["state"] == wanted for m in local):
         raise RuntimeError(f"{phase}: local controllers not both {wanted}: " +
                            ", ".join(m["name"] + "=" + m["state"] for m in local))
+    if phase == "joined" and len({str(m["group_uid"]).lower() for m in local}) != 1:
+        raise RuntimeError("Joined controllers do not report the same group UID")
 
 
 def report(first, second, third):
