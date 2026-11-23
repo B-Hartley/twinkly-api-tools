@@ -158,12 +158,21 @@ def read_device(ip, name, timeout):
     return address, count, result["data"]
 
 
-def from_devices(config, root, timeout=10):
+def from_devices(config, root, timeout=10, names=None):
     class Args:
         ips = None
     args = Args()
     args.config = config
     devices = get_devices(args)
+    if names:
+        def normalize(value):
+            return " ".join(str(value).split()).casefold()
+        wanted = {normalize(name) for name in names}
+        matched = [d for d in devices if normalize(d["name"]) in wanted]
+        missing = wanted - {normalize(d["name"]) for d in matched}
+        if missing:
+            raise ValueError("Not found in devices.json: " + ", ".join(sorted(missing)))
+        devices = matched
     created = skipped = 0
     for device in devices:
         try:
@@ -209,6 +218,8 @@ def main(argv=None):
     modes.add_argument("--devices", help="Capture live 3D mappings of all devices in a private devices.json")
     modes.add_argument("--verify-plan", help="Check archived references against private plan + live hardware identity")
     p.add_argument("--root", default=DEFAULT_ROOT)
+    p.add_argument("--names", nargs="+", help="Only these device names from devices.json")
+    p.add_argument("--include-plan", help="Also archive the saved 3D references in a private group plan")
     p.add_argument("--allow-saved-plan", action="store_true",
                    help="Allow saved original 3D plan when current controllers are grouped 2D")
     p.add_argument("--timeout", type=float, default=10)
@@ -222,8 +233,13 @@ def main(argv=None):
             n = from_plan(args.plan, args.root, args.allow_saved_plan, args.timeout)
             print("New immutable 3D references:", n)
         else:
-            created, skipped = from_devices(args.devices, args.root, args.timeout)
-            print("New references:", created, "| skipped:", skipped)
+            if args.include_plan:
+                saved = from_plan(args.include_plan, args.root,
+                                  args.allow_saved_plan, args.timeout)
+                print("Plan references created:", saved)
+            created, skipped = from_devices(args.devices, args.root,
+                                            args.timeout, args.names)
+            print("New live 3D references:", created, "| skipped:", skipped)
         print("READ ONLY: no controller or cloud mappings modified.")
         return 0
     except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError) as exc:
