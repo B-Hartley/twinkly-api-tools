@@ -149,7 +149,7 @@ class ReverseCycleTests(unittest.TestCase):
 
     def test_missing_2d_template_blocks_readiness(self):
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaisesRegex(ValueError, "No verified former"):
+            with self.assertRaisesRegex(ValueError, "No verified grouped cloud\\+LAN Area reference"):
                 reverse.archived_group_template(
                     plan(), [LEFT.replace(":", ""), RIGHT.replace(":", "")], [tmp])
 
