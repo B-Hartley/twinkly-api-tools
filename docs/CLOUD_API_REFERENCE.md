@@ -424,3 +424,29 @@ Readiness (live GET only): `python .\\cloud_group_cycle.py --group "Office Group
 Explicit execution: `python .\\cloud_group_cycle.py --group "Office Group" --execute --acknowledge-risk --confirm-group "Office Group"`.
 
 **UUID identity discovered from original app creates:** When the app creates a compound Area, the `POST /v3/objects` body `uuid` is the **same UUID as the local master/slave group role** (modulo case), while `layout.uuid` is distinct. The experimental `cloud_group_cycle.py` now deliberately assigns one new controller group UUID and uses that exact UUID for the cloud Area object. Individual cloud objects receive their own newly generated UUIDs. Never assign an unrelated cloud Area UUID.
+
+## Immutable per-controller 3D reference archive and reverse cycle
+
+`archive_3d_maps.py` creates a private per-MAC immutable 3D reference from
+an authenticated live controller or the explicitly opted-in saved original
+plan. It verifies source `3d`, all ordered coordinates, synthesized flag,
+LED count and a SHA-256 digest, rejecting overwrites with changed maps.
+`3d-map-archive/` is gitignored and should also be backed up securely.
+
+`cloud_group_cycle.py --start-ungrouped --group "Office Group"` changes
+the round trip to **standalone → grouped → standalone**. The initial read-only
+readiness check requires two cloud standalone objects, two live ungrouped
+3D controllers, a matching original private plan, immutable 3D references
+and archived 2D cloud Area template metadata. Execution creates a new Area
+via `POST /v3/objects` using a shared cloud/local group UUID and captured
+member descriptions, then independently verifies both controllers and the
+cloud. It pauses for visual in-app validation before proceeding. It finally
+restores both immutable standalone layouts, removes the *new* cloud Area
+association, creates separate 3D cloud objects using the original live
+standalone templates, and checks that the resulting cloud and controller maps
+match the initial state. A second app review follows.
+
+The reverse cycle has no implicit retries, no guessed template geometry,
+no automatic rollback or cloud-write guarantee. Abort rather than bypass
+any failed preflight. The original standalone source files and stage logs
+remain private in `cloud-preflight-backups/` and `3d-map-archive/`.
