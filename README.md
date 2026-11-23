@@ -139,4 +139,17 @@ For a controlled **overwrite** of the current Office layout with the backed-up, 
 
 `cloud_audit.py` can read the signed-in account's object and installation inventory using interactive `--login` or a bearer token supplied **locally** in `TWINKLY_CLOUD_TOKEN`. No cloud write methods are implemented; the raw responses are saved privately under ignored `cloud-audits/`. To understand how the app logs in **without disclosing credentials**, use `redact_login_trace.py` against a local `.flows` file; it emits method/path/status and top-level JSON key names only. See [cloud API usage](docs/CLOUD_API_REFERENCE.md#read-only-cloud-inventory-and-login-research).
 
-For interactive cloud login and read-only inventory: `python .\\cloud_audit.py --plan private-area-plan.json --login`. The password is prompted without echo and the access token stays in memory; full inventory backups are ignored by Git. Login and authenticated inventory have **not been live-tested** with this client.
+For interactive cloud login and read-only inventory: `python .\\cloud_audit.py --plan private-area-plan.json --login`. The password is prompted without echo and a DPAPI-encrypted access/refresh session is saved under your Windows user profile. Afterwards omit `--login` to reuse the access token while valid; run `--login` again after expiry until Twinkly's refresh endpoint has been verified. The password is never saved. Run `--forget-login` to delete the cached session. Full inventory backups are ignored by Git. The new DPAPI cache has **not yet been live-tested**.
+
+### Reuse encrypted Twinkly cloud login (Windows)
+
+```powershell
+# First time; prompt once and save DPAPI-encrypted tokens:
+python .\cloud_audit.py --plan private-area-plan.json --login
+# Later (while access token is still valid):
+python .\cloud_audit.py --plan private-area-plan.json
+# Delete encrypted token cache:
+python .\cloud_audit.py --plan private-area-plan.json --forget-login
+```
+
+Token cache: `%LOCALAPPDATA%\TwinklyApiTools\cloud-session.dpapi`, encrypted for the current Windows user via DPAPI. **The refresh-token exchange has not yet been identified**. After the access token expires you must log in again; we do not store your password or attempt an invented refresh call. Do not use plaintext username/password JSON files.
