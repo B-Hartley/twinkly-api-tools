@@ -199,7 +199,7 @@ def evaluate(snapshot):
             obj = next(obj for obj, ids in selected if ids == [member["mac"]])
             if obj.get("ledCount") != member["leds"]:
                 problems.append(member["label"] + ": cloud LED count differs")
-            if obj.get("layout", {}).get("source") != member["source"]:
+            if (obj.get("layout") or {}).get("source") != member["source"]:
                 problems.append(member["label"] + ": cloud/local source differs")
             try:
                 comparison = compare_points(coordinates(obj.get("layout")), member["points"])
