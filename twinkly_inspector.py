@@ -7,6 +7,7 @@ import hashlib
 import ipaddress
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import urllib.error
@@ -131,11 +132,14 @@ def save_json(path, obj):
 def inspect(args):
     devices = get_devices(args)
     now = dt.datetime.now(dt.timezone.utc)
-    base = Path(args.output) / now.strftime("%Y%m%dT%H%M%SZ")
+    group_name = getattr(args, "group_name", None)
+    if group_name and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", group_name):
+        raise ValueError("--group-name must use letters, digits, hyphen, underscore (max 64)")
+    base = Path(args.output) / group_name / now.strftime("%Y%m%dT%H%M%SZ") if group_name else Path(args.output) / now.strftime("%Y%m%dT%H%M%SZ")
     if base.exists():
         raise ValueError(f"Snapshot exists: {base}; rerun later")
     base.mkdir(parents=True)
-    manifest = {"schema": 1, "captured_utc": now.isoformat(), "purpose": "Read-only inspection, NOT restorable backup",
+    manifest = {"schema": 1, "state_name": group_name, "captured_utc": now.isoformat(), "purpose": "Read-only inspection, NOT restorable backup",
                 "controllers": []}
     skipped = []
     report = ["Twinkly Area Group Inspector", f"Captured UTC: {now.isoformat()}",
@@ -249,6 +253,7 @@ def main():
     i.add_argument("--ips", nargs="+", help="LAN IPv4 addresses of every physical Area group controller")
     i.add_argument("--config", help="JSON file with devices; defaults to ./devices.json")
     i.add_argument("--output", default="snapshots", help="Local snapshot root")
+    i.add_argument("--group-name", help="Named state such as frontgroup or ungrouped")
     i.add_argument("--timeout", type=float, default=5, help="Per-request timeout (seconds)")
     c = sub.add_parser("compare", help="Compare endpoint hashes of two snapshots")
     c.add_argument("before")
