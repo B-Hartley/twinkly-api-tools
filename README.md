@@ -233,3 +233,53 @@ readback after the single local POST.
 **Run the dry run and inspect the result before considering live execution.**
 Offline tests can be run with
 `python -m unittest discover -s tests -p "test_repair_missing_master.py"`.
+
+## Experimental CLOUD + LAN Check / Ungroup / Check / Group / Check
+
+`cloud_group_cycle.py` is the **cloud-writing** workflow, distinct from
+`group_roundtrip.py` (which only waits for app-driven changes). The new
+script reads the cloud account through the cached Windows login and reaches
+both physical controllers using the private plan. It creates and removes
+Twinkly cloud objects using the independently **observed but not yet
+client-verified** API calls, and performs LAN grouping/layout writes.
+It never silently retries a cloud create or removes a different object.
+
+**Run the live read-only readiness check first:**
+
+```powershell
+git pull
+python -m unittest discover -s tests -p "test_cloud_group_cycle.py" -v
+python .\cloud_group_cycle.py --group "Office Group"
+```
+
+The readiness check requires current cloud/LAN grouping to pass and locates
+earlier **full standalone 3D cloud object templates** under locally ignored
+`cloud-audits/` and `cloud-preflight-backups/`. It verifies the two
+controller MACs, source `3d`, LED counts, and 3D coordinate matches
+against the original private plan. **If templates cannot be verified, the
+script stops before any writes.** You must not invent aspect/geometry metadata.
+
+Once the readiness check succeeds and its backup requirements have been
+reviewed, opt in explicitly:
+
+```powershell
+python .\cloud_group_cycle.py --group "Office Group" `
+  --execute --acknowledge-risk --confirm-group "Office Group"
+```
+
+It performs a fresh full preflight and private backups, then pauses for
+`UNGROUP` before any writes. It sends local `none` + 3D layout to
+each controller, detaches the current cloud Area, creates two standalone
+cloud objects, and verifies with live preflight. It **pauses for you to
+inspect the app**; typing `GROUP` continues. It uploads the original Area
+2D maps and master/slave roles, then creates a new Area cloud object,
+verifies current cloud/LAN grouping and all original coordinates,
+and **pauses again for your in-app playback check** (`DONE`).
+
+This process is **experimental, potentially destructive, and not an atomic
+transaction**. Group/cloud object IDs will change. On any failed or
+ambiguous response, it halts without retries or rollback; local and cloud
+state may then differ. Complete private snapshots and a stage log are
+saved under ignored `cloud-preflight-backups/cloud-cycle-*/`.
+Never publish them: they can contain Twinkly device authentication
+material. The group cycle has not yet been live-tested independently.
