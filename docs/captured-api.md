@@ -6,6 +6,8 @@ Status: **experimental, not vendor-supported**. Based on the Office two-controll
 
 The provided inspector snapshot included **11 responding controllers**, and **all 11 reported firmware version 2.11.0** from `GET /xled/v1/fw/version`. The documented Office Area group create/delete protocol was observed alongside this device fleet. This does **not** establish compatibility for other firmware or controller families. Run `python probe_api.py` to produce a new per-controller firmware-indexed endpoint matrix before expanding the reference.
 
+See the [firmware 2.11.0 compatibility matrix](firmware-2.11.0-api-matrix.md) for **31 GET endpoints tested on 11 controllers**, including observed response fields, unsupported paths and non-JSON replies. In the later 14:50 UTC capture, all controllers were on firmware 2.11.0, and Office Left/Right were **ungrouped with standalone 3D coordinates**.
+
 ## Authentication
 
 Requests are local HTTP to each controller:
@@ -21,7 +23,8 @@ Twinkly's JSON `code` is the application-level status: `1000` denotes success; H
 |---|---|---|
 | GET | `/xled/v1/gestalt` | Model, firmware family, LED count and identity |
 | GET | `/xled/v1/device_name` | **Physical device name**, not Area group name |
-| GET | `/xled/v1/summary` | Group mode, UID, size, offset, and layout UUID |
+| GET | `/xled/v1/summary` | Aggregated group mode, UID, size, offset, and layout UUID |
+| GET | `/xled/v1/application/group` | Direct group membership, mode, UID, size and offset (confirmed on all 11) |
 | GET | `/xled/v1/led/layout/full` | 2D/3D coordinates, source and synthesized status |
 | GET | `/xled/v1/led/mode` | Active LED mode |
 | GET | `/xled/v1/led/config` | String-to-LED configuration |
