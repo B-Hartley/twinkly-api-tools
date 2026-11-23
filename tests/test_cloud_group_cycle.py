@@ -50,6 +50,19 @@ class CycleTests(unittest.TestCase):
                 name="Office Group", installation_id=4321, metadata="{}",
                 object_uuid="not-a-uuid")
 
+    def test_cloud_area_uuid_must_match_group_uid(self):
+        sample = stage()
+        group_obj = sample[preflight.FILES[0]]["objects"][0]
+        group_obj["uuid"] = "12345678-1234-1234-1234-123456789abc"
+        from test_cloud_group_preflight import LEFT, RIGHT
+        plan = {"size": 4, "members": [{"name": "Office Left"},
+                                       {"name": "Office Right"}]}
+        match = cycle.find_area(sample, plan)
+        self.assertEqual(match["id"], group_obj["id"])
+        group_obj["uuid"] = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+        with self.assertRaisesRegex(ValueError, "UUID differs"):
+            cycle.find_area(sample, plan)
+
     @patch("cloud_group_cycle.urllib.request.build_opener")
     def test_cloud_write_only_approved_paths(self, opener):
         with self.assertRaises(ValueError):
