@@ -218,13 +218,31 @@ def evaluate(snapshot):
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument("--group", help="Saved label or current cloud group name")
     source.add_argument("--snapshot-dir", type=Path)
     source.add_argument("--archive", type=Path)
     p.add_argument("--stage", help="Path inside ZIP, e.g. office-join-cycle/DATE/02-joined")
     p.add_argument("--output", type=Path, help="Optional private JSON report (never credentials)")
+    p.add_argument("--plan", default="private-area-plan.json", help="Private group plan, for --group")
+    p.add_argument("--login", action="store_true", help="Prompt for cloud login")
+    p.add_argument("--timeout", type=float, default=10)
+    p.add_argument("--backup-root", default="cloud-preflight-backups")
     args = p.parse_args(argv)
     try:
-        report = evaluate(read_stage(args.snapshot_dir, args.archive, args.stage))
+        if args.group:
+            if args.stage:
+                raise ValueError("--stage only applies to archived snapshots")
+            from cloud_group_live import collect
+            report, plan = collect(args.plan, login=args.login, timeout=args.timeout,
+                                   output=args.backup_root)
+            labels = {plan["group_name"].casefold()}
+            labels.update(str(item["name"]).casefold() for item in report["matched_objects"])
+            if args.group.casefold() not in labels:
+                raise ValueError("Group label not present in saved plan or matched cloud objects")
+        else:
+            if args.login:
+                raise ValueError("--login requires --group")
+            report = evaluate(read_stage(args.snapshot_dir, args.archive, args.stage))
         print("Twinkly cloud/local preflight:", report["result"], "state:", report["state"])
         for obj in report["matched_objects"]:
             print("  Cloud object", obj["id"], repr(obj["name"]),
@@ -238,7 +256,8 @@ def main(argv=None):
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        print("NO WRITES: this command used saved snapshot files only.")
+        print("NO GROUP/OBJECT/LAYOUT WRITES: " +
+              ("fresh cloud and LAN state audited." if args.group else "saved snapshots checked."))
         return 0 if report["result"] == "PASS_READ_ONLY" else 2
     except (OSError, ValueError, TypeError, KeyError, zipfile.BadZipFile,
             json.JSONDecodeError) as exc:
