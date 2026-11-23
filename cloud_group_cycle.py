@@ -287,13 +287,9 @@ def run(args):
                 raise RuntimeError(member["name"] + ": standalone LAN readback failed")
         log["stages"].append("LAN ungrouped")
         save_json(dest / "cycle-status-private.json", log)
-        token = get_cloud_token(timeout=args.timeout)
-        verify_cloud_object_unchanged(original, token, args.timeout)
-        cloud_write("PUT", "/v3/installations/" + str(installation) + "/objects",
-                    {"action": "remove", "objectIds": [original["id"]]},
-                    token, 200, args.timeout)
-        log["stages"].append("Cloud Area detached")
-        save_json(dest / "cycle-status-private.json", log)
+        # Build and validate BOTH object bodies while the original Area is
+        # still associated. If either payload is invalid, no cloud write occurs.
+        drafts = []
         for i, member in enumerate(plan["members"]):
             template = templates[member["name"]]
             device = original["devices"][i]["device"]
@@ -308,10 +304,21 @@ def run(args):
                 "part": 0, "device": device_payload(device, member["ip"], args.timeout)
             }], layout, name=template["name"],
                                installation_id=installation, metadata=template["meta"])
+            if body["ledCount"] != member["leds"] or body["layout"]["source"] != "3d":
+                raise RuntimeError("Stand-alone payload shape invalid; no cloud write")
+            drafts.append((member["name"], body))
+        token = get_cloud_token(timeout=args.timeout)
+        verify_cloud_object_unchanged(original, token, args.timeout)
+        cloud_write("PUT", "/v3/installations/" + str(installation) + "/objects",
+                    {"action": "remove", "objectIds": [original["id"]]},
+                    token, 200, args.timeout)
+        log["stages"].append("Cloud Area detached")
+        save_json(dest / "cycle-status-private.json", log)
+        for member_name, body in drafts:
             reply = cloud_write("POST", "/v3/objects", body, token, 201, args.timeout)
-            log["stages"].append("Cloud standalone created for " + member["name"])
+            log["stages"].append("Cloud standalone created for " + member_name)
             save_json(dest / "cycle-status-private.json", log)
-            print("Cloud standalone created:", member["name"],
+            print("Cloud standalone created:", member_name,
                   "(response ID:", reply.get("id", "unavailable"), ")")
         plan, standalone = checkpoint("3 CHECK UNGROUPED", args.plan, "ungrouped-cloud",
                                        dest, args.timeout)
