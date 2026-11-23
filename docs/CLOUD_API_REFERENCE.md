@@ -341,3 +341,23 @@ The preflight prints mismatch count, maximum X/Y/Z delta and a small list
 of **zero-based and one-based LED indexes**; it does not print MAC addresses,
 device credentials or raw coordinate arrays. The output may include object
 names and IDs. Store any optional JSON report privately.
+
+### Live preflight (recommended)
+
+`cloud_group_preflight.py --group "Office Windows"` now fetches fresh state,
+using the two controller IPs in the gitignored private plan and the cached,
+Windows-encrypted Twinkly cloud session. It invokes only GETs for cloud objects,
+installations, controller identity, grouping and layout; LAN login/verify
+requests are used for challenge-response authentication. Use `--login` to
+reauthenticate the cloud account when necessary.
+
+The `--group` label can also be the **current** object name in the matching
+cloud inventory. The saved plan can call the group `Office Windows` even if
+the cloud object was renamed; it is not used as device identity.
+Every matched object is identified from embedded hardware MACs, with strict
+fail-closed count and mapping checks.
+
+The script saves a timestamped private backup under
+`cloud-preflight-backups/` before reporting the outcome. The tool may report
+`BLOCK` for a single coordinate discrepancy or partially joined local
+controller. No group, layout or installation write operations are enabled.
