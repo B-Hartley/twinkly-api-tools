@@ -93,6 +93,33 @@ class ReverseCycleTests(unittest.TestCase):
             self.assertEqual(maps[0]["coordinates"],
                              s[preflight.FILES[1]]["layout"]["coordinates"])
 
+    def test_group_cloud_detaches_two_standalones_before_create(self):
+        originals = [{"id": 10}, {"id": 11}]
+        with patch("cloud_group_cycle_reverse.cloud_fresh_standalones") as fresh, \
+             patch("cloud_group_cycle_reverse.ops.cloud_write") as write:
+            reverse.detach_original_standalones(originals, 6804, "token", 10)
+        fresh.assert_called_once_with(originals, "token", 10)
+        write.assert_called_once_with(
+            "PUT", "/v3/installations/6804/objects",
+            {"action": "remove", "objectIds": [10, 11]},
+            "token", 200, 10)
+
+    def test_group_cloud_refuses_duplicate_standalone_ids(self):
+        with patch("cloud_group_cycle_reverse.ops.cloud_write") as write:
+            with self.assertRaisesRegex(ValueError, "missing/duplicate"):
+                reverse.detach_original_standalones(
+                    [{"id": 10}, {"id": 10}], 6804, "token", 10)
+            write.assert_not_called()
+
+    def test_group_cloud_refuses_changed_cloud_inventory(self):
+        with patch("cloud_group_cycle_reverse.cloud_fresh_standalones",
+                   side_effect=RuntimeError("Cloud standalone disappeared")), \
+             patch("cloud_group_cycle_reverse.ops.cloud_write") as write:
+            with self.assertRaisesRegex(RuntimeError, "disappeared"):
+                reverse.detach_original_standalones(
+                    [{"id": 10}, {"id": 11}], 6804, "token", 10)
+            write.assert_not_called()
+
     def test_cloud_template_rejects_missing_device_fields(self):
         s = standalone()
         originals = reverse.standalone_objects(s, plan())
