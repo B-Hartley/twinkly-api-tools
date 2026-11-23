@@ -114,7 +114,7 @@ Content-Type: application/json
 
 **Confirmed:** PUT to the existing object's ID can update its map and returns HTTP **200**. Observed request keys: `name`, `uuid`, `ledCount`, `devices`, `ledProfile`, `fps`, `capacity`, `meta`, `palette`, `layout`. In particular the new `layout.coords`, `layout.source` and layout metadata are sent with the object's other fields. A cloud object need not be deleted or recreated for a mapping change.
 
-**Untested:** Minimal layout-only PUT, optimistic concurrency, response semantics after external-client writes, and what app refresh does after such a write. An updater should first read and privately back up the complete current object, preserve immutable/ownership fields and membership, verify the target ID, then perform a separately authorised test. This repository does not yet implement authenticated cloud writes.
+**Untested:** Minimal layout-only PUT, optimistic concurrency, response semantics after external-client writes, and what app refresh does after such a write. An updater should first read and privately back up the complete current object, preserve immutable/ownership fields and membership, verify the target ID, then perform a separately authorised test. The repository now provides an **experimental guarded single-object 3D layout PUT** with private backup and GET readback; see below. Cloud group create/remove and 2D→3D metadata conversion are not implemented.
 
 ### Installation membership — PUT
 
@@ -240,3 +240,26 @@ python .\\cloud_audit.py --plan private-area-plan.json --forget-login
 ```
 
 **Important limitation:** the API endpoint and payload for redeeming `refresh_token` have **not yet been verified**. We save it encrypted for later support, but **cannot renew access indefinitely yet**. When the access token expires, you must run `--login` again. The new encrypted cache workflow remains untested on a live Windows account. Do not use plaintext password JSON or commit any token files.
+
+## Experimental cloud layout update tool
+
+`cloud_layout_update.py` implements one potential cloud write: replacing an existing **3D single-controller object's** encoded coordinates with those from a verified private saved plan. It uses the DPAPI-cached bearer token from `cloud_audit.py --login`, fetches the exact target object, checks its single device's name and LED count, saves a private before-object backup and the complete proposed request, and performs a second preflight GET before writing. The request uses the observed `PUT /v3/objects/{objectId}` route and reads back coordinates after the response. **The script has not yet been verified against the live Twinkly cloud API.**
+
+**Deliberate limitations:** This is *not* cloud grouping or ungrouping. It does not change LAN controllers. It refuses cloud objects that currently have a `2d` source, have multiple devices, lack required captured-PUT fields, or cannot be uniquely matched. That avoids guessing the new `geometry`, aspect and layout identifiers for a 2D default-map-to-3D camera-map conversion.
+
+Preview (read-only except for a private backup file on the PC):
+
+```powershell
+git pull
+python .\\cloud_layout_update.py --plan private-area-plan.json --member "Office Left" --object-id <OBJECT_ID>
+```
+
+**Do not execute until reviewing the private proposed PUT and confirming the intended object.** Explicitly authorised test write:
+
+```powershell
+python .\\cloud_layout_update.py --plan private-area-plan.json --member "Office Left" --object-id <OBJECT_ID> --execute --acknowledge-risk --confirm-object <OBJECT_ID>
+```
+
+The script performs no automatic retries or rollback and is not transactionally coordinated with the LAN. It writes private backups under `cloud-audits/layout-writes/` (Git-ignored). A success requires a fresh GET showing the same coordinate sequence; app UI and other account visibility must be checked independently.
+
+For an existing `2d` default map, **do not attempt to bypass this guard**. First validate a complete 3D cloud-layout metadata object (e.g. verified original 3D cloud object) and compare with the live object's immutable and shared-installation relationships. Only then extend the updater for source change.
