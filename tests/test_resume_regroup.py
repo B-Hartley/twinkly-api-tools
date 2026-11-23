@@ -4,7 +4,20 @@ import unittest
 from unittest.mock import patch
 
 import resume_regroup
-from tests.test_group_tools import sample_plan
+def sample_plan():
+    def layout(source):
+        return {'source': source, 'synthesized': False,
+                'coordinates': [{'x': 0.1, 'y': 0.2, 'z': 0.3}]}
+    members = []
+    for index, name in enumerate(('Left', 'Right')):
+        members.append({'name': name, 'ip': f'192.168.1.{11+index}',
+                        'offset': index, 'leds': 1,
+                        'area_layout': layout('2d'),
+                        'standalone_layout': layout('3d')})
+    return {'schema': 1, 'group_name': 'Test Group',
+            'uid': '12345678-1234-1234-1234-123456789abc',
+            'size': 2, 'members': members}
+
 
 
 class ResumeTests(unittest.TestCase):
