@@ -101,8 +101,9 @@ def validate_ip(ip):
 
 def get_devices(args):
     devices = [{"ip": ip, "name": ip} for ip in (args.ips or [])]
-    if args.config:
-        config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+    config_path = Path(args.config) if args.config else Path("devices.json")
+    if config_path.exists():
+        config = json.loads(config_path.read_text(encoding="utf-8"))
         if not isinstance(config, dict) or not isinstance(config.get("devices"), list):
             raise ValueError("Configuration must contain a devices list")
         for d in config["devices"]:
@@ -110,7 +111,7 @@ def get_devices(args):
                 raise ValueError("Each device must contain an ip string")
             devices.append({"ip": d["ip"], "name": str(d.get("name", d["ip"]))})
     if not devices:
-        raise ValueError("Provide --ips or --config with at least one controller")
+        raise ValueError(f"No controllers configured. Create {config_path} from devices.example.json, or supply --ips.")
     by_ip = {}
     for d in devices:
         d["ip"] = validate_ip(d["ip"])
@@ -134,12 +135,24 @@ def inspect(args):
     base.mkdir(parents=True)
     manifest = {"schema": 1, "captured_utc": now.isoformat(), "purpose": "Read-only inspection, NOT restorable backup",
                 "controllers": []}
+    skipped = []
     report = ["Twinkly Area Group Inspector", f"Captured UTC: {now.isoformat()}",
               "WARNING: This snapshot does NOT prove Area Editor position/rotation/scale can be restored.", ""]
     for d in devices:
         ip, name = d["ip"], d["name"]
         folder = base / "controllers" / ip.replace(".", "_")
         details = {"ip": ip, "name": name, "endpoints": {}, "errors": []}
+        probe = request(ip, ENDPOINTS["gestalt"], timeout=args.timeout)
+        if not probe.get("ok") and "status" not in probe:
+            reason = probe.get("error", "Device unreachable")
+            details.update({"status": "skipped", "skip_reason": reason, "authentication": "not_attempted"})
+            details["errors"].append({"connection": reason})
+            manifest["controllers"].append(details)
+            skipped.append((name, ip, reason))
+            report.extend([f"{name} ({ip})", f"  SKIPPED: {reason}", ""])
+            print(f"SKIPPED {name} ({ip}): {reason}")
+            continue
+        details["status"] = "inspected"
         token, auth_error = authenticate(ip, args.timeout)
         details["authentication"] = "verified" if token else "failed"
         if auth_error:
@@ -148,7 +161,7 @@ def inspect(args):
             if label not in PUBLIC and not token:
                 result = {"ok": False, "error": "Authentication unavailable"}
             else:
-                result = request(ip, path, token=token if label not in PUBLIC else None, timeout=args.timeout)
+                result = probe if label == "gestalt" else request(ip, path, token=token if label not in PUBLIC else None, timeout=args.timeout)
             result = scrub(result)
             save_json(folder / "responses" / (label + ".json"), result)
             entry = {"ok": result["ok"]}
@@ -184,10 +197,24 @@ def inspect(args):
                        f"  Endpoints OK: {sum(e['ok'] for e in details['endpoints'].values())}/{len(ENDPOINTS)}",
                        f"  Errors: {details['errors']}", ""])
         print(f"{name} ({ip}): {sum(e['ok'] for e in details['endpoints'].values())}/{len(ENDPOINTS)} endpoints")
+    inspected = [c for c in manifest["controllers"] if c["status"] == "inspected"]
+    complete = [c for c in inspected if c["endpoints"]["led_layout_full"]["ok"]]
+    manifest["summary"] = {"configured": len(devices), "inspected": len(inspected),
+                           "layout_retrieved": len(complete), "skipped": len(skipped)}
+    summary = ["RUN SUMMARY",
+               f"Configured: {len(devices)} | Inspected: {len(inspected)} | "
+               f"Layouts retrieved: {len(complete)} | Skipped: {len(skipped)}"]
+    for name, ip, reason in skipped:
+        summary.append(f"  SKIPPED {name} ({ip}): {reason}")
+    for c in inspected:
+        if not c["endpoints"]["led_layout_full"]["ok"]:
+            summary.append(f"  WARNING {c['name']} ({c['ip']}): LED layout unavailable")
+    report.extend(summary)
     save_json(base / "manifest.json", manifest)
     (base / "report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
+    print("\n" + "\n".join(summary))
     print(f"Saved snapshot: {base}")
-    return 0 if all(c["endpoints"]["led_layout_full"]["ok"] for c in manifest["controllers"]) else 2
+    return 0 if complete else 2
 
 
 def compare(args):
@@ -216,7 +243,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     i = sub.add_parser("inspect", help="Collect safe, read-only API snapshots")
     i.add_argument("--ips", nargs="+", help="LAN IPv4 addresses of every physical Area group controller")
-    i.add_argument("--config", help="JSON file containing devices with ip/name")
+    i.add_argument("--config", help="JSON file with devices; defaults to ./devices.json")
     i.add_argument("--output", default="snapshots", help="Local snapshot root")
     i.add_argument("--timeout", type=float, default=5, help="Per-request timeout (seconds)")
     c = sub.add_parser("compare", help="Compare endpoint hashes of two snapshots")
