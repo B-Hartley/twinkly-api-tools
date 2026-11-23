@@ -232,13 +232,21 @@ def approve(prompt, phrase):
 
 
 def run(args):
-    plan, _ = load_plan(args.plan, require_verified=args.execute)
+    plan, _ = load_plan(args.plan)
     if len(plan["members"]) != 2 or not 0 < args.timeout <= 30:
         raise ValueError("Only two controllers and timeout 0-30 seconds supported")
     if not args.execute:
-        print("DRY RUN. Planned: CHECK -> UNGROUP CLOUD+LAN -> CHECK -> GROUP CLOUD+LAN -> CHECK.")
-        print("Both transitions require manual confirmation and preserve private snapshots.")
-        print("No network calls or writes made. Use --execute with --acknowledge-risk.")
+        print("READ-ONLY CHECK: verifying the currently grouped cloud and LAN,")
+        print("and looking for archived standalone 3D cloud mapping templates.")
+        current_plan, current = checkpoint(
+            "1 CHECK GROUPED", args.plan, "grouped-cloud", args.output, args.timeout)
+        original = find_area(current, current_plan)
+        identities = [mac(current[FILES[i + 1]]["gestalt"]["mac"]) for i in range(2)]
+        templates = find_standalone_templates(
+            current_plan, identities, ("cloud-audits", "cloud-preflight-backups"))
+        print("READY FOR CONTROLLED TEST: verified", len(templates),
+              "standalone 3D templates; Area object", original["id"])
+        print("Dry run: no cloud/LAN writes. Use --execute with confirmations.")
         return 0
     if not args.acknowledge_risk or args.confirm_group != args.group:
         raise ValueError("Execution requires --acknowledge-risk and matching --confirm-group")
