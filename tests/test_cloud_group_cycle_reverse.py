@@ -73,7 +73,7 @@ class ReverseCycleTests(unittest.TestCase):
     def test_no_reference_blocks_before_grouping(self):
         s = standalone()
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaisesRegex(ValueError, "no 3D archive reference"):
+            with self.assertRaisesRegex(ValueError, "Missing immutable 3D reference"):
                 reverse.reference_check(s, plan(), tmp)
 
     def test_archive_is_authoritative_even_if_plan_is_stale(self):
