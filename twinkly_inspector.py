@@ -101,11 +101,17 @@ def validate_ip(ip):
 
 
 def get_devices(args):
-    devices = [{"ip": ip, "name": ip} for ip in (args.ips or [])]
-    config_path = Path(args.config) if args.config else Path("devices.json")
-    if args.config and not config_path.is_file():
+    # Explicit CLI IPs are the entire selection; never merge them with
+    # devices.json (even when that file contains the same IP addresses).
+    if getattr(args, "ips", None):
+        devices = [{"ip": ip, "name": ip} for ip in args.ips]
+        config_path = None
+    else:
+        devices = []
+        config_path = Path(args.config) if args.config else Path("devices.json")
+    if config_path is not None and args.config and not config_path.is_file():
         raise ValueError(f"Configuration file not found: {config_path}")
-    if config_path.is_file():
+    if config_path is not None and config_path.is_file():
         config = json.loads(config_path.read_text(encoding="utf-8"))
         if not isinstance(config, dict) or not isinstance(config.get("devices"), list):
             raise ValueError("Configuration must contain a devices list")
@@ -114,7 +120,7 @@ def get_devices(args):
                 raise ValueError("Each device must contain an ip string")
             devices.append({"ip": d["ip"], "name": str(d.get("name", d["ip"]))})
     if not devices:
-        raise ValueError(f"No controllers configured. Create {config_path} from devices.example.json, or supply --ips.")
+        raise ValueError("No controllers configured. Supply --ips or a valid devices.json.")
     by_ip = {}
     for d in devices:
         d["ip"] = validate_ip(d["ip"])
