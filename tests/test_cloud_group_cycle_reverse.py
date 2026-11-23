@@ -96,13 +96,31 @@ class ReverseCycleTests(unittest.TestCase):
     def test_group_cloud_detaches_two_standalones_before_create(self):
         originals = [{"id": 10}, {"id": 11}]
         with patch("cloud_group_cycle_reverse.cloud_fresh_standalones") as fresh, \
-             patch("cloud_group_cycle_reverse.ops.cloud_write") as write:
+             patch("cloud_group_cycle_reverse.ops.cloud_write") as write, \
+             patch("cloud_group_cycle_reverse.ops.cloud_get",
+                   side_effect=[{"objects": [{"id": 11}]},
+                                {"objects": []}]):
             reverse.detach_original_standalones(originals, 6804, "token", 10)
         fresh.assert_called_once_with(originals, "token", 10)
-        write.assert_called_once_with(
-            "PUT", "/v3/installations/6804/objects",
-            {"action": "remove", "objectIds": [10, 11]},
-            "token", 200, 10)
+        self.assertEqual(write.call_count, 2)
+        self.assertEqual(write.call_args_list[0].args,
+                         ("PUT", "/v3/installations/6804/objects",
+                          {"action": "remove", "objectIds": [10]},
+                          "token", 200, 10))
+        self.assertEqual(write.call_args_list[1].args,
+                         ("PUT", "/v3/installations/6804/objects",
+                          {"action": "remove", "objectIds": [11]},
+                          "token", 200, 10))
+
+    def test_group_cloud_stops_if_first_removal_not_confirmed(self):
+        originals = [{"id": 10}, {"id": 11}]
+        with patch("cloud_group_cycle_reverse.cloud_fresh_standalones"), \
+             patch("cloud_group_cycle_reverse.ops.cloud_write") as write, \
+             patch("cloud_group_cycle_reverse.ops.cloud_get",
+                   return_value={"objects": [{"id": 10}, {"id": 11}]}):
+            with self.assertRaisesRegex(RuntimeError, "removal not confirmed"):
+                reverse.detach_original_standalones(originals, 6804, "token", 10)
+            self.assertEqual(write.call_count, 1)
 
     def test_group_cloud_refuses_duplicate_standalone_ids(self):
         with patch("cloud_group_cycle_reverse.ops.cloud_write") as write:
