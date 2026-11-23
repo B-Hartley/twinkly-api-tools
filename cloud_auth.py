@@ -19,7 +19,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         raise RuntimeError("Cloud redirect refused to protect credentials")
 
 
-def authenticate(username, password, timeout=10):
+def authenticate(username, password, timeout=10, return_session=False):
     if not isinstance(username, str) or not username.strip() or not isinstance(password, str) or not password:
         raise ValueError("Username and password are required")
     if not 0 < timeout <= 30:
@@ -46,7 +46,12 @@ def authenticate(username, password, timeout=10):
     token = data.get("access_token")
     if not isinstance(token, str) or not token or len(token) > 4096 or any(c.isspace() for c in token):
         raise RuntimeError("Cloud login did not return valid access token")
-    # Do not return or retain refresh_token. Renewal flow is not verified.
+    # Deliberately discard refresh_token: endpoint for refresh is unverified.
+    if return_session:
+        lifetime = data.get('expires_in')
+        if not isinstance(lifetime, (int, float)) or isinstance(lifetime, bool) or not 0 < lifetime <= 2592000:
+            lifetime = 0
+        return {'access_token': token, 'expires_in': lifetime}
     return token
 
 
