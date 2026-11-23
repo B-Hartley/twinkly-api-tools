@@ -154,6 +154,40 @@ def cloud_fresh_standalones(previous, token, timeout):
             raise RuntimeError("Cloud standalone map changed")
 
 
+def validate_cloud_payload_inputs(template, standalones, plan):
+    """Check all captured create-schema fields before any controller writes."""
+    if len(standalones) != 2:
+        raise ValueError("Exactly two original cloud standalone objects required")
+    needed = ("capacity", "fps", "ledProfile", "meta")
+    layout_keys = ("source", "coords", "uuid", "geometry", "aspectXZ",
+                   "aspectXY", "name", "synthesized")
+    for label, obj in [("Area", template)] + [
+            (plan["members"][i]["name"], standalones[i]) for i in range(2)]:
+        if any(key not in obj for key in needed):
+            raise ValueError(label + ": cloud object missing create metadata")
+        layout = obj.get("layout")
+        if not isinstance(layout, dict) or any(key not in layout for key in layout_keys):
+            raise ValueError(label + ": cloud object missing layout metadata")
+    if template["layout"]["source"] != "2d":
+        raise ValueError("Saved Area template is not 2D")
+    if template.get("ledCount") != plan["size"]:
+        raise ValueError("Saved Area LED count mismatch")
+    for i, member in enumerate(plan["members"]):
+        obj = standalones[i]
+        if obj["layout"]["source"] != "3d" or obj.get("ledCount") != member["leds"]:
+            raise ValueError(member["name"] + ": invalid 3D standalone cloud metadata")
+        members = obj.get("devices")
+        if not isinstance(members, list) or len(members) != 1:
+            raise ValueError(member["name"] + ": cloud descriptor list invalid")
+        device = members[0].get("device")
+        if not isinstance(device, dict) or any(
+                key not in device for key in ops.DEVICE_KEYS):
+            raise ValueError(member["name"] +
+                             ": cloud device descriptor missing required captured fields")
+        if device.get("ledCount") != member["leds"]:
+            raise ValueError(member["name"] + ": cloud device LED count mismatch")
+
+
 def new_area_body(template, standalone, plan, installation, uid, timeout):
     layout = copy.deepcopy(template["layout"])
     layout["uuid"] = str(uuid.uuid4())
@@ -203,6 +237,7 @@ def run_reverse(args):
         template = archived_group_template(
             plan, ids, ("cloud-preflight-backups", "cloud-audits"))
         installation_id(standalones)
+        validate_cloud_payload_inputs(template, standalones, plan)
         print("READY FOR REVERSE CYCLE: immutable 3D archives valid, 2 cloud objects,")
         print("2D Area template found, previous Area name:", template.get("name"))
         print("DRY RUN: no cloud or LAN writes. Execute only after reviewing this output.")
@@ -222,6 +257,7 @@ def run_reverse(args):
         template = archived_group_template(
             plan, ids, ("cloud-preflight-backups", "cloud-audits"))
         installation = installation_id(standalones)
+        validate_cloud_payload_inputs(template, standalones, plan)
         save_json(destination / "initial-cloud-standalones-private.json", standalones)
         save_json(destination / "former-area-template-private.json", template)
         journal["stages"].append("Original 3D cloud and LAN mappings backed up")
