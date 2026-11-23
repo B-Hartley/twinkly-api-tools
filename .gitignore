@@ -20,3 +20,5 @@ twinkly-login-redacted.json
 cloud-auth-cache.json
 cloud-credentials.json
 *.dpapi
+
+cloud-preflight-backups/
