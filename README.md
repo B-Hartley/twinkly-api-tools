@@ -205,3 +205,31 @@ The preflight performs no grouping or layout writes. `BLOCK` (exit code 2)
 is expected when the cloud and local maps disagree, including a single LED;
 `PASS_READ_ONLY` (exit code 0) checks consistency, **not permission** to
 execute any future write.
+
+### Repair a missing master role (one-controller guarded operation)
+
+When cloud membership and all coordinates agree but the first controller
+reports `none` and the second is already `slave`, use the dedicated
+`repair_missing_master.py` dry run:
+
+```powershell
+git pull
+python .\repair_missing_master.py --group "Office Group"
+```
+
+This is **not** a generic grouping command. It is strictly scoped to the
+observed missing-master state: one 2-member cloud object, matching MACs and
+coordinates, correctly configured slave and standalone master. It reuses
+the **live slave's group UUID**, not a stale plan value, and only constructs
+a master-role assignment. Before any enabled write, it performs two fresh
+cloud + LAN audits with private backups, checks for state drift, and
+authenticates the target controller. The execution path requires
+`--execute --acknowledge-risk --group-confirm "Office Group" --master-confirm "Office Left"`
+(the last flag must match the **first member's exact name in your private
+plan**). No retries after ambiguous writes. It never changes cloud objects,
+the right controller or either layout, and performs a full independent
+readback after the single local POST.
+
+**Run the dry run and inspect the result before considering live execution.**
+Offline tests can be run with
+`python -m unittest discover -s tests -p "test_repair_missing_master.py"`.
