@@ -2,6 +2,7 @@
 """Guarded Area group ungroup/regroup CLI. Dry-run default; never writes without --execute."""
 import argparse
 import json
+import math
 from pathlib import Path
 import sys
 import time
@@ -79,6 +80,31 @@ def payloads(plan, command, uid):
             yield m, [(LAYOUT_API, layout), (GROUP_API, group)]
 
 
+def layout_matches(observed, expected, tolerance=0.0002):
+    """Ignore generated UUID/code; compare source and every LED coordinate."""
+    if not isinstance(observed, dict) or observed.get("source") != expected.get("source"):
+        return False
+    if observed.get("synthesized") != expected.get("synthesized"):
+        return False
+    coords = observed.get("coordinates")
+    reference = expected.get("coordinates")
+    if not isinstance(coords, list) or len(coords) != len(reference):
+        return False
+    for point, saved in zip(coords, reference):
+        if not isinstance(point, dict):
+            return False
+        for axis in ("x", "y", "z"):
+            try:
+                actual, original = point[axis], saved[axis]
+                if not all(math.isfinite(x) for x in (actual, original)):
+                    return False
+                if abs(actual - original) > tolerance:
+                    return False
+            except (KeyError, TypeError):
+                return False
+    return True
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("command", choices=["ungroup", "regroup"])
@@ -135,6 +161,11 @@ def main():
                     raise RuntimeError(f"Not in expected group: {m['name']}")
             elif group.get("mode") != "none":
                 raise RuntimeError(f"Not standalone before regroup: {m['name']}")
+            start_layout = m["area_layout"] if args.command == "ungroup" else m["standalone_layout"]
+            before_layout = request(ip, LAYOUT_API, token=token, timeout=args.timeout)
+            if not before_layout.get("ok") or not layout_matches(before_layout.get("data"), start_layout):
+                raise RuntimeError(
+                    f"{m['name']}: current layout differs from the saved starting layout; refusing writes")
         results = {"command": args.command, "group_name": plan["group_name"], "results": [],
                    "warning": "A successful HTTP response is not proof of restored Area app geometry"}
         print("Preflight passed. Sending controller writes. Do not interrupt.")
@@ -167,6 +198,16 @@ def main():
                                            "ok": verified, "group": group})
                 if not verified:
                     raise RuntimeError(f"Post-write group verification failed for {m['name']}")
+                after_layout = request(m["ip"], LAYOUT_API, token=tokens[m["ip"]],
+                                       timeout=args.timeout)
+                expected_layout = (m["standalone_layout"] if args.command == "ungroup"
+                                   else m["area_layout"])
+                layout_verified = (after_layout.get("ok") and
+                                   layout_matches(after_layout.get("data"), expected_layout))
+                results["results"].append({"name": m["name"], "verification": "led_layout_full",
+                                           "ok": bool(layout_verified)})
+                if not layout_verified:
+                    raise RuntimeError(f"Post-write layout verification failed for {m['name']}")
         finally:
             # Logs can contain identifiers: keep locally and never commit.
             save_json(Path(args.log), results)
