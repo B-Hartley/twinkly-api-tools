@@ -16,7 +16,8 @@ The cloud service at `https://api.twinkly.com` stores account, installation and 
 |---|---|---|---|
 | GET | `/v2/users/me` | Get authenticated account information | **Confirmed** 200 |
 | GET | `/v3/installations` | Get installations and their object references | **Confirmed** 200 |
-| GET | `/v3/objects` | Get saved light objects; supports query selectors | **Confirmed** 200 |
+| GET | `/v3/objects` | Get saved light objects; supports query selectors | **Confirmed** 200; conditional request can return **304** |
+| GET | `/v3/runtime/objects/{objectId}` | Retrieve per-object runtime information | **Confirmed** 200; full response fields not yet characterised |
 | POST | `/v3/objects` | Create a saved light object | **Confirmed** 201 |
 | PUT | `/v3/objects/{objectId}` | Update an *existing* object, including layout | **Confirmed** 200 |
 | PUT | `/v3/installations/{installationId}/objects` | Modify installation-object association | **Confirmed** 200 for `action:"remove"` |
@@ -25,6 +26,14 @@ The cloud service at `https://api.twinkly.com` stores account, installation and 
 | GET | `/v3/reconstruction/snapshot/{uuid}` | Look up saved reconstruction snapshot | **Endpoint observed**, response can be 404 |
 | DELETE | `/v3/reconstruction/snapshot/{uuid}` | Snapshot cleanup | **Endpoint observed**, success not established |
 | DELETE | `/v3/effects/compiled/{uuid}` | Compiled effect cleanup | **Confirmed** 204; mapping dependency **unproven** |
+
+## Shared installations and remote runtime
+
+**Confirmed:** a signed-in account with access to a shared installation can read `GET /v3/installations` and fetch object runtime information through `GET /v3/runtime/objects/{objectId}`. These are distinct from the saved-object definition returned by `/v3/objects`. The precise response schema and how remote authorisation is enforced have not been fully verified. `GET /v3/objects` may return HTTP **304 Not Modified** when conditional caching headers are supplied; a 304 without a response body must not be treated as an empty object list.
+
+**Remote access / MQTT:** the local `/xled/v1/mqtt/config` route is readable on tested controllers, but **no MQTT broker connection or subscription is demonstrated by HTTPS proxy traces alone**. A packet capture that includes MQTT traffic, device-side MQTT configuration or official protocol documentation would be needed to verify the broker, topics and credentials. Do not assume `/v3/runtime/objects` itself is MQTT.
+
+**Cloud login:** the observed requests include bearer-authenticated API calls, but a complete initial cloud account-login or token-refresh flow has **not** been established. Device `/xled/v1/login` and `/verify` exchanges are **LAN authentication**, not cloud account authentication. A preauthenticated or cached app session can make the login exchange invisible in an HTTPS proxy recording.
 
 ## Objects and mappings
 
