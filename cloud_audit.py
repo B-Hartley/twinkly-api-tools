@@ -204,10 +204,14 @@ def main():
         print("Displaying EVERY returned object (not just Office matches).")
         print("Note: mine=true may not include all objects shared through an installation.")
         for item in sorted(result, key=lambda x: (str(x["installation_id"] or ""), str(x["name"]))):
-            office_match = (item["led_count"] == plan["size"] or
-                            item["led_count"] in [m["leds"] for m in plan["members"]] or
-                            any(m["name"].casefold() in item["name"].casefold()
-                                for m in plan["members"]))
+            # LED count alone is not identity: numerous unrelated controllers
+            # have the same LED count. Require name or exact member set match.
+            expected_names = {m["name"].casefold() for m in plan["members"]}
+            object_member_names = {str(m["name"]).casefold() for m in item["members"]}
+            office_match = (item["name"].casefold() == plan["group_name"].casefold() or
+                            item["name"].casefold() in expected_names or
+                            (len(object_member_names) == len(expected_names) and
+                             object_member_names == expected_names))
             print(f"{'[OFFICE CANDIDATE] ' if office_match else ''}"
                   f"Installation={item['installation_id'] or '?'} "
                   f"Object={item['id']} name={item['name']!r} "
