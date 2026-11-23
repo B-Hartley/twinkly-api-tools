@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import urllib.error
 
 from cloud_audit import cloud_get, objects_from
 from cloud_token_store import access_token as cached_access_token
@@ -120,7 +121,7 @@ def main():
         print("INCONSISTENT: do not run regroup/ungroup automation or cloud writes.")
         print("Local private diagnostic:", path)
         return 2
-    except (OSError, RuntimeError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+    except (OSError, RuntimeError, ValueError, KeyError, TypeError, json.JSONDecodeError, urllib.error.URLError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
