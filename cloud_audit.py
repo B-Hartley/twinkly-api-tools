@@ -2,7 +2,7 @@
 """Read-only Twinkly cloud inventory audit (experimental, unofficial).
 
 Never writes to the cloud or LAN. Reads a bearer token from an environment
-variable; never sends it to a host other than https://api.twinkly.com.
+variable or performs an interactive login; never sends credentials outside https://api.twinkly.com.
 Cloud response backups contain sensitive data and stay on the user's PC.
 """
 import argparse
@@ -18,6 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from cloud_auth import interactive_login
 from group_test import load_plan, layout_matches
 from twinkly_inspector import save_json
 
@@ -143,13 +144,18 @@ def main():
     parser.add_argument("--plan", required=True, help="Private saved local group plan")
     parser.add_argument("--output", default="cloud-audits")
     parser.add_argument("--timeout", type=float, default=10)
+    parser.add_argument("--login", action="store_true", help="Prompt for account email/password and login in memory")
+    parser.add_argument("--username", help="Email to use with --login; password is always prompted")
     args = parser.parse_args()
     try:
         if not 0 < args.timeout <= 30:
             raise ValueError("Timeout out of range")
-        token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip()
+        if args.username and not args.login:
+            raise ValueError("--username requires --login")
+        token = (interactive_login(args.username, args.timeout) if args.login else
+                 os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip())
         if not token or any(c.isspace() for c in token) or len(token) > 4096:
-            raise ValueError("Set TWINKLY_CLOUD_TOKEN in the local shell to a valid token")
+            raise ValueError("Use --login or set TWINKLY_CLOUD_TOKEN locally to a valid token")
         plan, _ = load_plan(args.plan)
         now = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         dest = Path(args.output) / now
