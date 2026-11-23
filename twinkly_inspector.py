@@ -24,8 +24,11 @@ ENDPOINTS = {
     "led_mode": "/xled/v1/led/mode",
     "led_config": "/xled/v1/led/config",
     "current_effect": "/xled/v1/led/effects/current",
+    "effects_catalogue": "/xled/v1/led/effects",
+    "movies_catalogue": "/xled/v1/movies",
+    "playlist": "/xled/v1/playlist",
     "playlist_current": "/xled/v1/playlist/current",
-    "movies_current": "/xled/v1/movies/current",
+    "movies_current": "/xled/v1/led/movies/current",
     "network_status": "/xled/v1/network/status",
 }
 PUBLIC = {"gestalt", "firmware", "status"}
@@ -145,7 +148,7 @@ def inspect(args):
     if base.exists():
         raise ValueError(f"Snapshot exists: {base}; rerun later")
     base.mkdir(parents=True)
-    manifest = {"schema": 1, "state_name": group_name, "captured_utc": now.isoformat(), "purpose": "Read-only inspection, NOT restorable backup",
+    manifest = {"schema": 1, "state_name": group_name, "captured_utc": now.isoformat(), "purpose": "Read-only inspection: movie metadata, playlist and current selections only; NOT a restorable raw movie backup",
                 "controllers": []}
     skipped = []
     report = ["Twinkly Area Group Inspector", f"Captured UTC: {now.isoformat()}",
@@ -199,6 +202,16 @@ def inspect(args):
                 if isinstance(data.get(key), list):
                     details["coordinate_count"] = len(data[key])
                     break
+        movie_catalogue = details["endpoints"].get("movies_catalogue", {})
+        details["effects_capture"] = {
+            "movie_catalogue_retrieved": bool(movie_catalogue.get("ok")),
+            "playlist_retrieved": bool(details["endpoints"].get("playlist", {}).get("ok")),
+            "effect_catalogue_retrieved": bool(details["endpoints"].get("effects_catalogue", {}).get("ok")),
+            "selected_movie_retrieved": bool(details["endpoints"].get("movies_current", {}).get("ok")),
+            "raw_movie_frames_retrieved": False,
+            "raw_movie_frames_reason": "No documented read-only movie-frame download API; the documented /movies/full endpoint is upload-only.",
+            "fully_restorable_movie_backup": False,
+        }
         manifest["controllers"].append(details)
         report.extend([f"{name} ({ip})",
                        f"  Device: {details['identity']}",
