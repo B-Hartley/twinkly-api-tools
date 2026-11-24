@@ -20,7 +20,7 @@ import urllib.request
 
 from cloud_audit import BASE, NoRedirect, cloud_get
 from cloud_group_live import collect, get_cloud_token, read_local
-from cloud_group_preflight import FILES, objects_from, coordinates, compare_points, mac, normalized_uid
+from cloud_group_preflight import FILES, objects_from, coordinates, compare_points, mac, normalized_uid, CLOUD_LOCAL_TOLERANCE
 from group_test import load_plan, layout_matches
 from twinkly_inspector import request, authenticate, save_json
 
@@ -447,9 +447,20 @@ def run(args):
             if not compare_points(before, after)["matching"]:
                 raise RuntimeError("Final Area coordinates differ from starting Area")
         now_cloud = find_area(final, plan)
-        if not compare_points(coordinates(original["layout"]),
-                              coordinates(now_cloud["layout"]))["matching"]:
-            raise RuntimeError("Final cloud Area geometry differs from initial mapping")
+        # Cloud coordinates can be quantised on return. The normal cloud/LAN
+        # preflight already permits this narrow observed device precision drift;
+        # do not fail this final comparison under a stricter default tolerance.
+        cloud_comparison = compare_points(
+            coordinates(original["layout"]), coordinates(now_cloud["layout"]),
+            tolerance=CLOUD_LOCAL_TOLERANCE)
+        save_json(dest / "final-cloud-geometry-comparison-private.json", cloud_comparison)
+        print("FINAL CLOUD GEOMETRY", "PASS" if cloud_comparison["matching"] else "DIFF",
+              "max_delta", cloud_comparison["max_delta"],
+              "mismatched_leds", cloud_comparison["mismatched_leds"],
+              "tolerance", CLOUD_LOCAL_TOLERANCE)
+        if not cloud_comparison["matching"]:
+            raise RuntimeError("Final cloud Area geometry differs from initial mapping "
+                               "beyond cloud/local precision tolerance; see saved comparison")
         movie_final_ok = True
         if args.check_movies:
             import movie_retention
