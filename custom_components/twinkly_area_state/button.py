@@ -12,6 +12,7 @@ ACTIONS = (
     ("capture_layout_diagnostics", "Capture layout diagnostics", "mdi:bug-check"),
     ("capture_groups", "Capture groups", "mdi:lightbulb-group"),
     ("capture_3d_maps", "Capture 3D maps", "mdi:vector-polyline"),
+    ("import_3d_maps", "Import 3D map archives", "mdi:folder-download"),
     ("verify_archives", "Verify maps and groups", "mdi:shield-check"),
 )
 
