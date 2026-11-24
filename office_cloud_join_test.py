@@ -135,7 +135,9 @@ def capture_until_valid(plan, token, timeout, root, prefix, phase, max_attempts=
                 old = json.loads((folder / "summary-PRIVATE.json").read_text(encoding="utf-8"))
                 validate_phase(old, phase)
                 return old
-            except (OSError, ValueError, KeyError, TypeError):
+            except (OSError, ValueError, KeyError, TypeError, RuntimeError):
+                # An incomplete previous observation is not a valid finished phase.
+                # Keep the archived attempt and try the next numbered capture.
                 continue
         snapshot = capture(plan, token, timeout, folder)
         try:
