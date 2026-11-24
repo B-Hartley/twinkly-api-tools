@@ -15,11 +15,15 @@ from cloud_audit import cloud_get
 
 PATHS={"auth":"/v2/auth","refresh":"/v2/auth/refresh","auth-token":"/v2/auth/token","oauth":"/oauth/token"}
 
-def refresh(old, endpoint, encoding, timeout):
+def refresh(old, endpoint, encoding, timeout, shape="grant"):
     token=old.get("refresh_token")
     if not isinstance(token,str) or not token or len(token)>4096 or any(c.isspace() for c in token):
         raise ValueError("No valid cached refresh token; use --login")
-    fields={"grant_type":"refresh_token","refresh_token":token}
+    fields={"refresh_token":token}
+    if shape=="grant":
+        fields["grant_type"]="refresh_token"
+    elif shape=="camel":
+        fields={"refreshToken":token}
     if encoding=="json":
         body=json.dumps(fields).encode()
         content_type="application/json"
@@ -37,6 +41,30 @@ def refresh(old, endpoint, encoding, timeout):
             raw=response.read(MAX_RESPONSE+1)
     except urllib.error.HTTPError as exc:
         print("HTTP",exc.code,"- renewal rejected; cached session not changed.")
+        # Report only allowlisted field names and error codes, never raw values.
+        try:
+            error=json.loads(exc.read(MAX_RESPONSE))
+            fields={"username","password","refresh_token","refreshToken","grant_type","token","client_id","client_secret","access_token"}
+            identifiers={"invalid_grant","invalid_request","invalid_token","unsupported_grant_type","invalid_client","invalid_credentials","required","missing","expired","validation_error"}
+            def walk(value):
+                if isinstance(value,dict):
+                    for key,item in value.items():
+                        if key in fields:
+                            print("Validation mentions field:",key)
+                        if key in ("error","code","type") and isinstance(item,str) and item in identifiers:
+                            print("Error identifier:",item)
+                        if key in ("field","loc","param","path"):
+                            for part in (item if isinstance(item,list) else [item]):
+                                if isinstance(part,str) and part in fields:
+                                    print("Validation mentions field:",part)
+                        if isinstance(item,(dict,list)):
+                            walk(item)
+                elif isinstance(value,list):
+                    for item in value:
+                        walk(item)
+            walk(error)
+        except (ValueError,TypeError,OSError):
+            print("No parseable JSON validation details.")
         return None
     print("HTTP",status)
     if len(raw)>MAX_RESPONSE:
@@ -64,6 +92,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--endpoint",choices=PATHS,default="auth")
     p.add_argument("--encoding",choices=["json","form"],default="json")
+    p.add_argument("--shape",choices=["grant","token-only","camel"],default="grant",help="Request field format")
     p.add_argument("--login",action="store_true",help="First obtain a fresh private cloud session")
     p.add_argument("--timeout",type=float,default=20)
     a=p.parse_args()
@@ -76,7 +105,7 @@ def main():
         if not old:
             raise ValueError("No cached session; use --login")
         print("Cached access token seconds remaining:",round(old["expires_at"]-time.time()))
-        session=refresh(old,a.endpoint,a.encoding,a.timeout)
+        session=refresh(old,a.endpoint,a.encoding,a.timeout,a.shape)
         if session is None:
             return 2
         # Verify against read-only inventory before replacing the encrypted cache.
