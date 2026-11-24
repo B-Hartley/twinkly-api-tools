@@ -28,7 +28,7 @@ ENDPOINTS = {
     "movies_catalogue": "/xled/v1/movies",
     "playlist": "/xled/v1/playlist",
     "playlist_current": "/xled/v1/playlist/current",
-    "movies_current": "/xled/v1/led/movies/current",
+    "movies_current": "/xled/v1/movies/current",
     "network_status": "/xled/v1/network/status",
     "mqtt_config": "/xled/v1/mqtt/config",
 }
