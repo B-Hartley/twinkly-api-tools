@@ -9,6 +9,7 @@ from .const import DOMAIN
 
 
 ACTIONS = (
+    ("capture_layout_diagnostics", "Capture layout diagnostics", "mdi:bug-check"),
     ("capture_groups", "Capture groups", "mdi:lightbulb-group"),
     ("capture_3d_maps", "Capture 3D maps", "mdi:vector-polyline"),
     ("verify_archives", "Verify maps and groups", "mdi:shield-check"),
