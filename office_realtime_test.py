@@ -32,6 +32,7 @@ def main():
     p.add_argument("--effect",choices=["solid","rainbow","diagnostic"],default="rainbow")
     p.add_argument("--channels",type=int,choices=[3,4],help="Override only if investigating device metadata")
     p.add_argument("--transport",choices=["master","direct"],default="direct")
+    p.add_argument("--rt-mode",choices=["master","both"],default="master",help="Which controllers receive the RT mode command")
     p.add_argument("--vertical-axis",choices=["x","y","z"],default="y")
     p.add_argument("--invert-vertical",action="store_true")
     a=p.parse_args()
@@ -85,15 +86,17 @@ def main():
         ip=m["ip"]
         token=login(ip,5)
         old=checked(ip,MODE,token)["mode"]
-        if m is master and old not in ("off","movie","playlist","color","effect"):
+        print(f"{m['name']}: initial mode={old}")
+        if (m is master or a.rt_mode=="both") and old not in ("off","movie","playlist","color","effect","rt"):
             raise RuntimeError("Unsupported original mode: "+old)
         sessions.append((m,token,old))
     attempted=[]
     completed=False
     try:
-        m,token,old=sessions[0]
-        attempted.append((m,old))
-        checked(m["ip"],MODE,token,method="POST",payload={"mode":"rt"})
+        for m,token,old in (sessions if a.rt_mode=="both" else sessions[:1]):
+            attempted.append((m,old))
+            checked(m["ip"],MODE,token,method="POST",payload={"mode":"rt"})
+            print(f"{m['name']}: RT mode requested")
         with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
             start=time.monotonic()
             phase=None
@@ -101,10 +104,15 @@ def main():
             while (t:=time.monotonic()-start)<duration:
                 if a.effect=="diagnostic":
                     current=0 if t<10 else 1 if t<20 else 2
+                    frame=rt.diagnostic_frame(members,t,a.channels,a.vertical_axis,a.invert_vertical)
                     if phase!=current:
                         print(["LEFT RED / RIGHT OFF","LEFT OFF / RIGHT GREEN","OPPOSING RAINBOWS"][current],flush=True)
+                        for member in members:
+                            start_byte=member["offset"]*a.channels
+                            data=frame[start_byte:start_byte+member["leds"]*a.channels]
+                            lit=sum(any(data[i:i+a.channels]) for i in range(0,len(data),a.channels))
+                            print(f"  {member['name']}: {len(data)} bytes, {lit}/{member['leds']} nonblack pixels",flush=True)
                         phase=current
-                    frame=rt.diagnostic_frame(members,t,a.channels,a.vertical_axis,a.invert_vertical)
                 else:
                     frame=rt.frame_at(members,t,a.effect,a.channels)
                 for m,token,old in sessions:
