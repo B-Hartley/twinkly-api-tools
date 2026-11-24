@@ -21,7 +21,7 @@ from twinkly_inspector import save_json
 
 def execute(args):
     if args.command == "capture-3d":
-        if args.plan:
+        if not args.devices:
             count = maps.from_plan(args.plan, args.root or "3d-map-archive",
                                    allow_saved_plan=args.allow_saved_plan,
                                    timeout=args.timeout)
@@ -94,10 +94,6 @@ def main(argv=None):
     args = p.parse_args(argv)
     if not 0.1 <= args.timeout <= 30:
         p.error("--timeout must be between 0.1 and 30")
-    if args.command == "capture-3d" and bool(args.devices) == bool(args.allow_saved_plan or args.plan != "private-area-plan.json"):
-        # Explicit --devices is the preferred way to capture original live 3D.
-        # A saved --plan may be used instead for a currently grouped controller.
-        pass
     try:
         return execute(args)
     except (ValueError, RuntimeError, OSError, KeyError, TypeError) as exc:
