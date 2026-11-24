@@ -211,12 +211,43 @@ def verify_plan(plan, root, live=False, timeout=10):
     return entries
 
 
+def diagnose_plan(plan_path, root, timeout=10):
+    """Read-only comparison with non-sensitive summary; never replace a reference."""
+    plan, _ = load_plan(plan_path)
+    mismatched = False
+    for member in plan["members"]:
+        current = read_local(member, timeout)
+        address, count = identity(current["gestalt"])
+        saved = read_reference(root, address, count)
+        planned = verify_layout(member["standalone_layout"], count)
+        comparison = compare_points(
+            saved["layout"]["coordinates"], planned["coordinates"])
+        print(member["name"] + ": " + ("MATCH" if comparison["matching"] else "DIFFERENT"))
+        print("  Archive provenance:", saved.get("provenance", "unknown"))
+        print("  Archive created:", saved.get("created_utc", "unknown"))
+        print("  Archived LEDs:", saved["led_count"])
+        print("  Plan LEDs:", len(planned["coordinates"]))
+        print("  Synthesized flags: archive=" +
+              str(saved["layout"]["synthesized"]) + " plan=" +
+              str(planned["synthesized"]))
+        print("  Coordinate comparison:", json.dumps({
+            k: comparison.get(k) for k in
+            ("matching", "expected", "actual", "mismatched_leds", "max_delta")
+        }, sort_keys=True))
+        if not comparison["matching"] or (
+                saved["layout"]["synthesized"] != planned["synthesized"]):
+            mismatched = True
+    print("READ ONLY: neither the plan nor the archives were modified.")
+    return not mismatched
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     modes = p.add_mutually_exclusive_group(required=True)
     modes.add_argument("--plan", help="Archive the members of a private grouped/standalone plan")
     modes.add_argument("--devices", help="Capture live 3D mappings of all devices in a private devices.json")
     modes.add_argument("--verify-plan", help="Check archived references against private plan + live hardware identity")
+    modes.add_argument("--diagnose-plan", help="Read-only coordinate discrepancy summary against private plan")
     p.add_argument("--root", default=DEFAULT_ROOT)
     p.add_argument("--names", nargs="+", help="Only these device names from devices.json")
     p.add_argument("--include-plan", help="Also archive the saved 3D references in a private group plan")
@@ -227,6 +258,8 @@ def main(argv=None):
     try:
         if not 0 < args.timeout <= 30:
             raise ValueError("Timeout out of range")
+        if args.diagnose_plan:
+            return 0 if diagnose_plan(args.diagnose_plan, args.root, timeout=args.timeout) else 2
         if args.verify_plan:
             verify_plan(args.verify_plan, args.root, live=True, timeout=args.timeout)
         elif args.plan:
