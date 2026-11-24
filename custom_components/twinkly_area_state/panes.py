@@ -3,14 +3,18 @@ import math
 
 STRANDS = {
     "office left": (3, 4, 3), "office right": (3, 4, 3),
-    "landing": (6, 4), "master bedroom": (5, 5), "master bedroom left": (5, 5),
-    "master bedroom right": (5, 5), "bar": (2, 3, 3, 2),
+    "landing": (6, 4), "master bedroom": (5, 5), "bar": (2, 3, 3, 2),
     "lounge": (3, 4, 3), "front right bush": (1, 1),
     "front right": (1, 1),
 }
 DEFAULTS = {name: len(parts) for name, parts in STRANDS.items()}
 # Physical left-to-right orientation in the verified joined Front Area map.
 REVERSED = frozenset({"office right", "lounge", "landing", "master bedroom", "front right", "front right bush"})
+
+def pane_label(name, index):
+    if " ".join(name.casefold().split()) == "master bedroom":
+        return ("Left", "Right")[index]
+    return f"Pane {index+1}"
 
 def pane_indices(name, count, reverse=None):
     name = " ".join(name.casefold().split())
