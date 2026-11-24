@@ -107,7 +107,8 @@ def find_standalone_templates(plan, identity, roots):
             continue
         # Private archives may contain one or several nested snapshot stages.
         paths = list(base.rglob("objects-private.json")) + list(
-            base.rglob("cloud-objects-PRIVATE.json"))
+            base.rglob("cloud-objects-PRIVATE.json")) + list(
+            base.rglob("standalone-template-*-private.json"))
         if len(paths) > 1000:
             raise ValueError("Too many historical cloud snapshots; narrow the archive roots")
         for path in paths:
@@ -115,7 +116,9 @@ def find_standalone_templates(plan, identity, roots):
                 if path.stat().st_size > MAX_BODY:
                     continue
                 data = json.loads(path.read_text(encoding="utf-8"))
-                records = objects_from(data)
+                records = ([data] if isinstance(data, dict) and
+                           isinstance(data.get("devices"), list)
+                           else objects_from(data))
             except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError):
                 continue
             for o in records:
@@ -279,7 +282,10 @@ def verified_grouped_plan(plan, snapshot):
     root = Path("2d_group_archive")
     archives = []
     if root.is_dir():
-        for manifest in root.rglob("manifest.json"):
+        manifests = list(root.rglob("manifest.json"))
+        if len(manifests) > 1000:
+            raise ValueError("Too many 2D archives; narrow the archive root")
+        for manifest in manifests:
             try:
                 saved = group_refs.read_archive(manifest.parent)
             except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError):
@@ -298,7 +304,7 @@ def verified_grouped_plan(plan, snapshot):
             archives.append((manifest.stat().st_mtime, manifest.parent, saved))
     if not archives:
         raise ValueError(
-            "No matching immutable 2D group archive for the live 420-LED Area. "
+            "No matching immutable 2D group archive for the live Area. "
             "Run 'python area_manager.py capture-group' while still grouped; "
             "then repeat this read-only preflight.")
     _, folder, _ = max(archives, key=lambda item: item[0])
