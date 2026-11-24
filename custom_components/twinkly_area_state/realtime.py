@@ -119,3 +119,24 @@ def basic_group_members(observations):
             raise ValueError(f"{m['name']}: group size or LED offset mismatch")
         end+=m["led_count"]
     return members
+
+def mapped_rainbow(layout, count, width, axis="y", reverse=False):
+    """Return full-brightness static rainbow in original wire pixel order."""
+    import math
+    if width not in (3,4) or axis not in ("x","y","z") or layout.get("source")!="2d":
+        raise ValueError("Unsupported rainbow mapping")
+    coords=layout.get("coordinates",[])
+    if len(coords)!=count:
+        raise ValueError("Mapping LED count differs")
+    values=[float(c[axis]) for c in coords]
+    if not values or not all(map(math.isfinite,values)) or max(values)<=min(values):
+        raise ValueError("Invalid rainbow axis")
+    lo,hi=min(values),max(values)
+    result=bytearray()
+    for v in values:
+        fraction=(v-lo)/(hi-lo)
+        if reverse:
+            fraction=1-fraction
+        rgb=tuple(round(c*255) for c in colorsys.hsv_to_rgb(fraction*5/6,1,1))
+        result.extend((0,)+rgb if width==4 else rgb)
+    return bytes(result)
