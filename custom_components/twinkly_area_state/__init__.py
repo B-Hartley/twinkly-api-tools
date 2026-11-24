@@ -11,6 +11,7 @@ import hashlib
 import ipaddress
 import json
 import logging
+import math
 import os
 import re
 from datetime import datetime, timezone
@@ -193,6 +194,28 @@ def window_plan(snapshot, left_name, right_name, gap_width=1.0):
             "gap_in_window_widths": gap_width, "windows": results}
 
 
+def _geometry_matches(a, b, tolerance=0.0003):
+    """Accept only minor Twinkly floating-point round-trip differences."""
+    if (not isinstance(a, dict) or not isinstance(b, dict)
+            or a.get("source") != b.get("source")
+            or a.get("synthesized") != b.get("synthesized")):
+        return False
+    left, right = a.get("coordinates"), b.get("coordinates")
+    if not isinstance(left, list) or not isinstance(right, list) or len(left) != len(right):
+        return False
+    for one, two in zip(left, right):
+        if not isinstance(one, dict) or not isinstance(two, dict):
+            return False
+        for axis in ("x", "y", "z"):
+            a_value, b_value = one.get(axis), two.get(axis)
+            if type(a_value) not in (float, int) or type(b_value) not in (float, int):
+                return False
+            if (not math.isfinite(a_value) or not math.isfinite(b_value)
+                    or abs(a_value - b_value) > tolerance):
+                return False
+    return True
+
+
 def _validated_controller(item):
     """Validate hardware identity, local role and LED map from authenticated GETs."""
     if item.get("status") != "captured":
@@ -225,6 +248,8 @@ def _capture_local_groups(state):
     """Local grouped maps only; Twinkly cloud Area must be validated separately."""
     members = {}
     for item in state["devices"]:
+        if item.get("status") != "captured":
+            continue
         mac, count, layout, group = _validated_controller(item)
         if group.get("mode") not in ("master", "slave"):
             continue
@@ -244,14 +269,18 @@ def _capture_local_groups(state):
         raise ValueError("No live local groups found")
     records = {}
     for uid, grouped in members.items():
-        if len(grouped) != 2 or sorted(x["role"] for x in grouped) != ["master", "slave"]:
-            raise ValueError("Group " + uid + ": expected exactly one master and one slave")
+        if len(grouped) < 2 or sum(x["role"] == "master" for x in grouped) != 1:
+            raise ValueError("Group " + uid + ": expected one master and at least one slave")
         grouped.sort(key=lambda x: 0 if x["role"] == "master" else 1)
         if grouped[0]["size"] != grouped[1]["size"] or grouped[0]["size"] != sum(
                 x["led_count"] for x in grouped):
             raise ValueError("Group " + uid + ": inconsistent LED count")
-        if sorted(x["offset"] for x in grouped) != [0, grouped[0]["led_count"]]:
-            raise ValueError("Group " + uid + ": unexpected offsets")
+        ordered = sorted(grouped, key=lambda x: x["offset"] if type(x["offset"]) is int else -1)
+        next_offset = 0
+        for participant in ordered:
+            if participant["offset"] != next_offset:
+                raise ValueError("Group " + uid + ": inconsistent offsets")
+            next_offset += participant["led_count"]
         records[uid] = {"members": grouped, "led_count": grouped[0]["size"],
                         "source": "local-group-only",
                         "cloud_area_verified": False}
@@ -262,6 +291,8 @@ def _capture_live_3d(state):
     """3D reference must come from currently standalone hardware, not a 2D guess."""
     records = {}
     for item in state["devices"]:
+        if item.get("status") != "captured":
+            continue
         mac, count, layout, group = _validated_controller(item)
         if layout["source"] != "3d" or group.get("mode") != "none":
             continue
@@ -287,7 +318,7 @@ def _verify_archives(state, archives):
         if not observed:
             notes.append("Missing controller " + mac[-4:])
         elif observed["group"].get("mode") == "none":
-            if observed["layout"]["source"] != "3d" or digest(observed["layout"]) != ref["sha256"]:
+            if observed["layout"]["source"] != "3d" or not _geometry_matches(observed["layout"], ref["layout"]):
                 notes.append("3D reference differs for " + mac[-4:])
     saved_groups = archives.get("groups", {})
     for uid, group in saved_groups.items():
@@ -302,7 +333,7 @@ def _verify_archives(state, archives):
             for member, observed in live_members:
                 if observed["layout"]["source"] != "2d":
                     notes.append("Group member not 2D: " + member["name"])
-                elif digest(observed["layout"]) != digest(member["layout"]):
+                elif not _geometry_matches(observed["layout"], member["layout"]):
                     notes.append("Saved group layout differs: " + member["name"])
     return notes
 
