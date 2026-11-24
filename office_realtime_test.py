@@ -7,6 +7,9 @@ import socket
 import time
 from group_test import load_plan, GROUP_API, LAYOUT_API, layout_matches
 from movie_retention import read_member, compare
+from cloud_group_cycle_reverse import archived_group_reference, apply_area_reference
+from cloud_group_live import read_local
+from cloud_group_preflight import mac
 from resume_regroup import read_state, login
 from twinkly_inspector import request
 
@@ -34,6 +37,11 @@ def main():
     members=sorted(plan["members"],key=lambda m:m["offset"])
     if len(members)!=2 or {m["name"].lower() for m in members}!={"office left","office right"}:
         raise ValueError("Office pair only")
+    # Use exactly the same authoritative geometry as cloud regroup.
+    identities=[mac(read_local(m,5)["gestalt"]["mac"]) for m in plan["members"]]
+    _, layouts=archived_group_reference(plan,identities,("cloud-preflight-backups","cloud-audits"))
+    plan=apply_area_reference(plan,layouts)
+    members=sorted(plan["members"],key=lambda m:m["offset"])
     # Cloud regroup may generate a fresh UID; validate the live group, not stale UID.
     master=members[0]
     uid=checked(master["ip"],GROUP_API,login(master["ip"],5))["group"]["uid"]
