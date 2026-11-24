@@ -746,9 +746,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
             await group.stop(movie=True)
 
+    from .cloud_session import CloudSession
+    cloud = CloudSession(hass, entry.entry_id)
+
+    async def verify_cloud_session(call: ServiceCall):
+        await cloud.get("/v3/installations")
+        async_create(hass, "Cloud authentication verified. Cached tokens will renew automatically when required.",
+                     title="Twinkly cloud session", notification_id=f"{DOMAIN}_cloud_session")
+
+    hass.services.async_register(DOMAIN, "verify_cloud_session", verify_cloud_session)
     hass.services.async_register(DOMAIN, "resume_movie", resume_movie)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "devices": devices,
+        "cloud": cloud,
         "lock": lock,
         "store": store,
         "actions": {"capture_layout_diagnostics": capture_layout_diagnostics,
@@ -768,7 +778,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
-                    "capture_layout_diagnostics", "resume_movie", "import_3d_maps"):
+                    "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
