@@ -196,3 +196,31 @@ def standalone_member(device,gestalt,group):
         raise ValueError("Invalid standalone controller metadata")
     return dict(device,mac=mac,led_count=count,role="none",offset=0,size=count,
                 uid="standalone:"+mac,width=pixel_width(gestalt))
+
+
+def combined_bush_map(bottom, top, bottom_count, top_count, seam=0.5, top_rotation=0.0):
+    """Derived model: align independently captured axes, stack halves.
+
+    Original LED ordering and each half's relative XYZ proportions are kept.
+    Relative orientation and height split are assumed, not measured.
+    """
+    import math
+    if not 0<seam<1 or not math.isfinite(top_rotation):
+        raise ValueError("Invalid combined map alignment")
+    result=[]
+    for layout,count,start,end,rotation in (
+        (bottom,bottom_count,0,seam,0),
+        (top,top_count,seam,1,top_rotation),
+    ):
+        spiral_geometry(layout,count)
+        pts=[tuple(float(p[a]) for a in ("x","y","z")) for p in layout["coordinates"]]
+        xs,ys,zs=zip(*pts)
+        cx=(min(xs)+max(xs))/2
+        cz=(min(zs)+max(zs))/2
+        scale=(end-start)/(max(ys)-min(ys))
+        cos,sin=math.cos(rotation),math.sin(rotation)
+        for x,y,z in pts:
+            x,z=(x-cx)*scale,(z-cz)*scale
+            result.append({"x":x*cos-z*sin,"y":start+(y-min(ys))*scale,
+                           "z":x*sin+z*cos})
+    return {"source":"3d","synthesized":True,"coordinates":result}
