@@ -65,3 +65,28 @@ class MappedRainbowTests(unittest.TestCase):
             rt.mapped_rainbow(self.layout,4,4)
         with self.assertRaises(ValueError):
             rt.mapped_rainbow({"source":"2d","coordinates":[{"y":0}]*3},3,4)
+
+
+class SpiralTests(unittest.TestCase):
+    layout={"source":"3d","coordinates":[{"x":1,"y":0,"z":0},{"x":0,"y":1,"z":1},{"x":-1,"y":.5,"z":0},{"x":0,"y":.5,"z":-1}]}
+    def test_loop_and_brightness(self):
+        geo=rt.spiral_geometry(self.layout,4)
+        args=(geo,4,"Rising spiral")
+        frame=rt.spiral_frame(*args,0,(255,0,0,0),255)
+        self.assertEqual(len(frame),16)
+        self.assertEqual(frame,rt.spiral_frame(*args,6,(255,0,0,0),255))
+        self.assertNotEqual(frame,rt.spiral_frame(*args,1.5,(255,0,0,0),255))
+        self.assertEqual(rt.spiral_frame(*args,0,(255,0,0,0),0),bytes(16))
+        self.assertEqual(frame[0::4],bytes(4))
+    def test_static(self):
+        geo=rt.spiral_geometry(self.layout,4)
+        self.assertEqual(rt.spiral_frame(geo,3,"Static spiral",0,(0,255,0,0),255),rt.spiral_frame(geo,3,"Static spiral",2,(0,255,0,0),255))
+    def test_reject_2d(self):
+        with self.assertRaises(ValueError):
+            rt.spiral_geometry(dict(self.layout,source="2d"),4)
+    def test_group_three(self):
+        uid="12345678-1234-1234-1234-123456789abc"
+        obs=[({"name":str(i),"ip":str(i)},{"mac":f"{i:012x}","number_of_led":2,"led_profile":"RGB"},{"uid":uid,"mode":"master" if i==0 else "slave","offset":i*2,"size":6}) for i in range(3)]
+        self.assertEqual(len(rt.basic_group_members(obs)),3)
+        with self.assertRaises(ValueError):
+            rt.basic_group_members(obs[:2])
