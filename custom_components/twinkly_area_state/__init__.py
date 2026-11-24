@@ -14,6 +14,7 @@ import logging
 import math
 import os
 import re
+from pathlib import Path
 from datetime import datetime, timezone
 
 import voluptuous as vol
@@ -83,7 +84,7 @@ def parse_twinkly_json(raw):
         return data
 
 
-async def query(session, ip, endpoint, *, method="GET", payload=None, token=None):
+async def query(session, ip, endpoint, *, method="GET", payload=None, token=None, debug_capture=None):
     """Make a bounded local request with no redirects."""
     headers = {"Accept": "application/json"}
     if token:
@@ -92,9 +93,14 @@ async def query(session, ip, endpoint, *, method="GET", payload=None, token=None
     try:
         async with session.request(method, url, json=payload, headers=headers,
                                    allow_redirects=False, timeout=6) as resp:
+            if debug_capture is not None:
+                debug_capture["status"] = resp.status
+                debug_capture["content_type"] = resp.headers.get("Content-Type", "")[:100]
             if resp.status != 200:
                 return {"ok": False, "error": f"HTTP {resp.status}"}
             raw = await resp.content.read(MAX_RESPONSE + 1)
+            if debug_capture is not None:
+                debug_capture["body"] = raw
             if len(raw) > MAX_RESPONSE:
                 return {"ok": False, "error": "Response too large"}
             data = parse_twinkly_json(raw)
@@ -105,7 +111,7 @@ async def query(session, ip, endpoint, *, method="GET", payload=None, token=None
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
 
 
-async def capture(session, device):
+async def capture(session, device, *, layout_dump=None):
     ip = device["ip"]
     # Fast connectivity probe allows offline controllers to be reported once.
     probe = await query(session, ip, ENDPOINTS["gestalt"])
@@ -136,7 +142,9 @@ async def capture(session, device):
         if not token:
             responses[label] = {"ok": False, "error": auth_error or "Unauthenticated"}
             continue
-        responses[label] = redact(await query(session, ip, endpoint, token=token))
+        responses[label] = redact(await query(
+            session, ip, endpoint, token=token,
+            debug_capture=layout_dump if label == "layout" else None))
     return {"ip": ip, "name": device["name"], "status": "captured",
             "authentication": "verified" if token else "failed",
             "responses": responses}
@@ -218,6 +226,41 @@ def window_plan(snapshot, left_name, right_name, gap_width=1.0):
                         "suggested_coordinates": points})
     return {"description": "Concept-only 2D placement; no grouping or layout API writes",
             "gap_in_window_widths": gap_width, "windows": results}
+
+
+def _write_layout_diagnostic(root, device, snapshot, response):
+    """Save only layout GET body/status. No login or authentication response."""
+    destination = Path(root)
+    destination.mkdir(mode=0o700, parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    safe_name = re.sub(r"[^a-z0-9_-]+", "-", device["name"].lower()).strip("-")[:40]
+    base = stamp + "-" + (safe_name or "controller")
+    raw = snapshot.get("body", b"")
+    max_dump = 1024 * 1024
+    if not isinstance(raw, bytes):
+        raw = b""
+    body = raw[:max_dump]
+    details = {
+        "controller": device["name"],
+        "ip": device["ip"],
+        "endpoint": ENDPOINTS["layout"],
+        "http_status": snapshot.get("status"),
+        "content_type": snapshot.get("content_type"),
+        "response_bytes": len(raw),
+        "truncated": len(raw) > max_dump,
+        "capture_error": response.get("responses", {}).get("layout", {}).get("error"),
+        "authentication": response.get("authentication"),
+        "note": "Contains raw LED mapping coordinates. No login response, tokens or HTTP auth headers.",
+    }
+    for suffix, data in (
+        ("-layout-response.txt", body),
+        ("-layout-metadata.json", json.dumps(details, indent=2).encode("utf-8")),
+    ):
+        path = destination / (base + suffix)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+    return base
 
 
 def _geometry_matches(a, b, tolerance=0.0003):
@@ -384,6 +427,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return {"name": name, "captured_utc": datetime.now(timezone.utc).isoformat(),
                 "devices": result}
 
+    async def capture_layout_diagnostics(call: ServiceCall):
+        """Explicit opt-in raw layout diagnostics, never log secrets or responses."""
+        async with lock:
+            directory = hass.config.path("twinkly_area_diagnostics")
+            completed = []
+            for device in devices:
+                raw = {}
+                result = await capture(session, device, layout_dump=raw)
+                basename = await hass.async_add_executor_job(
+                    _write_layout_diagnostic, directory, device, raw, result)
+                completed.append(device["name"] + " (" + basename + ")")
+            async_create(
+                hass,
+                "Captured exact local layout response body and status for: "
+                + ", ".join(completed)
+                + ". Files: **/config/twinkly_area_diagnostics/**. "
+                "Review locally; contents include private LED geometry. "
+                "No controller settings changed.",
+                title="Twinkly layout diagnostics saved",
+                notification_id=f"{DOMAIN}_layout_debug",
+            )
+
     async def capture_groups(call: ServiceCall):
         async with lock:
             live = await collect("capture-groups-local")
@@ -483,6 +548,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                          title="Twinkly office window test plan",
                          notification_id=f"{DOMAIN}_office")
 
+    hass.services.async_register(DOMAIN, "capture_layout_diagnostics", capture_layout_diagnostics)
     hass.services.async_register(DOMAIN, "capture_groups", capture_groups)
     hass.services.async_register(DOMAIN, "capture_3d_maps", capture_3d_maps)
     hass.services.async_register(DOMAIN, "verify_archives", verify_archives)
@@ -495,7 +561,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                            vol.Required("left"): str, vol.Required("right"): str}))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "store": store,
-        "actions": {"capture_groups": capture_groups,
+        "actions": {"capture_layout_diagnostics": capture_layout_diagnostics,
+                    "capture_groups": capture_groups,
                     "capture_3d_maps": capture_3d_maps,
                     "verify_archives": verify_archives},
     }
@@ -506,7 +573,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_unload_platforms(entry, ["button"])
     for service in ("save_state", "restore_state", "office_window_plan",
-                    "capture_groups", "capture_3d_maps", "verify_archives"):
+                    "capture_groups", "capture_3d_maps", "verify_archives",
+                    "capture_layout_diagnostics"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
