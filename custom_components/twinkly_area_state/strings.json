@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Twinkly Area states",
-        "description": "Enter the physical Twinkly controller names and local IP addresses as a JSON list. This integration initially performs read-only snapshots.",
+        "title": "Twinkly Area Manager",
+        "description": "Use devices already configured by Home Assistant's Twinkly integration (automatically prefilled where available), or enter controller names and private LAN IPs as JSON. Capture and verification are read-only; cloud group changes are performed by the separate guarded CLI.",
         "data": {
           "devices_json": "Controller names and IPs (JSON)"
         }
