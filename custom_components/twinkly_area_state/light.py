@@ -1,5 +1,7 @@
 """Opt-in HTTP virtual lights for a verified local Twinkly group."""
 import asyncio
+import aiohttp
+import time
 import base64
 import logging
 import os
@@ -27,7 +29,7 @@ class Group:
         self.active=False
         self.error=False
         self.previous=None
-        self.last_auth=0
+        self.expiry={}
         self.master=next(m for m in members if m["role"]=="master")
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
 
@@ -44,6 +46,8 @@ class Group:
         await self.call(m,"/xled/v1/verify",method="POST",token=token,
                         payload={"challenge-response":d["challenge-response"]})
         self.tokens[m["mac"]]=token
+        lifetime=d.get("authentication_token_expires_in",14400)
+        self.expiry[m["mac"]]=time.monotonic()+max(1,float(lifetime)-30)
 
     async def validate(self):
         for m in self.members:
@@ -62,16 +66,30 @@ class Group:
 
     async def send(self):
         for m in self.members:
+            if time.monotonic()>=self.expiry.get(m["mac"],0):
+                await self.login(m)
             on,brightness,rgbw=self.state[m["mac"]]
             r,g,b,w=(round(c*brightness/255) if on else 0 for c in rgbw)
             pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
-            async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
-                    data=pixel*m["led_count"],headers={"X-Auth-Token":self.tokens[m["mac"]],
-                    "Content-Type":"application/octet-stream"},timeout=3,allow_redirects=False) as resp:
-                from . import parse_twinkly_json
-                data=parse_twinkly_json(await resp.read())
-                if resp.status!=200 or data.get("code")!=1000:
-                    raise HomeAssistantError(f"{m['name']}: frame rejected")
+            for attempt in range(3):
+                try:
+                    async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
+                            data=pixel*m["led_count"],headers={"X-Auth-Token":self.tokens[m["mac"]],
+                            "Content-Type":"application/octet-stream","Connection":"close"},
+                            timeout=aiohttp.ClientTimeout(total=8,connect=4),allow_redirects=False) as resp:
+                        from . import parse_twinkly_json
+                        status=resp.status
+                        data=parse_twinkly_json(await resp.read()) if status==200 else {}
+                    if status in (401,403) and attempt<2:
+                        await self.login(m)
+                        continue
+                    if status!=200 or data.get("code")!=1000:
+                        raise HomeAssistantError(f"{m['name']}: frame rejected (HTTP {status}, code {data.get('code')})")
+                    break
+                except (asyncio.TimeoutError,aiohttp.ClientConnectionError) as exc:
+                    if attempt==2:
+                        raise HomeAssistantError(f"{m['name']}: frame connection failed after 3 attempts") from exc
+                    await asyncio.sleep(.5*(attempt+1))
 
     async def mode(self,value):
         await self.call(self.master,MODE,method="POST",token=self.tokens[self.master["mac"]],payload={"mode":value})
@@ -100,7 +118,6 @@ class Group:
                     await self.restore()
                     raise
                 self.active=True
-                self.last_auth=self.hass.loop.time()
                 self.error=False
                 self.task=self.hass.async_create_background_task(self.run(),"Twinkly virtual light frames")
             else:
@@ -113,28 +130,29 @@ class Group:
             self.notify()
 
     async def run(self):
-        try:
-            while self.active:
-                await asyncio.sleep(.25)
-                async with self.lock:
-                    if self.active:
-                        if self.hass.loop.time()-self.last_auth>=45:
-                            await self.validate()
-                            await self.mode("rt")
-                            self.last_auth=self.hass.loop.time()
-                        await self.send()
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            _LOGGER.exception("Twinkly virtual streaming failed")
+        failures=0
+        while self.active:
+            await asyncio.sleep(.75 if failures==0 else min(10,2**failures))
             async with self.lock:
-                self.active=False
-                self.error=True
+                if not self.active:
+                    return
                 try:
-                    await self.restore()
-                except Exception:
-                    _LOGGER.exception("Twinkly mode restoration failed")
-                self.notify()
+                    if failures:
+                        await self.validate()
+                        await self.mode("rt")
+                    await self.send()
+                    failures=0
+                    if self.error:
+                        self.error=False
+                        self.notify()
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    failures+=1
+                    _LOGGER.warning("Twinkly virtual frame failure %s: %s",failures,exc)
+                    if failures>=3 and not self.error:
+                        self.error=True
+                        self.notify()
 
     async def stop(self,movie=False):
         async with self.lock:
