@@ -1,11 +1,28 @@
 """Pure geometry and RGB(W) frame helpers for virtual panes."""
 import math
 
-DEFAULTS = {
-    "office left": 3, "office right": 3, "landing": 2,
-    "master bedroom left": 2, "master bedroom right": 2,
-    "bar": 4, "lounge": 4, "front right bush": 2,
+STRANDS = {
+    "office left": (2, 3, 3, 2), "office right": (2, 3, 3, 2),
+    "landing": (4, 6), "master bedroom left": (5, 5),
+    "master bedroom right": (5, 5), "bar": (2, 3, 3, 2),
+    "lounge": (2, 3, 3, 2), "front right bush": (1, 1),
+    "front right": (1, 1),
 }
+DEFAULTS = {name: len(parts) for name, parts in STRANDS.items()}
+
+def strand_indices(count, parts, reverse=False):
+    if type(count) is not int or count <= 0 or not parts or any(type(p) is not int or p <= 0 for p in parts) or count % sum(parts):
+        raise ValueError("LED count does not divide into complete equal strands")
+    width = count // sum(parts)
+    order = list(reversed(parts)) if reverse else parts
+    result = []
+    start = 0
+    for part in order:
+        end = start + width * part
+        result.append(list(range(start, end)))
+        start = end
+    return list(reversed(result)) if reverse else result
+
 
 def split_indices(layout, count, panes, axis="x", boundaries=None, reverse=False):
     points = layout["coordinates"]
