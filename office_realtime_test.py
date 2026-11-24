@@ -55,7 +55,7 @@ def main():
     for m in members:
         print(m["name"],m["offset"],m["leds"])
     if a.effect=="diagnostic":
-        for t in (0,5,10):
+        for t in (0,10,20):
             rt.diagnostic_frame(members,t,a.channels,a.vertical_axis,a.invert_vertical)
     if not a.execute:
         print("Read-only preflight passed")
@@ -81,10 +81,10 @@ def main():
         with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
             start=time.monotonic()
             phase=None
-            duration=20 if a.effect=="diagnostic" else 10
+            duration=30 if a.effect=="diagnostic" else 10
             while (t:=time.monotonic()-start)<duration:
                 if a.effect=="diagnostic":
-                    current=0 if t<5 else 1 if t<10 else 2
+                    current=0 if t<10 else 1 if t<20 else 2
                     if phase!=current:
                         print(["LEFT RED / RIGHT OFF","LEFT OFF / RIGHT GREEN","OPPOSING RAINBOWS"][current],flush=True)
                         phase=current
