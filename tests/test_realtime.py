@@ -90,3 +90,19 @@ class SpiralTests(unittest.TestCase):
         self.assertEqual(len(rt.basic_group_members(obs)),3)
         with self.assertRaises(ValueError):
             rt.basic_group_members(obs[:2])
+
+
+class CombinedBushMapTests(unittest.TestCase):
+    def test_stacked_and_ordered(self):
+        layout={"source":"3d","coordinates":[{"x":1,"y":0,"z":0},{"x":0,"y":2,"z":1},{"x":-1,"y":1,"z":0},{"x":0,"y":1,"z":-1}]}
+        combined=rt.combined_bush_map(layout,layout,4,4)
+        self.assertEqual(len(combined["coordinates"]),8)
+        self.assertEqual([p["y"] for p in combined["coordinates"]],[0,.5,.25,.25,.5,1,.75,.75])
+        geo=rt.spiral_geometry(combined,8)
+        self.assertEqual(geo[1][1],geo[4][1])
+        full=rt.spiral_frame(geo,4,"Rising spiral",1,(255,0,0,0),255)
+        self.assertEqual(full,rt.spiral_frame(geo[:4],4,"Rising spiral",1,(255,0,0,0),255)+rt.spiral_frame(geo[4:],4,"Rising spiral",1,(255,0,0,0),255))
+        self.assertEqual(layout["coordinates"][1]["y"],2)
+    def test_missing_coordinates(self):
+        with self.assertRaises(ValueError):
+            rt.combined_bush_map({"source":"3d","coordinates":[]},{"source":"3d","coordinates":[]},4,4)
