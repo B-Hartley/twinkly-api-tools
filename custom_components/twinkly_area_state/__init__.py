@@ -589,8 +589,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     raise ValueError("Existing captured group " + uid + " differs; refusing overwrite")
                 saved.setdefault(uid, record)
             await store.async_save(data)
-            for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+            ctx = hass.data[DOMAIN][entry.entry_id]
+            for group in ctx.get("virtual_groups", []):
                 group.load_maps(data)
+            for bush in ctx.get("combined_bushes", []):
+                bush.load_maps(data)
+            for group in ctx.get("virtual_groups", []):
                 group.notify()
             async_create(hass, f"Captured {len(records)} group(s), with LED layouts and movie "
                          "catalogues, from the local controllers. Cloud Area identity is "
@@ -610,8 +614,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     raise ValueError("Different 3D reference already saved for " + mac[-4:])
                 saved.setdefault(mac, record)
             await store.async_save(data)
-            for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+            ctx = hass.data[DOMAIN][entry.entry_id]
+            for group in ctx.get("virtual_groups", []):
                 group.load_maps(data)
+            for bush in ctx.get("combined_bushes", []):
+                bush.load_maps(data)
+            for group in ctx.get("virtual_groups", []):
                 group.notify()
             async_create(hass, f"Captured {len(records)} standalone 3D mapping(s). "
                          "Controllers currently grouped in 2D were not saved as 3D.",
@@ -641,8 +649,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     archives.get("maps_3d", {}), incoming, identities)
                 archives["maps_3d"] = merged
                 await store.async_save(data)
-                for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+                ctx = hass.data[DOMAIN][entry.entry_id]
+                for group in ctx.get("virtual_groups", []):
                     group.load_maps(data)
+                for bush in ctx.get("combined_bushes", []):
+                    bush.load_maps(data)
+                for group in ctx.get("virtual_groups", []):
                     group.notify()
             except (ValueError, OSError, TypeError, KeyError) as exc:
                 raise HomeAssistantError(f"3D archive import failed: {exc}") from exc
