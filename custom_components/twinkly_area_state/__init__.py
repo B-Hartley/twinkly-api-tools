@@ -444,7 +444,21 @@ def _capture_local_groups(state):
 
 
 def _capture_live_3d(state):
-    """3D reference must come from currently standalone hardware, not a 2D guess."""
+    """Capture only original standalone 3D maps; never archive grouped mappings."""
+    # Check membership first so an incomplete group layout cannot obscure the
+    # actionable "ungroup first" message.
+    grouped = []
+    for item in state["devices"]:
+        role = (item.get("responses", {}).get("group", {}).get("data") or {}).get("group", {}).get("mode")
+        if role in ("master", "slave"):
+            grouped.append(item["name"])
+    if grouped:
+        raise ValueError(
+            "Initial 3D map capture requires ungrouped standalone controllers. "
+            "Currently grouped: " + ", ".join(grouped) +
+            ". First preserve your existing group backup; then ungroup in the "
+            "Twinkly app and retry Capture 3D maps. No maps were saved."
+        )
     records = {}
     for item in state["devices"]:
         if item.get("status") != "captured":
@@ -457,18 +471,6 @@ def _capture_live_3d(state):
                         "sha256": digest(layout),
                         "source": "live-standalone-3d"}
     if not records:
-        grouped = []
-        for item in state["devices"]:
-            role = (item.get("responses", {}).get("group", {}).get("data") or {}).get("group", {}).get("mode")
-            if role in ("master", "slave"):
-                grouped.append(item["name"])
-        if grouped:
-            raise ValueError(
-                "Initial 3D map capture requires ungrouped standalone controllers. "
-                "Currently grouped: " + ", ".join(grouped) +
-                ". First preserve your existing group backup; then ungroup in the "
-                "Twinkly app and retry Capture 3D maps. No maps were saved."
-            )
         raise ValueError(
             "No standalone 3D maps found. Initial 3D mapping requires each "
             "controller to be ungrouped and mapped in 3D in the Twinkly app."
