@@ -27,6 +27,7 @@ class Group:
         self.active=False
         self.error=False
         self.previous=None
+        self.last_auth=0
         self.master=next(m for m in members if m["role"]=="master")
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
 
@@ -99,6 +100,7 @@ class Group:
                     await self.restore()
                     raise
                 self.active=True
+                self.last_auth=self.hass.loop.time()
                 self.error=False
                 self.task=self.hass.async_create_background_task(self.run(),"Twinkly virtual light frames")
             else:
@@ -116,6 +118,10 @@ class Group:
                 await asyncio.sleep(.25)
                 async with self.lock:
                     if self.active:
+                        if self.hass.loop.time()-self.last_auth>=45:
+                            await self.validate()
+                            await self.mode("rt")
+                            self.last_auth=self.hass.loop.time()
                         await self.send()
         except asyncio.CancelledError:
             raise
