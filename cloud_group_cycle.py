@@ -240,6 +240,33 @@ def approve(prompt, phrase):
         raise RuntimeError("Stopped by operator. No automatic rollback.")
 
 
+def verified_retention_plan(plan, snapshot):
+    """Anchor live grouped 2D to current readback and standalone 3D to archives.
+
+    Refuse the effects test if the private per-MAC archive is missing or
+    if the two-controller hardware identity differs from the saved plan.
+    """
+    import archive_3d_maps as refs
+    if len(plan["members"]) != 2:
+        raise ValueError("Two controllers required")
+    verified = copy.deepcopy(plan)
+    for index, member in enumerate(verified["members"]):
+        local = snapshot[FILES[index + 1]]
+        controller_mac, count = refs.identity(local["gestalt"])
+        if count != member["leds"]:
+            raise ValueError(member["name"] + ": unexpected LED count")
+        area = local["layout"]
+        if (area.get("source") != "2d" or
+                len(area.get("coordinates", [])) != count or
+                not isinstance(area.get("synthesized"), bool)):
+            raise ValueError(member["name"] + ": current grouped 2D layout unavailable")
+        member["area_layout"] = {key: copy.deepcopy(area[key])
+                                 for key in ("source", "coordinates", "synthesized")}
+        standalone = refs.read_reference("3d-map-archive", controller_mac, count)
+        member["standalone_layout"] = copy.deepcopy(standalone["layout"])
+    return verified
+
+
 def run(args):
     plan, _ = load_plan(args.plan)
     if getattr(args, "check_movies", False) and getattr(args, "start_ungrouped", False):
@@ -251,6 +278,11 @@ def run(args):
         print("and looking for archived standalone 3D cloud mapping templates.")
         current_plan, current = checkpoint(
             "1 CHECK GROUPED", args.plan, "grouped-cloud", args.output, args.timeout)
+        if args.check_movies:
+            current_plan = verified_retention_plan(current_plan, current)
+            import movie_retention
+            movie_retention.capture(current_plan, Path(args.output) / "movie-preflight",
+                                    "grouped-readonly", args.timeout, save_json)
         original = find_area(current, current_plan)
         identities = [mac(current[FILES[i + 1]]["gestalt"]["mac"]) for i in range(2)]
         templates = find_standalone_templates(
@@ -271,6 +303,8 @@ def run(args):
     movie_mid_report = None
     try:
         plan, start = checkpoint("1 CHECK GROUPED", args.plan, "grouped-cloud", dest, args.timeout)
+        if args.check_movies:
+            plan = verified_retention_plan(plan, start)
         original = find_area(start, plan)
         if args.group.casefold() not in (plan["group_name"].casefold(),
                                          str(original["name"]).casefold()):
@@ -346,6 +380,8 @@ def run(args):
                   "(response ID:", reply.get("id", "unavailable"), ")")
         plan, standalone = checkpoint("3 CHECK UNGROUPED", args.plan, "ungrouped-cloud",
                                        dest, args.timeout)
+        if args.check_movies:
+            plan = verified_retention_plan(plan, start)
         for i, m in enumerate(plan["members"]):
             if not layout_matches(standalone[FILES[i + 1]]["layout"], m["standalone_layout"]):
                 raise RuntimeError("Original standalone 3D mapping not restored: " + m["name"])
@@ -403,6 +439,8 @@ def run(args):
         print("New cloud Area object:", reply.get("id", "unavailable"))
         plan, final = checkpoint("5 CHECK REGROUPED", args.plan, "grouped-cloud",
                                   dest, args.timeout)
+        if args.check_movies:
+            plan = verified_retention_plan(plan, start)
         for i, member in enumerate(plan["members"]):
             before = start[FILES[i + 1]]["layout"]["coordinates"]
             after = final[FILES[i + 1]]["layout"]["coordinates"]
