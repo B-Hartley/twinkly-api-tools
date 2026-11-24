@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from .const import DOMAIN
-from .realtime import pixel_width, mapped_rainbow
+from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS
 
 _LOGGER=logging.getLogger(__name__)
 MODE="/xled/v1/led/mode"
@@ -31,6 +31,7 @@ class Group:
         self.previous=None
         self.expiry={}
         self.effects={m["mac"]:"Solid" for m in members}
+        self.geometry={}
         self.patterns={m["mac"]:{} for m in members}
         self.master=next(m for m in members if m["role"]=="master")
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
@@ -63,7 +64,9 @@ class Group:
                 raise HomeAssistantError("Group changed; reload integration before streaming")
 
     def load_maps(self, data):
-        records=data.get("_area_manager",{}).get("groups",{})
+        archives=data.get("_area_manager",{})
+        records=archives.get("groups",{})
+        originals=archives.get("maps_3d",{})
         for m in self.members:
             patterns={}
             record=records.get(m["uid"],{})
@@ -74,7 +77,16 @@ class Group:
                         patterns[name]=mapped_rainbow(saved["layout"],m["led_count"],m["width"],axis,reverse)
                     except (ValueError,KeyError,TypeError) as exc:
                         _LOGGER.warning("%s: %s unavailable: %s",m["name"],name,exc)
-            self.patterns[m["mac"]]=patterns
+            mac=m["mac"]
+            self.geometry.pop(mac,None)
+            original=originals.get(mac,{})
+            if original.get("led_count")==m["led_count"]:
+                try:
+                    self.geometry[mac]=spiral_geometry(original["layout"],m["led_count"])
+                    patterns.update({name:None for name in SPIRAL_EFFECTS})
+                except (ValueError,KeyError,TypeError) as exc:
+                    _LOGGER.warning("%s: spiral unavailable: %s",m["name"],exc)
+            self.patterns[mac]=patterns
             if self.effects[m["mac"]] not in patterns:
                 self.effects[m["mac"]]="Solid"
 
@@ -83,33 +95,42 @@ class Group:
             e.async_write_ha_state()
 
     async def send(self):
-        for m in self.members:
-            if time.monotonic()>=self.expiry.get(m["mac"],0):
-                await self.login(m)
-            on,brightness,rgbw=self.state[m["mac"]]
-            r,g,b,w=(round(c*brightness/255) if on else 0 for c in rgbw)
-            pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
-            pattern=self.patterns[m["mac"]].get(self.effects[m["mac"]])
-            frame=bytes(round(c*brightness/255) if on else 0 for c in pattern) if pattern is not None else pixel*m["led_count"]
-            for attempt in range(3):
-                try:
-                    async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
-                            data=frame,headers={"X-Auth-Token":self.tokens[m["mac"]],
-                            "Content-Type":"application/octet-stream","Connection":"close"},
-                            timeout=aiohttp.ClientTimeout(total=8,connect=4),allow_redirects=False) as resp:
-                        from . import parse_twinkly_json
-                        status=resp.status
-                        data=parse_twinkly_json(await resp.read()) if status==200 else {}
-                    if status in (401,403) and attempt<2:
-                        await self.login(m)
-                        continue
-                    if status!=200 or data.get("code")!=1000:
-                        raise HomeAssistantError(f"{m['name']}: frame rejected (HTTP {status}, code {data.get('code')})")
-                    break
-                except (asyncio.TimeoutError,aiohttp.ClientConnectionError) as exc:
-                    if attempt==2:
-                        raise HomeAssistantError(f"{m['name']}: frame connection failed after 3 attempts") from exc
-                    await asyncio.sleep(.5*(attempt+1))
+        now=time.monotonic()
+        results=await asyncio.gather(*(self.send_member(m,now) for m in self.members),return_exceptions=True)
+        for result in results:
+            if isinstance(result,BaseException):
+                raise result
+
+    async def send_member(self,m,now):
+        if time.monotonic()>=self.expiry.get(m["mac"],0):
+            await self.login(m)
+        on,brightness,rgbw=self.state[m["mac"]]
+        r,g,b,w=(round(c*brightness/255) if on else 0 for c in rgbw)
+        pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
+        pattern=self.patterns[m["mac"]].get(self.effects[m["mac"]])
+        frame=bytes(round(c*brightness/255) if on else 0 for c in pattern) if pattern is not None else pixel*m["led_count"]
+        effect=self.effects[m["mac"]]
+        if effect in SPIRAL_EFFECTS and m["mac"] in self.geometry:
+            frame=spiral_frame(self.geometry[m["mac"]],m["width"],effect,now,rgbw,brightness if on else 0)
+        for attempt in range(3):
+            try:
+                async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
+                        data=frame,headers={"X-Auth-Token":self.tokens[m["mac"]],
+                        "Content-Type":"application/octet-stream","Connection":"close"},
+                        timeout=aiohttp.ClientTimeout(total=8,connect=4),allow_redirects=False) as resp:
+                    from . import parse_twinkly_json
+                    status=resp.status
+                    data=parse_twinkly_json(await resp.read()) if status==200 else {}
+                if status in (401,403) and attempt<2:
+                    await self.login(m)
+                    continue
+                if status!=200 or data.get("code")!=1000:
+                    raise HomeAssistantError(f"{m['name']}: frame rejected (HTTP {status}, code {data.get('code')})")
+                break
+            except (asyncio.TimeoutError,aiohttp.ClientConnectionError) as exc:
+                if attempt==2:
+                    raise HomeAssistantError(f"{m['name']}: frame connection failed after 3 attempts") from exc
+                await asyncio.sleep(.5*(attempt+1))
 
     async def mode(self,value):
         await self.call(self.master,MODE,method="POST",token=self.tokens[self.master["mac"]],payload={"mode":value})
@@ -152,6 +173,7 @@ class Group:
                 try:
                     await self.send()
                 except Exception:
+                    self.effects[m["mac"]]=old_effect
                     self.state[m["mac"]]=old
                     raise
             self.notify()
@@ -159,7 +181,8 @@ class Group:
     async def run(self):
         failures=0
         while self.active:
-            await asyncio.sleep(.75 if failures==0 else min(10,2**failures))
+            moving=any(self.state[k][0] and effect in MOVING_SPIRALS for k,effect in self.effects.items())
+            await asyncio.sleep((.2 if moving else .75) if failures==0 else min(10,2**failures))
             async with self.lock:
                 if not self.active:
                     return
@@ -237,34 +260,38 @@ async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
     from .realtime import basic_group_members
     ctx=hass.data[DOMAIN][entry.entry_id]
-    selected=[d for d in ctx["devices"] if d["name"].casefold() in ("office left","office right")]
-    if len(selected)!=2:
-        _LOGGER.warning("Office virtual lights require both named Office controllers")
-        return
+    selected=ctx["devices"]
     session=async_get_clientsession(hass)
     async def read(m,path,**kw):
         reply=await query(session,m["ip"],path,**kw)
         if not reply["ok"]:
             raise ValueError(f"{m['name']}: {path}: {reply.get('error')}")
         return reply["data"]
+    groups=[]
     async with ctx["lock"]:
-        try:
-            observations=[]
-            for m in selected:
+        observations={}
+        for m in selected:
+            try:
                 gestalt=await read(m,"/xled/v1/gestalt")
                 login=await read(m,"/xled/v1/login",method="POST",
                     payload={"challenge":base64.b64encode(os.urandom(32)).decode()})
                 token=login["authentication_token"]
                 await read(m,"/xled/v1/verify",method="POST",token=token,
                     payload={"challenge-response":login["challenge-response"]})
-                group=await read(m,"/xled/v1/application/group",token=token)
-                observations.append((m,gestalt,group["group"]))
-            members=basic_group_members(observations)
-            group=Group(hass,members,ctx["lock"],query)
-            group.load_maps(await ctx["store"].async_load() or {})
-            group.entities=[VirtualLight(group,m) for m in members]
-        except (ValueError,KeyError,TypeError,StopIteration) as exc:
-            _LOGGER.warning("Office virtual lights not created: %s",exc)
-            return
-    ctx["virtual_groups"]=[group]
-    async_add_entities(group.entities)
+                group=(await read(m,"/xled/v1/application/group",token=token))["group"]
+                if group.get("mode") in ("master","slave"):
+                    observations.setdefault(str(group.get("uid","")).lower(),[]).append((m,gestalt,group))
+            except (ValueError,KeyError,TypeError, OSError) as exc:
+                _LOGGER.warning("%s: virtual light discovery skipped: %s",m["name"],exc)
+        data=await ctx["store"].async_load() or {}
+        for uid,items in observations.items():
+            try:
+                members=basic_group_members(items)
+                group=Group(hass,members,ctx["lock"],query)
+                group.load_maps(data)
+                group.entities=[VirtualLight(group,m) for m in members]
+                groups.append(group)
+            except (ValueError,KeyError,TypeError,StopIteration) as exc:
+                _LOGGER.warning("Virtual group %s not created: %s",uid,exc)
+    ctx["virtual_groups"]=groups
+    async_add_entities([e for group in groups for e in group.entities])
