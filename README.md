@@ -511,3 +511,47 @@ certificate profiles and is **not as strict as the default**.
 It does not fix a wrong hostname, unknown issuer or changed certificate.
 Matching a CA served by the broker against itself does not independently
 establish authenticity. Never add an unverified CA system-wide.
+
+## Experimental grouped Office effects retention cycle
+
+`scrool/xled` and `patrickbs96/ioBroker.twinkly` both confirm the
+read-only local `GET /xled/v1/movies`, `GET /xled/v1/playlist`, and
+`GET /xled/v1/movies/current` interfaces, plus **write-only** movie
+upload APIs (`POST /movies/new`, `POST /movies/full`).
+Neither provides a confirmed movie-frame download/backup API.
+
+When Office Left and Right are **already grouped** with their effects
+installed, inspect with no cloud/controller modifications:
+
+```powershell
+git pull
+python -m unittest discover -s tests -p "test_movie_retention.py" -v
+python -m unittest discover -s tests -p "test_effects_capture.py" -v
+python .\cloud_group_cycle.py --group "Office Group" --check-movies
+```
+
+The dry run validates the existing cloud Area, immutable 3D backups and
+reads each controller's movie list. It does not prove custom effects can
+be restored. **Run no destructive cycle if the movies are irreplaceable.**
+
+The controlled live experiment (only after separately backing up any
+valuable custom effects) is:
+
+```powershell
+python .\cloud_group_cycle.py --group "Office Group" --check-movies --execute --acknowledge-risk --confirm-group "Office Group"
+```
+
+It requires typed `RISK-MOVIES`, `UNGROUP`, `GROUP` and `DONE`
+confirmations, with operator inspection at checkpoints. It captures
+movie UUIDs, frame metadata, and playlist entries on both controllers
+**before ungroup**, **after ungroup**, **after regroup** and writes
+private `movie-retention-*-private.json` plus comparison reports to
+the cycle backup folder. Catalogue UUIDs, not mutable local slot IDs,
+identify retained movies. Geometry is anchored to the current verified
+grouped 2D readback and immutable per-MAC standalone 3D archives.
+
+**Warning:** The group operations can delete movies; metadata alone
+cannot restore their RGB(W) frames. A changed catalogue is reported,
+not silently "fixed". The script stops on failed verification but may
+already have changed cloud/local state; never blindly rerun it.
+Playback must be checked manually in the Twinkly app.
