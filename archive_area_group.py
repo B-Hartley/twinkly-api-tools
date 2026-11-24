@@ -18,7 +18,7 @@ def checked(ip, path, timeout, token=None):
         raise ValueError(f"{ip}: cannot read {path}: {result.get('error','invalid reply')}")
     return result["data"]
 
-def verify(area, members):
+def verify(area, members, allow_detached=False):
     uid=normalized_uid(area.get("uuid"))
     if not uid or any(k not in area for k in ("capacity","fps","ledProfile","meta","uuid")):
         raise ValueError("Missing cloud Area creation metadata")
@@ -36,6 +36,7 @@ def verify(area, members):
     total=area.get("ledCount")
     offset=0
     points=[]
+    detached=[]
     for i,address in enumerate(order):
         entry=members[address]
         g=entry["gestalt"]
@@ -48,7 +49,11 @@ def verify(area, members):
         observed_offset=group.get("offset")
         if observed_offset is None and i==0:
             observed_offset=0
-        if normalized_uid(group.get("uid"))!=uid or group.get("mode")!=role or group.get("size")!=total or observed_offset!=offset:
+        if (allow_detached and i>0 and group.get("mode")=="none"
+                and group.get("uid") in (None,"") and group.get("size") is None
+                and group.get("offset") is None):
+            detached.append({"name":entry["name"],"mac":address,"part":i,"expected_offset":offset})
+        elif normalized_uid(group.get("uid"))!=uid or group.get("mode")!=role or group.get("size")!=total or observed_offset!=offset:
             raise ValueError(f"{entry['name']}: expected UID={uid}, role={role}, "
                              f"size={total}, offset={offset}; observed "
                              f"UID={group.get('uid')}, role={group.get('mode')}, "
@@ -60,7 +65,7 @@ def verify(area, members):
         offset+=n
     if total!=offset or not compare_points(coordinates(layout),points,tolerance=CLOUD_LOCAL_TOLERANCE)["matching"]:
         raise ValueError("Cloud/local geometry or LED total differs")
-    return uid,order
+    return uid,order,detached
 
 def capture(args):
     token=get_cloud_token(login=args.login,timeout=args.timeout)
@@ -102,15 +107,18 @@ def capture(args):
         print(f"  [{i}] {m['name']}: LEDs={m['gestalt'].get('number_of_led')}, "
               f"part={slot.get('part')}, role={g.get('mode')}, offset={g.get('offset')}, "
               f"size={g.get('size')}, UID={g.get('uid')}, layout={m['layout'].get('source')}")
-    uid,order=verify(area,members)
+    uid,order,detached=verify(area,members,args.allow_detached)
     payload={"area":area,"members":[members[a] for a in order]}
     dest=Path(args.root)/"multi-area"/uid/(dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
     dest.mkdir(parents=True,exist_ok=False)
-    doc={"schema":1,"group_name":area.get("name"),"uid":uid,"macs_in_order":order,
+    doc={"schema":2,"detached":detached,"group_name":area.get("name"),"uid":uid,"macs_in_order":order,
          "led_count":area["ledCount"],"payload":payload,"sha256":checksum(payload)}
     with (dest/"reference.json").open("x",encoding="utf-8") as f:
         json.dump(doc,f,indent=2,ensure_ascii=False,allow_nan=False)
     read_archive(dest/"reference.json")
+    if detached:
+        print("WARNING: detached local members:", ", ".join(d["name"] for d in detached))
+        print("Geometry verified; membership is inconsistent. Restoration is not yet proven.")
     print("VERIFIED cloud and local geometry:",len(order),"light sets,",area["ledCount"],"LEDs")
     for address in order:
         m=members[address]
@@ -121,10 +129,12 @@ def capture(args):
 def read_archive(path):
     doc=json.loads(Path(path).read_text(encoding="utf-8"))
     payload=doc["payload"]
-    if doc.get("schema")!=1 or checksum(payload)!=doc.get("sha256"):
+    if doc.get("schema") not in (1,2) or checksum(payload)!=doc.get("sha256"):
         raise ValueError("Archive checksum/schema mismatch")
     members={mac(m["gestalt"]["mac"]):m for m in payload["members"]}
-    uid,order=verify(payload["area"],members)
+    uid,order,detached=verify(payload["area"],members,doc["schema"]==2)
+    if detached!=doc.get("detached",[]):
+        raise ValueError("Archive detached membership manifest differs")
     if uid!=doc["uid"] or order!=doc["macs_in_order"] or doc["led_count"]!=payload["area"]["ledCount"]:
         raise ValueError("Archive manifest differs")
     return doc
@@ -137,10 +147,13 @@ def main():
     p.add_argument("--timeout",type=float,default=20)
     p.add_argument("--login",action="store_true")
     p.add_argument("--verify-archive")
+    p.add_argument("--allow-detached",action="store_true",help="Archive explicitly ungrouped cloud members only if all geometry still matches")
     a=p.parse_args()
     try:
         if a.verify_archive:
             doc=read_archive(a.verify_archive)
+            if doc.get("detached"):
+                print("WARNING: detached local members:", ", ".join(d["name"] for d in doc["detached"]))
             print("VERIFIED:",doc["group_name"],len(doc["macs_in_order"]),"light sets,",doc["led_count"],"LEDs")
             return 0
         if not a.group or not 0<a.timeout<=30:
