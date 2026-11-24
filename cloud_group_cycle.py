@@ -242,6 +242,8 @@ def approve(prompt, phrase):
 
 def run(args):
     plan, _ = load_plan(args.plan)
+    if getattr(args, "check_movies", False) and getattr(args, "start_ungrouped", False):
+        raise ValueError("--check-movies is only supported for grouped -> ungrouped -> regrouped")
     if len(plan["members"]) != 2 or not 0 < args.timeout <= 30:
         raise ValueError("Only two controllers and timeout 0-30 seconds supported")
     if not args.execute:
@@ -265,6 +267,8 @@ def run(args):
     dest = Path(args.output) / ("cloud-cycle-" + stamp)
     dest.mkdir(parents=True, exist_ok=False)
     log = {"stages": [], "complete": False, "name": args.group}
+    movie_baseline = None
+    movie_mid_report = None
     try:
         plan, start = checkpoint("1 CHECK GROUPED", args.plan, "grouped-cloud", dest, args.timeout)
         original = find_area(start, plan)
@@ -281,6 +285,17 @@ def run(args):
         for m in plan["members"]:
             save_json(dest / ("standalone-template-" + str(m["offset"]) + "-private.json"),
                       templates[m["name"]])
+        if args.check_movies:
+            import movie_retention
+            movie_baseline = movie_retention.capture(
+                plan, dest, "grouped-before", args.timeout, save_json)
+            baseline_count = sum(len(record["movies"]) for record in movie_baseline)
+            if baseline_count == 0:
+                raise RuntimeError("No installed movies reported; refusing effects test")
+            print("WARNING: movie frame bytes have NOT been backed up.")
+            print("A cloud/LAN ungroup could erase uploaded effects. No automated recovery exists.")
+            approve("Risk acknowledged: custom effects may be lost irreversibly. "
+                    "Continue only with other copies of valuable effects.", "RISK-MOVIES")
         print("Verified current Area and two archived standalone 3D templates.")
         approve("Stage 2 will UNGROUP both controllers and change the cloud installation. "
                 "The app may temporarily show missing objects.", "UNGROUP")
@@ -334,6 +349,15 @@ def run(args):
         for i, m in enumerate(plan["members"]):
             if not layout_matches(standalone[FILES[i + 1]]["layout"], m["standalone_layout"]):
                 raise RuntimeError("Original standalone 3D mapping not restored: " + m["name"])
+        if args.check_movies:
+            import movie_retention
+            midway = movie_retention.capture(
+                plan, dest, "standalone-middle", args.timeout, save_json)
+            movie_mid_report = movie_retention.compare(movie_baseline, midway)
+            save_json(dest / "movie-retention-middle-report-private.json", movie_mid_report)
+            if not movie_retention.print_comparison("after ungroup", movie_mid_report):
+                print("WARNING: Some movie UUIDs or metadata changed after ungrouping.")
+                print("Regrouping may NOT restore lost animation frames.")
         approve("Inspect the Twinkly app: there should now be TWO independent Office "
                 "controllers with their original 3D layouts. If correct, allow regroup.", "GROUP")
         # Local regroup: 2d layout first, then master/slave roles.
@@ -388,10 +412,25 @@ def run(args):
         if not compare_points(coordinates(original["layout"]),
                               coordinates(now_cloud["layout"]))["matching"]:
             raise RuntimeError("Final cloud Area geometry differs from initial mapping")
+        movie_final_ok = True
+        if args.check_movies:
+            import movie_retention
+            final_movies = movie_retention.capture(
+                plan, dest, "regrouped-after", args.timeout, save_json)
+            outcome = movie_retention.compare(movie_baseline, final_movies)
+            save_json(dest / "movie-retention-final-report-private.json", outcome)
+            movie_final_ok = movie_retention.print_comparison("after regroup", outcome)
+            log["movie_retention_pass"] = movie_final_ok
+            save_json(dest / "cycle-status-private.json", log)
         approve("Inspect the Twinkly app: ONE Office group should control both windows. "
                 "If playback works, finish.", "DONE")
         log["complete"] = True
         print("ROUND TRIP VERIFIED: cloud and LAN consistency; original Area geometry preserved.")
+        if args.check_movies:
+            print("MOVIE RETENTION", "PASS (catalogue metadata only)" if movie_final_ok
+                  else "FAIL: movies changed or missing")
+            if not movie_final_ok:
+                return 2
         return 0
     except (RuntimeError, ValueError, TypeError, KeyError, OSError,
             urllib.error.URLError) as exc:
@@ -413,6 +452,8 @@ def main(argv=None):
     p.add_argument("--execute", action="store_true")
     p.add_argument("--acknowledge-risk", action="store_true")
     p.add_argument("--confirm-group")
+    p.add_argument("--check-movies", action="store_true",
+                   help="Experimental movie catalogue comparison at all three stages; no raw frame backup")
     p.add_argument("--start-ungrouped", action="store_true",
                    help="Check standalone -> group -> check -> ungroup -> check")
     args = p.parse_args(argv)
