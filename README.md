@@ -1,25 +1,42 @@
-# Twinkly Area Group Inspector + Home Assistant integration
+# Twinkly Area Manager + Home Assistant integration
 
-Read-only snapshot and comparison tool for **Twinkly Area groups** assembled in the Area Editor from independently camera-mapped sets.
+Experimental tools to capture, verify, group and ungroup Twinkly Area groups, preserving original per-controller 3D mapping references and, on tested Office hardware, uploaded movie catalogues.
 
-**Important:** This is an investigation tool, **not a confirmed backup/restore solution**. The group's Area Editor transforms (position, scale, rotation and ordering) may not be exposed by documented local API endpoints. Do **not** delete or ungroup your working display on the strength of a snapshot.
+**Proven live on Office Left and Office Right:** a cloud/LAN group → ungroup → regroup cycle, with the three uploaded movies still playable. This does not provide a backup of raw movie animation frames, and cloud mutations can be partially successful.
 
-## HACS Home Assistant integration (experimental)
+## Install Home Assistant integration (HACS / Marketplace custom repo)
 
-This repo now contains `custom_components/twinkly_area_state`, installable as a **HACS custom repository**. It supports named controller snapshots via `twinkly_area_state.save_state`, a **read-only** `restore_state` audit and an `office_window_plan` for two equally sized windows with a gap of one window width.
+The existing `custom_components/twinkly_area_state` integration now provides a **Twinkly Area Manager** device with three dashboard buttons:
 
-**The Home Assistant integration's restore service cannot yet actually regroup or upload saved mappings.** The restore service deliberately performs a dry run while the Twinkly Area-group create/remove API remains unverified. Use **Office Left** and **Office Right** as the disposable test group before any attempt to modify your Front display.
+- **Capture groups**: immutable local group mappings and movie metadata
+- **Capture 3D maps**: original 3D mappings from standalone controllers
+- **Verify maps and groups**: read-only checks against saved references
 
-See [Home Assistant setup and actions](docs/HOME_ASSISTANT.md).
+The setup UI attempts to prefill the controller list from Home Assistant's built-in **Twinkly** integration. Your native Twinkly light controls remain untouched. No MQTT broker required.
+
+Add `https://github.com/B-Hartley/twinkly-api-tools` to Home Assistant **Marketplace / HACS → Custom repositories** as an Integration, install, restart, then select **Settings → Devices & services → Add integration → Twinkly Area Manager**.
+
+**Group/Ungroup in HA UI are not yet exposed** because they also require experimental Twinkly cloud authentication, private verified map archives, and careful partial-write recovery. Do not mistake the HA read-only snapshot service for a cloud restore operation. See [Home Assistant setup](docs/HOME_ASSISTANT.md) for the current capabilities and limitations.
+
+## Standalone CLI: separate, guarded operations
+
+```powershell
+python .\area_manager.py capture-group
+python .\area_manager.py capture-3d --devices ".\devices.json"
+python .\area_manager.py verify
+python .\area_manager.py ungroup --group "Office Group"
+python .\area_manager.py group --group "Office Group"
+```
+
+The last two default to **read-only preflight**. Real one-way group/ungroup writes require `--execute --acknowledge-risk --confirm-group "Office Group"` and manual confirmations at the decision points. They require a private plan, archived source geometry and a working Twinkly cloud token on the Windows host. No automatic retries or rollback after a partial write.
 
 ## Safety
 
-- Only GETs are sent to device data endpoints. The sole POSTs are `/xled/v1/login` and `/xled/v1/verify`, needed for Twinkly authentication. These may invalidate another client session's API token; schedule captures when automation is idle.
-- No group, mode, effect, LED or layout is ever modified.
-- Explicit device IPs: no network-wide scan, no cloud account, no HA token.
-- Raw device responses, including IDs, IPs, MACs and geometry, remain on your machine and are ignored by Git. Do not commit your snapshot folders.
-- Unavailable endpoints are recorded as errors rather than silently treated as valid empty configurations.
-- Unreachable controllers are skipped after a single initial connection probe. Reachable controllers with authentication or layout problems remain in the report as warnings.
+- HA captures use local Twinkly REST API GETs and authentication login/verify POSTs only; they do not change group, effect, mode or layout.
+- CLI captures and `verify` are read-only; **CLI `group` and `ungroup` can change cloud and physical controller state only with explicit opt-in**.
+- Raw coordinates, controller identities and cloud backups belong in private, gitignored local folders.
+- No support for downloading raw uploaded animation frames yet; confirm effects actually play after any group change.
+- Currently proven write workflow supports exactly **two** verified controllers. Group capture in HA can record multiple local groups but cannot claim cloud validation.
 
 ## Quick start (PowerShell / Windows)
 
