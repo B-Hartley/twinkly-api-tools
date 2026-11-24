@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 
 from cloud_audit import BASE, NoRedirect, cloud_get, objects_from, decode_coords
-from cloud_token_store import access_token as cached_access_token
+from cloud_token_store import renewable_access_token as cached_access_token
 from group_test import load_plan
 from twinkly_inspector import save_json
 
@@ -109,7 +109,7 @@ def run(args):
         raise ValueError("Member must exactly identify one member in private-area-plan.json")
     if args.execute and not (args.acknowledge_risk and args.confirm_object == str(args.object_id)):
         raise ValueError("Execution requires --acknowledge-risk and --confirm-object matching --object-id")
-    token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token()
+    token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token(timeout=args.timeout)
     if not token:
         raise ValueError("No valid cached login. Run cloud_audit.py --login first.")
     cloud = cloud_get(SELECTOR, token, args.timeout)
