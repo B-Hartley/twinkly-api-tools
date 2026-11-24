@@ -30,5 +30,21 @@
     "abort": {
       "single_instance_allowed": "Already configured"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Twinkly cloud login (optional)",
+        "description": "Sign in once to enable cloud operations. The password is not retained; access and refresh tokens are stored privately in Home Assistant. Select forget to remove the saved session.",
+        "data": {
+          "username": "Twinkly account email",
+          "password": "Twinkly password",
+          "forget": "Forget saved cloud session"
+        }
+      }
+    },
+    "error": {
+      "cloud_auth_failed": "Cloud login failed. Check your credentials and network connection."
+    }
   }
 }
