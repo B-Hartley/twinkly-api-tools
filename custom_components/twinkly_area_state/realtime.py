@@ -69,3 +69,19 @@ def pixel_width(gestalt):
     if expected is not None and expected!=width:
         raise ValueError("Conflicting LED profile and pixel width")
     return width
+
+def colour_swap_frame(members, stage, channels=4):
+    """Four solid-colour pairs, independent of geometry and animation."""
+    pairs=(((255,0,0),(0,0,255)),((0,0,255),(255,0,0)),
+           ((0,255,0),(128,0,255)),((128,0,255),(0,255,0)))
+    if channels not in (3,4) or stage not in range(4):
+        raise ValueError("Invalid colour swap stage or pixel width")
+    result=bytearray()
+    for m in members:
+        name=m["name"].casefold()
+        if name not in ("office left","office right") or m["offset"]!=len(result)//channels:
+            raise ValueError("Invalid Office zone or offset")
+        rgb=pairs[stage][0 if name=="office left" else 1]
+        pixel=bytes(((0,)+rgb) if channels==4 else rgb)
+        result.extend(pixel*m["leds"])
+    return bytes(result)
