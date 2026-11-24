@@ -10,6 +10,7 @@ from homeassistant.components.light import LightEntity, ColorMode, LightEntityFe
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
+from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS
 
@@ -235,11 +236,25 @@ class VirtualLight(LightEntity):
         self._attr_supported_color_modes={self._attr_color_mode}
         mac=format_mac(m["mac"])
         connection=(CONNECTION_NETWORK_MAC,mac)
-        # HA 2026.8+ devices belong to one config entry. Keep a named
-        # companion device, with the physical MAC for cross-reference.
-        self._attr_device_info=DeviceInfo(
-            identifiers={(DOMAIN,m["mac"])},connections={connection},
-            name=m["name"]+" (Virtual)",manufacturer="Twinkly")
+        # Attach the entity directly to the native device, not a second
+        # device registration owned by this integration.
+        registry=dr.async_get(group.hass)
+        matches={}
+        for entry in group.hass.config_entries.async_entries("twinkly"):
+            for device in dr.async_entries_for_config_entry(registry,entry.entry_id):
+                if connection in device.connections or any(
+                    domain=="twinkly" and format_mac(value)==mac
+                    for domain,value in device.identifiers
+                ):
+                    matches[device.id]=device
+        if len(matches)==1:
+            self.device_entry=next(iter(matches.values()))
+            self._attr_device_info=None
+        else:
+            self._attr_device_info=DeviceInfo(
+                identifiers={(DOMAIN,m["mac"])},connections={connection},
+                name=m["name"]+" (Virtual)",manufacturer="Twinkly")
+            _LOGGER.warning("%s: expected one native device, found %s; using companion",m["name"],len(matches))
     @property
     def effect_list(self):
         return ["Solid", *self.group.patterns[self.member["mac"]]]
