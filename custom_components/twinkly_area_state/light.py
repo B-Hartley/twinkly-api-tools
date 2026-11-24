@@ -53,7 +53,7 @@ class Group:
             await self.login(m)
             d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
             group=d["group"]
-            if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or group.get("offset",0)!=m["offset"]):
+            if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or (0 if group.get("offset") is None and m["role"]=="master" else group.get("offset"))!=m["offset"]):
                 raise HomeAssistantError("Group changed; reload integration before streaming")
 
     def notify(self):
@@ -182,31 +182,36 @@ class VirtualLight(LightEntity):
             await self.group.update(self.member,False,{})
 
 async def async_setup_entry(hass,entry,async_add_entities):
-    from . import capture,query,_capture_local_groups
+    from . import query
+    from .realtime import basic_group_members
     ctx=hass.data[DOMAIN][entry.entry_id]
-    devices=ctx["devices"]
-    groups=[]
-    # Initial release intentionally limited to the tested Office pair.
-    selected=[d for d in devices if d["name"].casefold() in ("office left","office right")]
+    selected=[d for d in ctx["devices"] if d["name"].casefold() in ("office left","office right")]
     if len(selected)!=2:
+        _LOGGER.warning("Office virtual lights require both named Office controllers")
         return
+    session=async_get_clientsession(hass)
+    async def read(m,path,**kw):
+        reply=await query(session,m["ip"],path,**kw)
+        if not reply["ok"]:
+            raise ValueError(f"{m['name']}: {path}: {reply.get('error')}")
+        return reply["data"]
     async with ctx["lock"]:
-        live=[await capture(async_get_clientsession(hass),d) for d in selected]
         try:
-            records=_capture_local_groups({"devices":live})
-            for uid,record in records.items():
-                members=record["members"]
-                if any(m["size"]!=record["led_count"] for m in members):
-                    raise ValueError("Inconsistent group size")
-                for m in members:
-                    item=next(d for d in live if d["ip"]==m["ip"])
-                    m["width"]=pixel_width(item["responses"]["gestalt"]["data"])
-                    m["uid"]=uid
-                group=Group(hass,members,ctx["lock"],query)
-                group.entities=[VirtualLight(group,m) for m in members]
-                groups.append(group)
-        except (ValueError,KeyError,StopIteration):
-            _LOGGER.warning("Office virtual lights not created: complete verified local group required")
+            observations=[]
+            for m in selected:
+                gestalt=await read(m,"/xled/v1/gestalt")
+                login=await read(m,"/xled/v1/login",method="POST",
+                    payload={"challenge":base64.b64encode(os.urandom(32)).decode()})
+                token=login["authentication_token"]
+                await read(m,"/xled/v1/verify",method="POST",token=token,
+                    payload={"challenge-response":login["challenge-response"]})
+                group=await read(m,"/xled/v1/application/group",token=token)
+                observations.append((m,gestalt,group["group"]))
+            members=basic_group_members(observations)
+            group=Group(hass,members,ctx["lock"],query)
+            group.entities=[VirtualLight(group,m) for m in members]
+        except (ValueError,KeyError,TypeError,StopIteration) as exc:
+            _LOGGER.warning("Office virtual lights not created: %s",exc)
             return
-    ctx["virtual_groups"]=groups
-    async_add_entities([e for g in groups for e in g.entities])
+    ctx["virtual_groups"]=[group]
+    async_add_entities(group.entities)
