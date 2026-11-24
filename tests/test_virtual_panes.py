@@ -8,7 +8,15 @@ spec.loader.exec_module(panes)
 
 class TestPanes(unittest.TestCase):
     def test_default_count(self):
-        self.assertEqual(sum(v for k,v in panes.DEFAULTS.items() if k != "front right"), 21)
+        self.assertEqual(sum(v for k,v in panes.DEFAULTS.items() if k != "front right"), 19)
+
+    def test_master_bedroom(self):
+        self.assertEqual(panes.pane_label("Master Bedroom",0), "Left")
+        self.assertEqual(panes.pane_label("Master Bedroom",1), "Right")
+        self.assertEqual(panes.pane_indices("Master Bedroom",210), [list(range(105,210)),list(range(105))])
+
+    def test_landing_orientation(self):
+        self.assertEqual(panes.pane_indices("Landing",210), [list(range(84,210)),list(range(84))])
 
     def test_strands(self):
         parts = panes.strand_indices(210, (2,3,3,2))
