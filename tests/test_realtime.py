@@ -48,3 +48,20 @@ class DiagnosticTests(unittest.TestCase):
     def test_invalid_axis(self):
         with self.assertRaises(KeyError):
             rt.diagnostic_frame(self.members,20,axis="z")
+
+
+class MappedRainbowTests(unittest.TestCase):
+    layout={"source":"2d","coordinates":[{"x":1,"y":0},{"x":0,"y":1},{"x":.5,"y":.5}]}
+    def test_wrgb_and_reverse(self):
+        frame=rt.mapped_rainbow(self.layout,3,4)
+        self.assertEqual(frame[:4],bytes([0,255,0,0]))
+        self.assertEqual(frame[4:8],bytes([0,255,0,255]))
+        self.assertEqual(rt.mapped_rainbow(self.layout,3,4,reverse=True)[:4],frame[4:8])
+        self.assertEqual(len(frame),12)
+    def test_horizontal(self):
+        self.assertEqual(rt.mapped_rainbow(self.layout,3,3,"x")[:3],bytes([255,0,255]))
+    def test_bad_map(self):
+        with self.assertRaises(ValueError):
+            rt.mapped_rainbow(self.layout,4,4)
+        with self.assertRaises(ValueError):
+            rt.mapped_rainbow({"source":"2d","coordinates":[{"y":0}]*3},3,4)
