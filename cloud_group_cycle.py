@@ -401,6 +401,10 @@ def run(args):
                 print("WARNING: Some movie UUIDs or metadata changed after ungrouping.")
                 print("Regrouping may NOT restore lost animation frames.")
         if getattr(args, "stop_after_ungroup", False):
+            if movie_mid_report is not None and not all(
+                    item["preserved"] for item in movie_mid_report):
+                raise RuntimeError("Ungroup completed but saved movie/playlist metadata changed. "
+                                   "Stop; never rerun without reviewing backups.")
             approve("Confirm both standalone 3D layouts and effects in the Twinkly app. "
                     "No regroup will be attempted.", "DONE-UNGROUP")
             log["complete"] = True
