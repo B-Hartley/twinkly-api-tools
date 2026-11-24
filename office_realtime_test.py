@@ -5,7 +5,8 @@ import importlib.util
 from pathlib import Path
 import socket
 import time
-from group_test import load_plan
+from group_test import load_plan, GROUP_API, LAYOUT_API, layout_matches
+from movie_retention import read_member, compare
 from resume_regroup import read_state, login
 from twinkly_inspector import request
 
@@ -22,8 +23,9 @@ def checked(ip,path,token,**kwargs):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--plan",required=True)
+    p.add_argument("--plan",default="private-area-plan.json")
     p.add_argument("--execute",action="store_true")
+    p.add_argument("--finish",choices=["movie","restore"],default="movie")
     p.add_argument("--effect",choices=["solid","rainbow"],default="rainbow")
     p.add_argument("--channels",type=int,choices=[3,4],required=True)
     p.add_argument("--transport",choices=["master","direct"],default="master")
@@ -32,6 +34,11 @@ def main():
     members=sorted(plan["members"],key=lambda m:m["offset"])
     if len(members)!=2 or {m["name"].lower() for m in members}!={"office left","office right"}:
         raise ValueError("Office pair only")
+    # Cloud regroup may generate a fresh UID; validate the live group, not stale UID.
+    master=members[0]
+    uid=checked(master["ip"],GROUP_API,login(master["ip"],5))["group"]["uid"]
+    import uuid
+    uid=str(uuid.UUID(uid))
     for m in members:
         if read_state(m,uid,plan["size"],5)!={"group":"expected","layout":"area"}:
             raise RuntimeError("Regroup and verify first")
@@ -40,6 +47,9 @@ def main():
     if not a.execute:
         print("Read-only preflight passed")
         return
+    before=[read_member(m,5) for m in members]
+    if a.finish=="movie" and not before[0]["movies"]:
+        raise RuntimeError("No native movies on master")
     targets=members[:1] if a.transport=="master" else members
     sessions=[]
     for m in targets:
@@ -50,6 +60,7 @@ def main():
             raise RuntimeError("Unsupported original mode: "+old)
         sessions.append((m,token,old))
     attempted=[]
+    completed=False
     try:
         for m,token,old in sessions:
             attempted.append((m,old))
@@ -63,13 +74,14 @@ def main():
                     for packet in rt.packets(token,data):
                         sock.sendto(packet,(m["ip"],7777))
                 time.sleep(.04)
+        completed=True
     finally:
         errors=[]
         for m,old in reversed(attempted):
             try:
                 token=login(m["ip"],5)
-                checked(m["ip"],MODE,token,method="POST",payload={"mode":old})
-                print("Restored",m["name"],old)
+                checked(m["ip"],MODE,token,method="POST",payload={"mode":"movie" if completed and a.finish=="movie" else old})
+                print("Handover",m["name"],"movie" if completed and a.finish=="movie" else old)
             except Exception as exc:
                 errors.append(str(exc))
         if errors:
@@ -77,7 +89,10 @@ def main():
     for m in members:
         if read_state(m,uid,plan["size"],5)!={"group":"expected","layout":"area"}:
             raise RuntimeError("Post-test group/layout mismatch")
-    print("Group/layout verified; visually confirm animation and restored mode")
+    after=[read_member(m,5) for m in members]
+    if not all(x["preserved"] for x in compare(before,after)):
+        raise RuntimeError("Movie catalogue or playlist changed")
+    print("Group/layout and movie catalogue verified; visually confirm animation and handover")
 
 if __name__=="__main__":
     main()
