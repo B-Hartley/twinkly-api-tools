@@ -263,6 +263,53 @@ def _write_layout_diagnostic(root, device, snapshot, response):
     return base
 
 
+def _write_capture_diagnostic(root, action, state, layout_dumps):
+    """Private per-run capture JSON and exact layout bodies, even on validation failure.
+
+    Never persist session tokens, authentication headers or login/verify replies.
+    A layout body is retained verbatim because malformed JSON is the fault under
+    investigation; this data contains private LED geometry.
+    """
+    destination = Path(root)
+    destination.mkdir(mode=0o700, parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    safe_action = re.sub(r"[^a-z0-9_-]+", "-", action.lower()).strip("-")
+    basename = stamp + "-" + safe_action
+    devices_out = []
+    for i, item in enumerate(state["devices"]):
+        snap = layout_dumps[i]
+        raw = snap.get("body")
+        layout_file = None
+        if isinstance(raw, bytes):
+            layout_file = f"{basename}-device-{i + 1}-layout.txt"
+            fd = os.open(destination / layout_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "wb") as output:
+                output.write(raw)
+        devices_out.append({
+            "name": item["name"],
+            "ip": item["ip"],
+            "status": item["status"],
+            "authentication": item.get("authentication"),
+            "layout_http_status": snap.get("status"),
+            "layout_content_type": snap.get("content_type"),
+            "layout_response_bytes": len(raw) if isinstance(raw, bytes) else None,
+            "raw_layout_file": layout_file,
+            "responses": redact(item.get("responses", {})),
+            "reason": item.get("reason"),
+        })
+    report = {
+        "action": action,
+        "captured_utc": state["captured_utc"],
+        "warning": "PRIVATE: contains controller addresses, identities and LED coordinates. Do not commit to GitHub.",
+        "devices": devices_out,
+    }
+    path = destination / (basename + ".json")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as output:
+        json.dump(report, output, ensure_ascii=False, indent=2)
+    return path.name
+
+
 def _geometry_matches(a, b, tolerance=0.0003):
     """Accept only minor Twinkly floating-point round-trip differences."""
     if (not isinstance(a, dict) or not isinstance(b, dict)
@@ -422,10 +469,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Capture sequentially: the device's local API tokens can be affected by
         # other active clients; avoid overlapping session setup unnecessarily.
         result = []
+        layout_dumps = []
         for device in devices:
-            result.append(await capture(session, device))
-        return {"name": name, "captured_utc": datetime.now(timezone.utc).isoformat(),
-                "devices": result}
+            raw = {}
+            result.append(await capture(session, device, layout_dump=raw))
+            layout_dumps.append(raw)
+        state = {"name": name, "captured_utc": datetime.now(timezone.utc).isoformat(),
+                 "devices": result}
+        if name in ("capture-groups-local", "capture-3d-local"):
+            # Write BEFORE validation so malformed responses survive an exception.
+            filename = await hass.async_add_executor_job(
+                _write_capture_diagnostic,
+                hass.config.path("twinkly_area_diagnostics"), name, state, layout_dumps)
+            async_create(
+                hass, "Diagnostic JSON saved to **/config/twinkly_area_diagnostics/"
+                + filename + "**. Exact layout response bodies are in adjacent "
+                "device-layout.txt files when returned. These files are private "
+                "and may contain controller identities and LED geometry.",
+                title="Twinkly capture diagnostics saved",
+                notification_id=f"{DOMAIN}_{name}_diagnostics",
+            )
+        return state
 
     async def capture_layout_diagnostics(call: ServiceCall):
         """Explicit opt-in raw layout diagnostics, never log secrets or responses."""
