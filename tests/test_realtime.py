@@ -38,13 +38,13 @@ class DiagnosticTests(unittest.TestCase):
              for i,name in enumerate(("Office Left","Office Right"))]
     def test_isolation(self):
         self.assertEqual(rt.diagnostic_frame(self.members,0),bytes([255,0,0])*3+bytes(9))
-        self.assertEqual(rt.diagnostic_frame(self.members,5),bytes(9)+bytes([0,255,0])*3)
+        self.assertEqual(rt.diagnostic_frame(self.members,10),bytes(9)+bytes([0,255,0])*3)
     def test_opposite_spatial_phase(self):
-        frame=rt.diagnostic_frame(self.members,10)
-        flipped=rt.diagnostic_frame(self.members,10,invert=True)
+        frame=rt.diagnostic_frame(self.members,20)
+        flipped=rt.diagnostic_frame(self.members,20,invert=True)
         self.assertEqual(frame[:9],flipped[9:])
         self.assertEqual(frame[9:],flipped[:9])
         self.assertNotEqual(frame[3:6],frame[12:15])
     def test_invalid_axis(self):
         with self.assertRaises(KeyError):
-            rt.diagnostic_frame(self.members,10,axis="z")
+            rt.diagnostic_frame(self.members,20,axis="z")
