@@ -68,6 +68,10 @@ class TwinklyAreaStateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Select existing native Twinkly controllers or configure LAN IPs manually."""
     VERSION = 1
 
+    @staticmethod
+    def async_get_options_flow(config_entry):
+        return TwinklyCloudOptionsFlow()
+
     async def async_step_user(self, user_input=None):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -127,3 +131,26 @@ class TwinklyAreaStateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }),
             errors=errors,
         )
+
+
+class TwinklyCloudOptionsFlow(config_entries.OptionsFlow):
+    """Optional cloud authentication without storing the account password."""
+    async def async_step_init(self,user_input=None):
+        from .cloud_session import CloudSession
+        from homeassistant.exceptions import HomeAssistantError
+        cloud=CloudSession(self.hass,self.config_entry.entry_id)
+        errors={}
+        if user_input is not None:
+            try:
+                if user_input.get("forget"):
+                    await cloud.forget()
+                else:
+                    await cloud.login(user_input["username"],user_input["password"])
+                return self.async_create_entry(title="",data=dict(self.config_entry.options))
+            except (HomeAssistantError,KeyError):
+                errors["base"]="cloud_auth_failed"
+        return self.async_show_form(step_id="init",data_schema=vol.Schema({
+            vol.Optional("username"):str,
+            vol.Optional("password"):selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)),
+            vol.Optional("forget",default=False):bool,
+        }),errors=errors)
