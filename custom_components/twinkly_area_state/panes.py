@@ -2,7 +2,7 @@
 import math
 
 STRANDS = {
-    "office left": (2, 3, 3, 2), "office right": (2, 3, 3, 2),
+    "office left": (3, 4, 3), "office right": (3, 4, 3),
     "landing": (4, 6), "master bedroom left": (5, 5),
     "master bedroom right": (5, 5), "bar": (2, 3, 3, 2),
     "lounge": (2, 3, 3, 2), "front right bush": (1, 1),
