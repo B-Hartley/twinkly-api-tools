@@ -15,7 +15,7 @@ import sys
 import urllib.error
 
 from cloud_audit import cloud_get, objects_from, decode_coords
-from cloud_token_store import access_token as cached_access_token
+from cloud_token_store import renewable_access_token as cached_access_token
 from group_test import load_plan, layout_matches
 from twinkly_inspector import authenticate, request, save_json
 
@@ -168,7 +168,7 @@ def main():
         plan, _ = load_plan(args.plan)
         if len(plan["members"]) != 2 or plan["size"] != 420:
             raise ValueError("Office test requires exactly 2 controllers and 420 total LEDs")
-        token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token()
+        token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token(timeout=args.timeout)
         if not token:
             raise ValueError("Cloud token absent or expired; run cloud_audit.py --plan private-area-plan.json --login")
         if args.resume_run:
