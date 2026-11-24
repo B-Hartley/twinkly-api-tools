@@ -144,44 +144,29 @@ class Group:
         await self.login(self.master)
         await self.mode(self.previous or "off")
 
-    async def update(self,m,on,kwargs):
-        async with self.lock:
-            old=self.state[m["mac"]]
-            old_effect=self.effects[m["mac"]]
-            effect=kwargs.get("effect", "Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else old_effect)
-            if effect not in ["Solid", *self.patterns[m["mac"]]]:
-                raise HomeAssistantError("Effect requires a captured map for the current group")
+    def prepare(self,members,on,kwargs):
+        """Compute all requested changes before sending any frame."""
+        changes={}
+        for m in members:
+            key=m["mac"]
+            old=self.state[key]
+            effect=kwargs.get("effect", "Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else self.effects[key])
+            if effect not in ["Solid", *self.patterns[key]]:
+                raise HomeAssistantError(f"{m['name']}: effect requires a captured map")
             b=kwargs.get("brightness",old[1])
             c=kwargs.get("rgbw_color",kwargs.get("rgb_color",old[2]))
             c=tuple(c)+(0,) if len(c)==3 else tuple(c)
-            if not self.active:
-                await self.validate()
-                self.previous=(await self.call(self.master,MODE,token=self.tokens[self.master["mac"]]))["mode"]
-                if self.previous not in ("off","movie","playlist","color","effect"):
-                    raise HomeAssistantError("Group already in unsupported mode; stop external streaming first")
-                try:
-                    await self.mode("rt")
-                    self.effects[m["mac"]]=effect
-                    self.state[m["mac"]]=(on,b,c)
-                    await self.send()
-                except Exception:
-                    self.effects[m["mac"]]=old_effect
-                    self.state[m["mac"]]=old
-                    await self.restore()
-                    raise
-                self.active=True
-                self.error=False
-                self.task=self.hass.async_create_background_task(self.run(),"Twinkly virtual light frames")
-            else:
-                self.effects[m["mac"]]=effect
-                self.state[m["mac"]]=(on,b,c)
-                try:
-                    await self.send()
-                except Exception:
-                    self.effects[m["mac"]]=old_effect
-                    self.state[m["mac"]]=old
-                    raise
-            self.notify()
+            changes[key]=((on,b,c),effect)
+        return changes
+
+    async def prepare_start(self):
+        await self.validate()
+        self.previous=(await self.call(self.master,MODE,token=self.tokens[self.master["mac"]]))["mode"]
+        if self.previous not in ("off","movie","playlist","color","effect"):
+            raise HomeAssistantError("Group already in unsupported mode; stop external streaming first")
+
+    async def update(self,m,on,kwargs):
+        await update_together([(self,[m])],on,kwargs)
 
     async def run(self):
         failures=0
@@ -222,6 +207,111 @@ class Group:
             self.error=False
             self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
             self.notify()
+
+async def update_together(targets,on,kwargs):
+    """Stage all zones under the common lock; start/send concurrently."""
+    if not targets:
+        return
+    async with targets[0][0].lock:
+        targets=[(g,members) for g,members in targets if on or g.active]
+        if not targets:
+            return
+        changes=[(g,g.prepare(members,on,kwargs)) for g,members in targets]
+        starting=[g for g,_ in changes if not g.active]
+        # Validate all new sessions before touching playback mode.
+        results=await asyncio.gather(*(g.prepare_start() for g in starting),return_exceptions=True)
+        for result in results:
+            if isinstance(result,BaseException):
+                raise result
+        old=[(g,{k:(g.state[k],g.effects[k]) for k in values}) for g,values in changes]
+        try:
+            results=await asyncio.gather(*(g.mode("rt") for g in starting),return_exceptions=True)
+            for result in results:
+                if isinstance(result,BaseException):
+                    raise result
+            for g,values in changes:
+                for key,(state,effect) in values.items():
+                    g.state[key]=state
+                    g.effects[key]=effect
+            results=await asyncio.gather(*(g.send() for g,_ in changes),return_exceptions=True)
+            for result in results:
+                if isinstance(result,BaseException):
+                    raise result
+        except BaseException:
+            for g,values in old:
+                for key,(state,effect) in values.items():
+                    g.state[key]=state
+                    g.effects[key]=effect
+            await asyncio.gather(*(g.restore() for g in starting),return_exceptions=True)
+            # Active streams resend their previous state on the next tick.
+            raise
+        for g in starting:
+            g.active=True
+            g.error=False
+            g.task=g.hass.async_create_background_task(g.run(),"Twinkly virtual light frames")
+        for g,_ in changes:
+            g.notify()
+
+
+class CombinedBush(LightEntity):
+    """One logical bush containing two independently addressable controllers."""
+    _attr_should_poll=False
+    _attr_supported_features=LightEntityFeature.EFFECT
+    _attr_has_entity_name=True
+
+    def __init__(self,name,slug,targets):
+        self.targets=targets
+        self.parts=[(g,m) for g,members in targets for m in members]
+        self._attr_unique_id="combined_"+slug
+        self._attr_name=None
+        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly",model="Combined virtual bush")
+        self._attr_color_mode=ColorMode.RGBW if all(m["width"]==4 for _,m in self.parts) else ColorMode.RGB
+        self._attr_supported_color_modes={self._attr_color_mode}
+
+    @property
+    def available(self):
+        return all(not g.error for g,_ in self.parts)
+
+    @property
+    def is_on(self):
+        return any(g.active and g.state[m["mac"]][0] for g,m in self.parts)
+
+    def selected_states(self):
+        states=[g.state[m["mac"]] for g,m in self.parts]
+        return [s for s in states if s[0]] or states
+
+    @property
+    def brightness(self):
+        states=self.selected_states()
+        return round(sum(s[1] for s in states)/len(states))
+
+    @property
+    def rgbw_color(self):
+        states=self.selected_states()
+        return tuple(round(sum(s[2][i] for s in states)/len(states)) for i in range(4))
+
+    @property
+    def rgb_color(self):
+        return self.rgbw_color[:3]
+
+    @property
+    def effect_list(self):
+        common=set.intersection(*(set(g.patterns[m["mac"]]) for g,m in self.parts))
+        return ["Solid", *sorted(common)]
+
+    @property
+    def effect(self):
+        effects={g.effects[m["mac"]] for g,m in self.parts}
+        return next(iter(effects)) if len(effects)==1 else None
+
+    async def async_turn_on(self,**kwargs):
+        if "effect" in kwargs and kwargs["effect"] not in self.effect_list:
+            raise HomeAssistantError("Effect is not available on both bush halves")
+        await update_together(self.targets,True,kwargs)
+
+    async def async_turn_off(self,**kwargs):
+        await update_together(self.targets,False,{})
+
 
 class VirtualLight(LightEntity):
     _attr_should_poll=False
@@ -331,4 +421,28 @@ async def async_setup_entry(hass,entry,async_add_entities):
             except (ValueError,KeyError,TypeError,StopIteration) as exc:
                 _LOGGER.warning("Virtual group %s not created: %s; discovered %s",uid,exc,[(m["name"],g.get("mode"),g.get("offset"),g.get("size"),hw.get("number_of_led")) for m,hw,g in items])
     ctx["virtual_groups"]=groups
-    async_add_entities([e for group in groups for e in group.entities])
+    combined=[]
+    definitions=(
+        ("Virtual Front Left Bush","front_left_bush",({"front left top"},{"front left bottom"})),
+        ("Virtual Back Right Bush","back_right_bush",({"back bush top","backr bush top","back right bush top"},{"back bush bottom","backr bush bottom","back right bush bottom"})),
+    )
+    for name,slug,aliases in definitions:
+        matches=[[(g,m) for g in groups for m in g.members if " ".join(m["name"].casefold().split()) in names] for names in aliases]
+        if any(len(match)!=1 for match in matches):
+            _LOGGER.warning("%s: expected exactly one controller per half; found %s",name,[len(x) for x in matches])
+            continue
+        targets=[]
+        for match in matches:
+            g,m=match[0]
+            existing=next((members for owner,members in targets if owner is g),None)
+            if existing is None:
+                targets.append((g,[m]))
+            else:
+                existing.append(m)
+        entity=CombinedBush(name,slug,targets)
+        for g,_ in targets:
+            # Share notifications, but add the combined entity only once.
+            g.entities.append(entity)
+        combined.append(entity)
+    individual=[e for group in groups for e in group.entities if isinstance(e,VirtualLight)]
+    async_add_entities(individual+combined)
