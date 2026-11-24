@@ -24,3 +24,35 @@ def frame_at(members, t, effect="rainbow", channels=3):
                 result.append(0) # RGBW devices use WRGB wire order
             result.extend(int(v*level) for v in rgb)
     return bytes(result)
+
+def diagnostic_frame(members, t, channels=3, axis="y", invert=False):
+    """Five seconds per solid isolation test, then opposing moving rainbows."""
+    import math
+    if channels not in (3,4) or axis not in ("x","y","z"):
+        raise ValueError("Unsupported format or axis")
+    result=bytearray()
+    for m in members:
+        name=m["name"].casefold()
+        if name not in ("office left","office right") or m["offset"] != len(result)//channels:
+            raise ValueError("Unexpected Office zone or offset")
+        coords=m["area_layout"]["coordinates"]
+        values=[float(c[axis]) for c in coords]
+        if len(values)!=m["leds"] or not all(map(math.isfinite,values)) or max(values)<=min(values):
+            raise ValueError("Invalid vertical mapping axis for "+m["name"])
+        lo,hi=min(values),max(values)
+        left=name=="office left"
+        for v in values:
+            if t<5:
+                rgb=(255,0,0) if left else (0,0,0)
+            elif t<10:
+                rgb=(0,0,0) if left else (0,255,0)
+            else:
+                height=(v-lo)/(hi-lo)
+                if invert:
+                    height=1-height
+                phase=height if left else -height
+                rgb=tuple(int(c*255) for c in colorsys.hsv_to_rgb((phase+(t-10)*.25)%1,1,1))
+            if channels==4:
+                result.append(0)
+            result.extend(rgb)
+    return bytes(result)
