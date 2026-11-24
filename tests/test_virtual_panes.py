@@ -8,7 +8,7 @@ spec.loader.exec_module(panes)
 
 class TestPanes(unittest.TestCase):
     def test_default_count(self):
-        self.assertEqual(sum(v for k,v in panes.DEFAULTS.items() if k != "front right"), 24)
+        self.assertEqual(sum(v for k,v in panes.DEFAULTS.items() if k != "front right"), 22)
 
     def test_strands(self):
         parts = panes.strand_indices(210, (2,3,3,2))
@@ -18,6 +18,13 @@ class TestPanes(unittest.TestCase):
         self.assertEqual([len(p) for p in panes.strand_indices(600,(1,1))], [300,300])
         with self.assertRaises(ValueError):
             panes.strand_indices(211,(2,3,3,2))
+
+    def test_office_panes(self):
+        for name in ("office left", "office right"):
+            self.assertEqual(panes.STRANDS[name], (3,4,3))
+            parts = panes.strand_indices(210, panes.STRANDS[name], name == "office right")
+            self.assertEqual([len(p) for p in parts], [63,84,63])
+            self.assertEqual(sorted(sum(parts, [])), list(range(210)))
 
     def test_partition(self):
         layout = {"coordinates": [{"x": x} for x in (0, 0.2, 0.4, 0.6, 0.8, 1)]}
