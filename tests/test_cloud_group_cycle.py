@@ -74,6 +74,19 @@ class CycleTests(unittest.TestCase):
             cycle.cloud_write("POST", "/v3/objects/123", {}, "token", 200, 10)
         opener.assert_not_called()
 
+    def test_cloud_roundtrip_precision_matches_preflight_tolerance(self):
+        original = [point(1), point(2)]
+        latest = copy.deepcopy(original)
+        latest[0]["x"] += 0.00024405
+        self.assertFalse(preflight.compare_points(original, latest)["matching"])
+        self.assertTrue(preflight.compare_points(
+            original, latest, tolerance=cycle.CLOUD_LOCAL_TOLERANCE)["matching"])
+        latest[0]["x"] += 0.00010
+        comparison = preflight.compare_points(
+            original, latest, tolerance=cycle.CLOUD_LOCAL_TOLERANCE)
+        self.assertFalse(comparison["matching"])
+        self.assertEqual(comparison["mismatched_leds"], 1)
+
     def test_default_dry_run_does_not_write(self):
         args = argparse.Namespace(
             plan="private-area-plan.json", group="Office Windows", timeout=10,
