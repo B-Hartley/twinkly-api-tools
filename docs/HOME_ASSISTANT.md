@@ -10,7 +10,8 @@ It does **not** replace, patch or import the native Twinkly light integration.
 2. Open **Custom repositories** and add `https://github.com/B-Hartley/twinkly-api-tools` as an **Integration**.
 3. Install **Twinkly Area Manager** and restart Home Assistant.
 4. Open **Settings → Devices & services → Add integration → Twinkly Area Manager**.
-5. The form will prefill controllers already configured in Home Assistant's **Twinkly** integration where their private LAN IP addresses are available. Review/remove controllers before saving. If no existing controllers are found, enter a JSON list, for example:
+5. If Home Assistant already has Twinkly controllers configured, a **multi-select list** of their names and IPs appears. Select the physical controllers to include, or choose **Enter IP addresses manually instead**.
+6. If no known Twinkly controllers are available, or you select manual setup, enter a JSON list, for example:
 
 ```json
 [
