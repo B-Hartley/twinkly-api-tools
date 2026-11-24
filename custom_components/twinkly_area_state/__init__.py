@@ -33,6 +33,10 @@ ENDPOINTS = {
     "group_config": "/xled/v1/led/movie/config",
     "mode": "/xled/v1/led/mode",
     "config": "/xled/v1/led/config",
+    "group": "/xled/v1/application/group",
+    "movies": "/xled/v1/movies",
+    "playlist": "/xled/v1/playlist",
+    "current_movie": "/xled/v1/movies/current",
 }
 SENSITIVE = {"authentication_token", "challenge", "challenge-response", "password", "token", "secret"}
 STATE_NAME = vol.All(str, vol.Match(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$"))
@@ -189,6 +193,120 @@ def window_plan(snapshot, left_name, right_name, gap_width=1.0):
             "gap_in_window_widths": gap_width, "windows": results}
 
 
+def _validated_controller(item):
+    """Validate hardware identity, local role and LED map from authenticated GETs."""
+    if item.get("status") != "captured":
+        raise ValueError(item.get("name", "Controller") + ": offline")
+    replies = item.get("responses", {})
+    for key in ("gestalt", "layout", "group"):
+        if not replies.get(key, {}).get("ok"):
+            raise ValueError(item["name"] + ": missing " + key + " response")
+    identity = replies["gestalt"]["data"]
+    layout = replies["layout"]["data"]
+    group = replies["group"]["data"].get("group")
+    if not isinstance(identity, dict) or not isinstance(layout, dict) or not isinstance(group, dict):
+        raise ValueError(item["name"] + ": invalid device reply")
+    led_count = identity.get("number_of_led")
+    address = str(identity.get("mac", "")).lower().replace(":", "")
+    coords = layout.get("coordinates")
+    if (not re.fullmatch(r"[0-9a-f]{12}", address)
+            or type(led_count) is not int or led_count <= 0
+            or not isinstance(coords, list) or len(coords) != led_count
+            or layout.get("source") not in ("2d", "3d")):
+        raise ValueError(item["name"] + ": invalid MAC / mapping / LED count")
+    if any(not isinstance(p, dict) or any(
+            type(p.get(axis)) not in (float, int)
+            for axis in ("x", "y", "z")) for p in coords):
+        raise ValueError(item["name"] + ": coordinates malformed")
+    return address, led_count, layout, group
+
+
+def _capture_local_groups(state):
+    """Local grouped maps only; Twinkly cloud Area must be validated separately."""
+    members = {}
+    for item in state["devices"]:
+        mac, count, layout, group = _validated_controller(item)
+        if group.get("mode") not in ("master", "slave"):
+            continue
+        if layout.get("source") != "2d":
+            raise ValueError(item["name"] + ": grouped but not 2D")
+        uid = str(group.get("uid", "")).lower()
+        if not re.fullmatch(r"[0-9a-f-]{36}", uid):
+            raise ValueError(item["name"] + ": group UID missing")
+        members.setdefault(uid, []).append({
+            "name": item["name"], "ip": item["ip"], "mac": mac,
+            "led_count": count, "layout": layout, "role": group["mode"],
+            "offset": group.get("offset"), "size": group.get("size"),
+            "movies": item["responses"].get("movies"),
+            "playlist": item["responses"].get("playlist"),
+        })
+    if not members:
+        raise ValueError("No live local groups found")
+    records = {}
+    for uid, grouped in members.items():
+        if len(grouped) != 2 or sorted(x["role"] for x in grouped) != ["master", "slave"]:
+            raise ValueError("Group " + uid + ": expected exactly one master and one slave")
+        grouped.sort(key=lambda x: 0 if x["role"] == "master" else 1)
+        if grouped[0]["size"] != grouped[1]["size"] or grouped[0]["size"] != sum(
+                x["led_count"] for x in grouped):
+            raise ValueError("Group " + uid + ": inconsistent LED count")
+        if sorted(x["offset"] for x in grouped) != [0, grouped[0]["led_count"]]:
+            raise ValueError("Group " + uid + ": unexpected offsets")
+        records[uid] = {"members": grouped, "led_count": grouped[0]["size"],
+                        "source": "local-group-only",
+                        "cloud_area_verified": False}
+    return records
+
+
+def _capture_live_3d(state):
+    """3D reference must come from currently standalone hardware, not a 2D guess."""
+    records = {}
+    for item in state["devices"]:
+        mac, count, layout, group = _validated_controller(item)
+        if layout["source"] != "3d" or group.get("mode") != "none":
+            continue
+        records[mac] = {"name": item["name"], "ip_at_capture": item["ip"],
+                        "led_count": count, "layout": layout,
+                        "sha256": digest(layout),
+                        "source": "live-standalone-3d"}
+    if not records:
+        raise ValueError("No standalone 3D controllers found; grouped 2D cannot be saved as 3D")
+    return records
+
+
+def _verify_archives(state, archives):
+    """Compare live state with saved mapping for whichever state is currently active."""
+    current = {}
+    for item in state["devices"]:
+        mac, count, layout, group = _validated_controller(item)
+        current[mac] = {"count": count, "layout": layout, "group": group}
+    notes = []
+    saved_3d = archives.get("maps_3d", {})
+    for mac, ref in saved_3d.items():
+        observed = current.get(mac)
+        if not observed:
+            notes.append("Missing controller " + mac[-4:])
+        elif observed["group"].get("mode") == "none":
+            if observed["layout"]["source"] != "3d" or digest(observed["layout"]) != ref["sha256"]:
+                notes.append("3D reference differs for " + mac[-4:])
+    saved_groups = archives.get("groups", {})
+    for uid, group in saved_groups.items():
+        live_members = [(m, current.get(m["mac"])) for m in group["members"]]
+        if not all(observed is not None for _, observed in live_members):
+            notes.append("Group " + uid[:8] + ": member missing")
+            continue
+        # Saved UUID identifies the historical group. New cloud groups receive
+        # new UIDs, so compare geometry only if the live group still has that UID.
+        if all(observed["group"].get("mode") in ("master", "slave")
+               for _, observed in live_members):
+            for member, observed in live_members:
+                if observed["layout"]["source"] != "2d":
+                    notes.append("Group member not 2D: " + member["name"])
+                elif digest(observed["layout"]) != digest(member["layout"]):
+                    notes.append("Saved group layout differs: " + member["name"])
+    return notes
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Register capture, audit, and explicitly non-destructive restore-plan actions."""
     devices = validate_devices(entry.data[CONF_DEVICES_JSON])
@@ -200,6 +318,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         result = await asyncio.gather(*(capture(session, d) for d in devices))
         return {"name": name, "captured_utc": datetime.now(timezone.utc).isoformat(),
                 "devices": result}
+
+    async def capture_groups(call: ServiceCall):
+        async with lock:
+            live = await collect("capture-groups-local")
+            records = _capture_local_groups(live)
+            data = await store.async_load() or {}
+            archives = data.setdefault("_area_manager", {"maps_3d": {}, "groups": {}})
+            saved = archives.setdefault("groups", {})
+            for uid, record in records.items():
+                if uid in saved and digest(saved[uid]) != digest(record):
+                    raise ValueError("Existing captured group " + uid + " differs; refusing overwrite")
+                saved.setdefault(uid, record)
+            await store.async_save(data)
+            async_create(hass, f"Captured {len(records)} group(s), with LED layouts and movie "
+                         "catalogues, from the local controllers. Cloud Area identity is "
+                         "NOT verified by this HA action. Existing captures were not overwritten.",
+                         title="Twinkly groups captured",
+                         notification_id=f"{DOMAIN}_capture_group")
+
+    async def capture_3d_maps(call: ServiceCall):
+        async with lock:
+            live = await collect("capture-3d-local")
+            records = _capture_live_3d(live)
+            data = await store.async_load() or {}
+            archives = data.setdefault("_area_manager", {"maps_3d": {}, "groups": {}})
+            saved = archives.setdefault("maps_3d", {})
+            for mac, record in records.items():
+                if mac in saved and saved[mac]["sha256"] != record["sha256"]:
+                    raise ValueError("Different 3D reference already saved for " + mac[-4:])
+                saved.setdefault(mac, record)
+            await store.async_save(data)
+            async_create(hass, f"Captured {len(records)} standalone 3D mapping(s). "
+                         "Controllers currently grouped in 2D were not saved as 3D.",
+                         title="Twinkly 3D mappings captured",
+                         notification_id=f"{DOMAIN}_capture_3d")
+
+    async def verify_archives(call: ServiceCall):
+        async with lock:
+            live = await collect("verify-live")
+            data = await store.async_load() or {}
+            archives = data.get("_area_manager", {})
+            if not archives.get("maps_3d") and not archives.get("groups"):
+                raise ValueError("No captured group or 3D references to verify")
+            issues = _verify_archives(live, archives)
+            async_create(hass, ("PASS: current local geometry matches the applicable "
+                               "saved references." if not issues else
+                               "CHECK: " + "; ".join(issues)) +
+                         " Cloud Area verification requires the separate cloud CLI.",
+                         title="Twinkly Area verification",
+                         notification_id=f"{DOMAIN}_verify")
 
     async def save_state(call: ServiceCall):
         async with lock:
@@ -250,6 +418,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                          title="Twinkly office window test plan",
                          notification_id=f"{DOMAIN}_office")
 
+    hass.services.async_register(DOMAIN, "capture_groups", capture_groups)
+    hass.services.async_register(DOMAIN, "capture_3d_maps", capture_3d_maps)
+    hass.services.async_register(DOMAIN, "verify_archives", verify_archives)
     hass.services.async_register(DOMAIN, "save_state", save_state,
         schema=vol.Schema({vol.Required("name"): STATE_NAME}))
     hass.services.async_register(DOMAIN, "restore_state", restore_state,
@@ -257,12 +428,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(DOMAIN, "office_window_plan", office_plan,
         schema=vol.Schema({vol.Required("name"): STATE_NAME,
                            vol.Required("left"): str, vol.Required("right"): str}))
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"store": store}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "store": store,
+        "actions": {"capture_groups": capture_groups,
+                    "capture_3d_maps": capture_3d_maps,
+                    "verify_archives": verify_archives},
+    }
+    await hass.config_entries.async_forward_entry_setups(entry, ["button"])
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    for service in ("save_state", "restore_state", "office_window_plan"):
+    await hass.config_entries.async_unload_platforms(entry, ["button"])
+    for service in ("save_state", "restore_state", "office_window_plan",
+                    "capture_groups", "capture_3d_maps", "verify_archives"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
