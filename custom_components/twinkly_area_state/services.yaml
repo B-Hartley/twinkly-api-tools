@@ -1,3 +1,12 @@
+capture_groups:
+  name: Capture live group(s)
+  description: Save immutable local 2D group geometry and uploaded movie metadata. Requires full master/slave group and does not write to lights. Cloud Area is verified only by the separate CLI.
+capture_3d_maps:
+  name: Capture original 3D map(s)
+  description: Save immutable original 3D mapping only from currently standalone 3D controllers. Grouped 2D maps cannot be treated as original 3D.
+verify_archives:
+  name: Verify saved groups and 3D maps
+  description: Read live controllers and compare applicable saved LED coordinates and hardware identities. Does not change lights or cloud groups.
 save_state:
   name: Save named Twinkly state
   description: Capture and retain raw local controller responses and X/Y/Z LED coordinates by name. Existing named state will be replaced.
