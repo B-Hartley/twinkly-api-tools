@@ -2,7 +2,7 @@
 """Windows DPAPI-protected Twinkly cloud token cache.
 
 Tokens are encrypted to the current Windows account, never committed to Git,
-and only accessed by local scripts. Refresh flow is intentionally not guessed.
+and only accessed by local scripts. Expired sessions can be renewed using the confirmed cloud refresh endpoint.
 """
 import ctypes
 from ctypes import wintypes
@@ -106,3 +106,32 @@ def access_token(location=None):
 def clear_session(location=None):
     location = Path(location) if location else cache_path()
     location.unlink(missing_ok=True)
+
+
+def renewable_access_token(location=None, timeout=10):
+    """Reuse valid tokens; serialize rotating refreshes across Windows processes."""
+    location=Path(location) if location else cache_path()
+    if not location.is_file():
+        return None
+    if os.name!="nt":
+        raise RuntimeError("Cloud session renewal requires Windows DPAPI")
+    import msvcrt
+    from cloud_auth import refresh_session
+    with open(str(location)+".lock","a+b") as lock:
+        lock.seek(0)
+        msvcrt.locking(lock.fileno(),msvcrt.LK_LOCK,1)
+        try:
+            session=load_session(location)
+            if not session:
+                return None
+            if session["expires_at"]>time.time()+300:
+                return session["access_token"]
+            if not session.get("refresh_token"):
+                return access_token(location)
+            renewed=refresh_session(session["refresh_token"],timeout)
+            store_session(renewed,location)
+            print("Twinkly cloud session renewed; encrypted token cache updated.")
+            return renewed["access_token"]
+        finally:
+            lock.seek(0)
+            msvcrt.locking(lock.fileno(),msvcrt.LK_UNLCK,1)
