@@ -41,7 +41,7 @@ class EffectsCaptureTests(unittest.TestCase):
     def test_documented_get_paths(self):
         self.assertEqual(inspector.ENDPOINTS["movies_catalogue"], "/xled/v1/movies")
         self.assertEqual(inspector.ENDPOINTS["movies_current"],
-                         "/xled/v1/led/movies/current")
+                         "/xled/v1/movies/current")
         self.assertEqual(inspector.ENDPOINTS["playlist"], "/xled/v1/playlist")
         self.assertEqual(inspector.ENDPOINTS["effects_catalogue"],
                          "/xled/v1/led/effects")
