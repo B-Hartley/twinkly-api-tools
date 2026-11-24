@@ -12,6 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
+from .panes import DEFAULTS, pane_indices, pane_label, composite
 from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
 
 _LOGGER=logging.getLogger(__name__)
@@ -33,6 +34,9 @@ class Group:
         self.expiry={}
         self.effects={m["mac"]:"Solid" for m in members}
         self.geometry={}
+        self.pane_maps={}
+        self.pane_states={}
+        self.pane_overrides=set()
         self.combined_geometry={}
         self.combined_selected=set()
         self.patterns={m["mac"]:{} for m in members}
@@ -93,6 +97,14 @@ class Group:
                     patterns.update({name:None for name in SPIRAL_EFFECTS})
                 except (ValueError,KeyError,TypeError) as exc:
                     _LOGGER.warning("%s: spiral unavailable: %s",m["name"],exc)
+            name=" ".join(m["name"].casefold().split())
+            if name in DEFAULTS:
+                config=data.get("_virtual_panes",{}).get(mac,{})
+                try:
+                    self.pane_maps[mac]=pane_indices(name,m["led_count"],config.get("reverse"))
+                except (ValueError,KeyError,TypeError) as exc:
+                    self.pane_maps.pop(mac,None)
+                    _LOGGER.warning("%s: pane map unavailable: %s",m["name"],exc)
             self.patterns[mac]=patterns
             if self.effects[m["mac"]] not in patterns:
                 self.effects[m["mac"]]="Solid"
@@ -120,6 +132,15 @@ class Group:
         if effect in SPIRAL_EFFECTS and m["mac"] in self.geometry:
             geometry=self.combined_geometry.get(m["mac"],self.geometry[m["mac"]]) if m["mac"] in self.combined_selected else self.geometry[m["mac"]]
             frame=spiral_frame(geometry,m["width"],effect,now,rgbw,brightness if on else 0)
+        mac=m["mac"]
+        if mac in self.pane_overrides:
+            frame=bytearray(frame)
+            for i,indices in enumerate(self.pane_maps.get(mac,[])):
+                enabled,level,color=self.pane_states[(mac,i)]
+                r,g,b,w=(round(c*level/255) if enabled else 0 for c in color)
+                pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
+                composite(frame,m["width"],indices,pixel*m["led_count"])
+            frame=bytes(frame)
         for attempt in range(3):
             try:
                 async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
@@ -171,6 +192,43 @@ class Group:
     async def update(self,m,on,kwargs):
         await update_together([(self,[m])],on,kwargs)
 
+    async def update_pane(self,m,index,on,kwargs):
+        mac=m["mac"]
+        async with self.lock:
+            if mac not in self.pane_maps:
+                raise HomeAssistantError("Capture a valid pane map first")
+            if not on and not self.active:
+                return
+            starting=not self.active
+            if starting:
+                await self.prepare_start()
+            old_states=self.pane_states.copy()
+            old_overrides=self.pane_overrides.copy()
+            try:
+                if mac not in self.pane_overrides:
+                    for i in range(len(self.pane_maps[mac])):
+                        self.pane_states[(mac,i)]=self.state[mac]
+                self.pane_overrides.add(mac)
+                old=self.pane_states[(mac,index)]
+                color=tuple(kwargs.get("rgbw_color",kwargs.get("rgb_color",old[2])))
+                if len(color)==3:
+                    color+=(0,)
+                self.pane_states[(mac,index)]=(on,kwargs.get("brightness",old[1]),color)
+                if starting:
+                    await self.mode("rt")
+                await self.send()
+            except BaseException:
+                self.pane_states=old_states
+                self.pane_overrides=old_overrides
+                if starting:
+                    await asyncio.gather(self.restore(),return_exceptions=True)
+                raise
+            if starting:
+                self.active=True
+                self.error=False
+                self.task=self.hass.async_create_background_task(self.run(),"Twinkly virtual pane frames")
+            self.notify()
+
     async def run(self):
         failures=0
         while self.active:
@@ -209,6 +267,8 @@ class Group:
             await self.mode("movie" if movie else self.previous or "off")
             self.error=False
             self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
+            self.pane_overrides.clear()
+            self.pane_states.clear()
             self.notify()
 
 async def update_together(targets,on,kwargs,combined=False):
@@ -227,6 +287,7 @@ async def update_together(targets,on,kwargs,combined=False):
             if isinstance(result,BaseException):
                 raise result
         old=[(g,{k:(g.state[k],g.effects[k],k in g.combined_selected) for k in values}) for g,values in changes]
+        old_panes=[(g,g.pane_overrides.copy()) for g,_ in changes]
         try:
             results=await asyncio.gather(*(g.mode("rt") for g in starting),return_exceptions=True)
             for result in results:
@@ -236,6 +297,7 @@ async def update_together(targets,on,kwargs,combined=False):
                 for key,(state,effect) in values.items():
                     g.state[key]=state
                     g.effects[key]=effect
+                    g.pane_overrides.discard(key)
                     if combined and key in g.combined_geometry:
                         g.combined_selected.add(key)
                     else:
@@ -245,6 +307,8 @@ async def update_together(targets,on,kwargs,combined=False):
                 if isinstance(result,BaseException):
                     raise result
         except BaseException:
+            for g,overrides in old_panes:
+                g.pane_overrides=overrides
             for g,values in old:
                 for key,(state,effect,was_combined) in values.items():
                     g.state[key]=state
@@ -395,7 +459,10 @@ class VirtualLight(LightEntity):
         return not self.group.error
     @property
     def is_on(self):
-        return self.group.active and self.group.state[self.member["mac"]][0]
+        mac=self.member["mac"]
+        if mac in self.group.pane_overrides:
+            return self.group.active and any(self.group.pane_states[(mac,i)][0] for i in range(len(self.group.pane_maps.get(mac,[]))))
+        return self.group.active and self.group.state[mac][0]
     @property
     def brightness(self):
         return self.group.state[self.member["mac"]][1]
@@ -410,6 +477,56 @@ class VirtualLight(LightEntity):
     async def async_turn_off(self,**kwargs):
         if self.group.active:
             await self.group.update(self.member,False,{})
+
+class PaneLight(VirtualLight):
+    _attr_supported_features=LightEntityFeature(0)
+
+    def __init__(self,group,m,index):
+        super().__init__(group,m)
+        self.index=index
+        self._attr_name=pane_label(m["name"],index)
+        self._attr_unique_id=f"{m['mac']}_pane_{index+1}"
+
+    @property
+    def available(self):
+        return super().available and self.member["mac"] in self.group.pane_maps
+
+    def pane_state(self):
+        mac=self.member["mac"]
+        if mac in self.group.pane_overrides:
+            return self.group.pane_states[(mac,self.index)]
+        return self.group.state[mac]
+
+    @property
+    def is_on(self):
+        return self.group.active and self.pane_state()[0]
+
+    @property
+    def brightness(self):
+        return self.pane_state()[1]
+
+    @property
+    def rgbw_color(self):
+        return self.pane_state()[2]
+
+    @property
+    def effect_list(self):
+        return None
+
+    @property
+    def effect(self):
+        return None
+
+    @property
+    def extra_state_attributes(self):
+        maps=self.group.pane_maps.get(self.member["mac"])
+        return {"pane_led_count":len(maps[self.index]) if maps else 0}
+
+    async def async_turn_on(self,**kwargs):
+        await self.group.update_pane(self.member,self.index,True,kwargs)
+
+    async def async_turn_off(self,**kwargs):
+        await self.group.update_pane(self.member,self.index,False,{})
 
 async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
@@ -456,6 +573,7 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 group=Group(hass,members,ctx["lock"],query)
                 group.load_maps(data)
                 group.entities=[VirtualLight(group,m) for m in members]
+                group.entities.extend(PaneLight(group,m,i) for m in members for i in range(DEFAULTS.get(" ".join(m["name"].casefold().split()),0)))
                 groups.append(group)
             except (ValueError,KeyError,TypeError,StopIteration) as exc:
                 _LOGGER.warning("Virtual group %s not created: %s; discovered %s",uid,exc,[(m["name"],g.get("mode"),g.get("offset"),g.get("size"),hw.get("number_of_led")) for m,hw,g in items])
