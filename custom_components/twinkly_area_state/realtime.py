@@ -110,8 +110,8 @@ def basic_group_members(observations):
             raise ValueError(f"{name}: invalid group role, offset or size")
         members.append(dict(device,mac=mac,led_count=count,role=role,offset=offset,
                             size=size,uid=uid,width=pixel_width(gestalt)))
-    if len(members)!=2 or len({m["uid"] for m in members})!=1 or len({m["mac"] for m in members})!=2 or sum(m["role"]=="master" for m in members)!=1:
-        raise ValueError("Expected two distinct controllers in one group with one master")
+    if len(members)<2 or len({m["uid"] for m in members})!=1 or len({m["mac"] for m in members})!=len(members) or sum(m["role"]=="master" for m in members)!=1:
+        raise ValueError("Expected distinct controllers in one complete group with one master")
     total=sum(m["led_count"] for m in members)
     end=0
     for m in sorted(members,key=lambda m:m["offset"]):
@@ -139,4 +139,49 @@ def mapped_rainbow(layout, count, width, axis="y", reverse=False):
             fraction=1-fraction
         rgb=tuple(round(c*255) for c in colorsys.hsv_to_rgb(fraction*5/6,1,1))
         result.extend((0,)+rgb if width==4 else rgb)
+    return bytes(result)
+
+SPIRAL_EFFECTS=("Static spiral","Rising spiral","Falling spiral","Rainbow spiral","Double helix")
+MOVING_SPIRALS=SPIRAL_EFFECTS[1:]
+
+def spiral_geometry(layout,count):
+    """Precompute azimuth and normalized height in the original LED order."""
+    import math
+    if layout.get("source")!="3d":
+        raise ValueError("Spiral requires original 3D geometry")
+    coords=layout.get("coordinates",[])
+    if len(coords)!=count or not coords:
+        raise ValueError("3D map count mismatch")
+    points=[tuple(float(p[a]) for a in ("x","y","z")) for p in coords]
+    if not all(math.isfinite(v) for p in points for v in p):
+        raise ValueError("Nonfinite 3D coordinates")
+    xs,ys,zs=zip(*points)
+    # Y is vertical; X/Z describe the horizontal cross-section.
+    lo,hi=min(ys),max(ys)
+    if hi<=lo or max(xs)<=min(xs) or max(zs)<=min(zs):
+        raise ValueError("Degenerate 3D spiral geometry")
+    cx=(min(xs)+max(xs))/2
+    cz=(min(zs)+max(zs))/2
+    return tuple((math.atan2(z-cz,x-cx)/(2*math.pi),(y-lo)/(hi-lo))
+                 for x,y,z in points)
+
+def spiral_frame(geometry,width,effect,elapsed,rgbw,brightness):
+    """Continuous six-second helix with a feathered luminous band."""
+    import math
+    if width not in (3,4) or effect not in SPIRAL_EFFECTS:
+        raise ValueError("Unknown spiral or pixel format")
+    motion=0 if effect=="Static spiral" else (-1 if effect=="Falling spiral" else 1)
+    phase=motion*(elapsed%6)/6
+    arms=2 if effect=="Double helix" else 1
+    result=bytearray()
+    for angle,height in geometry:
+        wave=(1+math.cos(2*math.pi*arms*(angle-2*height+phase)))/2
+        level=wave**8*brightness/255
+        if effect=="Rainbow spiral":
+            r,g,b=(round(c*255) for c in colorsys.hsv_to_rgb((height+phase)%1,1,1))
+            w=0
+        else:
+            r,g,b,w=rgbw
+        pixel=(w,r,g,b) if width==4 else (r,g,b)
+        result.extend(round(c*level) for c in pixel)
     return bytes(result)
