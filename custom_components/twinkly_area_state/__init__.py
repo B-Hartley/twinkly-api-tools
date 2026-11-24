@@ -85,30 +85,66 @@ def parse_twinkly_json(raw):
 
 
 async def query(session, ip, endpoint, *, method="GET", payload=None, token=None, debug_capture=None):
-    """Make a bounded local request with no redirects."""
+    """Read the complete bounded response; retry incomplete GET JSON after cooldown.
+
+    aiohttp StreamReader.read(n) can return fewer than n bytes even when more
+    data will arrive. Accumulate chunks until EOF rather than parsing the first.
+    Never retry authentication POSTs or other writes.
+    """
     headers = {"Accept": "application/json"}
     if token:
         headers["X-Auth-Token"] = token
     url = f"http://{ip}{endpoint}"
-    try:
-        async with session.request(method, url, json=payload, headers=headers,
-                                   allow_redirects=False, timeout=6) as resp:
-            if debug_capture is not None:
-                debug_capture["status"] = resp.status
-                debug_capture["content_type"] = resp.headers.get("Content-Type", "")[:100]
-            if resp.status != 200:
-                return {"ok": False, "error": f"HTTP {resp.status}"}
-            raw = await resp.content.read(MAX_RESPONSE + 1)
-            if debug_capture is not None:
-                debug_capture["body"] = raw
-            if len(raw) > MAX_RESPONSE:
-                return {"ok": False, "error": "Response too large"}
-            data = parse_twinkly_json(raw)
-            if isinstance(data, dict) and data.get("code") not in (None, 1000):
-                return {"ok": False, "error": f"Device code {data.get('code')}"}
-            return {"ok": True, "data": data}
-    except (asyncio.TimeoutError, OSError, ValueError) as exc:
-        return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+    attempts = 3 if method == "GET" else 1
+    for attempt in range(1, attempts + 1):
+        if debug_capture is not None:
+            debug_capture.clear()
+            debug_capture["attempt"] = attempt
+        try:
+            async with session.request(
+                method, url, json=payload, headers=headers,
+                allow_redirects=False, timeout=15,
+            ) as resp:
+                if debug_capture is not None:
+                    debug_capture["status"] = resp.status
+                    debug_capture["content_type"] = resp.headers.get("Content-Type", "")[:100]
+                if resp.status != 200:
+                    return {"ok": False, "error": f"HTTP {resp.status}"}
+                chunks = []
+                total = 0
+                while True:
+                    chunk = await resp.content.read(min(64 * 1024, MAX_RESPONSE + 1 - total))
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                    total += len(chunk)
+                    if total > MAX_RESPONSE:
+                        return {"ok": False, "error": "Response too large"}
+                raw = b"".join(chunks)
+                if debug_capture is not None:
+                    debug_capture["body"] = raw
+                try:
+                    data = parse_twinkly_json(raw)
+                except ValueError as exc:
+                    # A successful HTTP response with unfinished JSON may be
+                    # an interrupted stream. Retry fresh, never splice fragments.
+                    if method == "GET" and attempt < attempts:
+                        _LOGGER.debug(
+                            "Twinkly %s GET returned invalid JSON on attempt %s/%s; "
+                            "retrying after cooldown: %s", endpoint, attempt, attempts, exc
+                        )
+                        await asyncio.sleep(float(attempt))
+                        continue
+                    return {"ok": False, "error": (
+                        f"Incomplete or malformed controller JSON after {attempt} "
+                        f"attempt(s): {exc}"
+                    )}
+                if isinstance(data, dict) and data.get("code") not in (None, 1000):
+                    return {"ok": False, "error": f"Device code {data.get('code')}"}
+                return {"ok": True, "data": data}
+        except (asyncio.TimeoutError, OSError, ValueError) as exc:
+            return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+    return {"ok": False, "error": "Controller read failed after retries"}
 
 
 async def capture(session, device, *, layout_dump=None):
@@ -421,7 +457,22 @@ def _capture_live_3d(state):
                         "sha256": digest(layout),
                         "source": "live-standalone-3d"}
     if not records:
-        raise ValueError("No standalone 3D controllers found; grouped 2D cannot be saved as 3D")
+        grouped = []
+        for item in state["devices"]:
+            role = (item.get("responses", {}).get("group", {}).get("data") or {}).get("group", {}).get("mode")
+            if role in ("master", "slave"):
+                grouped.append(item["name"])
+        if grouped:
+            raise ValueError(
+                "Initial 3D map capture requires ungrouped standalone controllers. "
+                "Currently grouped: " + ", ".join(grouped) +
+                ". First preserve your existing group backup; then ungroup in the "
+                "Twinkly app and retry Capture 3D maps. No maps were saved."
+            )
+        raise ValueError(
+            "No standalone 3D maps found. Initial 3D mapping requires each "
+            "controller to be ungrouped and mapped in 3D in the Twinkly app."
+        )
     return records
 
 
