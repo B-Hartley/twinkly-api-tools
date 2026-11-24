@@ -26,6 +26,10 @@ def verify(area, members):
     if not isinstance(layout,dict) or any(k not in layout for k in ("coords","uuid","geometry","aspectXZ","aspectXY","name","synthesized")):
         raise ValueError("Missing cloud layout metadata")
     slots=area.get("devices",[])
+    parts=[slot.get("part") for slot in slots]
+    if any(type(part) is not int for part in parts) or sorted(parts)!=list(range(len(slots))):
+        raise ValueError("Cloud Area parts must form a unique contiguous sequence")
+    slots=sorted(slots,key=lambda slot:slot["part"])
     order=[mac(s.get("device",{}).get("mac")) for s in slots]
     if len(order)<2 or None in order or len(set(order))!=len(order) or set(order)!=set(members):
         raise ValueError("Cloud/local member identities differ")
