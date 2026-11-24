@@ -30,8 +30,8 @@ def main():
     p.add_argument("--execute",action="store_true")
     p.add_argument("--finish",choices=["movie","restore"],default="movie")
     p.add_argument("--effect",choices=["solid","rainbow","diagnostic"],default="rainbow")
-    p.add_argument("--channels",type=int,choices=[3,4],required=True)
-    p.add_argument("--transport",choices=["master","direct"],default="master")
+    p.add_argument("--channels",type=int,choices=[3,4],help="Override only if investigating device metadata")
+    p.add_argument("--transport",choices=["master","direct"],default="direct")
     p.add_argument("--vertical-axis",choices=["x","y","z"],default="y")
     p.add_argument("--invert-vertical",action="store_true")
     a=p.parse_args()
@@ -40,7 +40,23 @@ def main():
     if len(members)!=2 or {m["name"].lower() for m in members}!={"office left","office right"}:
         raise ValueError("Office pair only")
     # Use exactly the same authoritative geometry as cloud regroup.
-    identities=[mac(read_local(m,5)["gestalt"]["mac"]) for m in plan["members"]]
+    local=[read_local(m,5) for m in plan["members"]]
+    identities=[mac(x["gestalt"]["mac"]) for x in local]
+    formats=[]
+    for m,x in zip(plan["members"],local):
+        g=x["gestalt"]
+        n=rt.pixel_width(g)
+        formats.append(n)
+        fw=checked(m["ip"],"/xled/v1/fw/version",None).get("version","")
+        print(f"{m['name']}: profile={g.get('led_profile')}, bytes_per_led={g.get('bytes_per_led')}, family={g.get('fw_family')}, firmware={fw}, detected={n}")
+        if g.get("fw_family")=="D" or tuple(int(v) for v in fw.split(".")[:3])<(2,4,14):
+            raise ValueError("This experiment requires UDP protocol v3 firmware")
+    if len(set(formats))!=1:
+        raise ValueError("Mixed pixel formats not yet supported")
+    if a.channels is not None and a.channels!=formats[0]:
+        raise ValueError("Requested channels conflict with live device format; omit --channels")
+    a.channels=formats[0]
+    print(f"Using {a.channels} bytes per LED; transport={a.transport}")
     _, layouts=archived_group_reference(plan,identities,("cloud-preflight-backups","cloud-audits"))
     plan=apply_area_reference(plan,layouts)
     members=sorted(plan["members"],key=lambda m:m["offset"])
@@ -69,15 +85,15 @@ def main():
         ip=m["ip"]
         token=login(ip,5)
         old=checked(ip,MODE,token)["mode"]
-        if old not in ("off","movie","playlist","color","effect"):
+        if m is master and old not in ("off","movie","playlist","color","effect"):
             raise RuntimeError("Unsupported original mode: "+old)
         sessions.append((m,token,old))
     attempted=[]
     completed=False
     try:
-        for m,token,old in sessions:
-            attempted.append((m,old))
-            checked(m["ip"],MODE,token,method="POST",payload={"mode":"rt"})
+        m,token,old=sessions[0]
+        attempted.append((m,old))
+        checked(m["ip"],MODE,token,method="POST",payload={"mode":"rt"})
         with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
             start=time.monotonic()
             phase=None
@@ -93,6 +109,8 @@ def main():
                     frame=rt.frame_at(members,t,a.effect,a.channels)
                 for m,token,old in sessions:
                     data=frame if a.transport=="master" else frame[m["offset"]*a.channels:(m["offset"]+m["leds"])*a.channels]
+                    if len(data)!=(plan["size"] if a.transport=="master" else m["leds"])*a.channels:
+                        raise RuntimeError("Unexpected frame length")
                     for packet in rt.packets(token,data):
                         sock.sendto(packet,(m["ip"],7777))
                 time.sleep(.04)
