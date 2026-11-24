@@ -369,6 +369,7 @@ def run(args):
     try:
         plan, start = checkpoint("1 CHECK GROUPED", args.plan, "grouped-cloud", dest, args.timeout)
         plan = verified_grouped_plan(plan, start)
+        reference_plan = copy.deepcopy(plan)
         original = find_area(start, plan)
         if args.group.casefold() not in (plan["group_name"].casefold(),
                                          str(original["name"]).casefold()):
@@ -442,8 +443,9 @@ def run(args):
             save_json(dest / "cycle-status-private.json", log)
             print("Cloud standalone created:", member_name,
                   "(response ID:", reply.get("id", "unavailable"), ")")
-        plan, standalone = checkpoint("3 CHECK UNGROUPED", args.plan, "ungrouped-cloud",
-                                       dest, args.timeout)
+        _, standalone = checkpoint("3 CHECK UNGROUPED", args.plan, "ungrouped-cloud",
+                                    dest, args.timeout)
+        plan = copy.deepcopy(reference_plan)
         if getattr(args, "check_movies", False):
             plan = verified_retention_plan(plan, start)
         for i, m in enumerate(plan["members"]):
@@ -513,8 +515,9 @@ def run(args):
         log["stages"].append("Cloud Area created")
         save_json(dest / "cycle-status-private.json", log)
         print("New cloud Area object:", reply.get("id", "unavailable"))
-        plan, final = checkpoint("5 CHECK REGROUPED", args.plan, "grouped-cloud",
-                                  dest, args.timeout)
+        _, final = checkpoint("5 CHECK REGROUPED", args.plan, "grouped-cloud",
+                               dest, args.timeout)
+        plan = copy.deepcopy(reference_plan)
         if getattr(args, "check_movies", False):
             plan = verified_retention_plan(plan, start)
         for i, member in enumerate(plan["members"]):
