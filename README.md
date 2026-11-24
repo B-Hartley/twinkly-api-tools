@@ -488,3 +488,26 @@ python .\probe_mqtt_broker.py --port 8883 --username twinkly32 --ca-file ".\veri
 Never use a trust-all TLS bypass for MQTT credentials or control. A network
 interception device or a broker using a private CA are both possibilities.
 The README example CA filename is illustrative, not included in Git.
+
+### Legacy Ledworks CA profile (Office broker 2026-11-24)
+
+The Office broker presented a Ledworks self-signed CA, SHA-1 thumbprint
+`C4099D5055058364F9B39C5A601E6E4F531BB39B`. Once the observed
+CA PEM was supplied, Python/OpenSSL reported:
+`Basic Constraints of CA cert not marked critical`.
+
+For **diagnostic use only after independently validating CA identity**,
+the MQTT probe offers an opt-in compatibility switch:
+
+```powershell
+python .\probe_mqtt_broker.py --port 8883 --username twinkly32 --ca-file ".\ledworks-observed-ca.pem" --legacy-ca
+```
+
+`--legacy-ca` requires TLS and an explicit CA file. It disables only
+OpenSSL's `VERIFY_X509_STRICT` RFC-profile checks, which can reject an
+old CA's noncritical Basic Constraints; normal signature/chain validation
+and hostname verification remain enabled. This broadens accepted
+certificate profiles and is **not as strict as the default**.
+It does not fix a wrong hostname, unknown issuer or changed certificate.
+Matching a CA served by the broker against itself does not independently
+establish authenticity. Never add an unverified CA system-wide.
