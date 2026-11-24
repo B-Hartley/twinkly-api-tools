@@ -56,3 +56,16 @@ def diagnostic_frame(members, t, channels=3, axis="y", invert=False):
                 result.append(0)
             result.extend(rgb)
     return bytes(result)
+
+def pixel_width(gestalt):
+    """Detect wire pixel width; never silently guess conflicting metadata."""
+    width=gestalt.get("bytes_per_led")
+    profile=gestalt.get("led_profile")
+    expected={"RGB":3,"RGBW":4,"WRGB":4}.get(str(profile).upper())
+    if width is None:
+        width=expected
+    if type(width) is not int or width not in (3,4):
+        raise ValueError("Unknown LED pixel width")
+    if expected is not None and expected!=width:
+        raise ValueError("Conflicting LED profile and pixel width")
+    return width
