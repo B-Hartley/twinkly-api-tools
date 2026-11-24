@@ -1,7 +1,7 @@
 """Twinkly Area named-state snapshots. No destructive API writes.
 
-Only POST requests: Twinkly login and verify authentication.
-All data capture endpoints are GET. Restore is deliberately a validation plan.
+Capture endpoints are read-only apart from authentication. Virtual lights explicitly
+write playback mode and HTTP real-time frames; never change maps or groups.
 """
 from __future__ import annotations
 
@@ -686,22 +686,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(DOMAIN, "office_window_plan", office_plan,
         schema=vol.Schema({vol.Required("name"): STATE_NAME,
                            vol.Required("left"): str, vol.Required("right"): str}))
+    async def resume_movie(call: ServiceCall):
+        for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+            await group.stop(movie=True)
+
+    hass.services.async_register(DOMAIN, "resume_movie", resume_movie)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "devices": devices,
+        "lock": lock,
         "store": store,
         "actions": {"capture_layout_diagnostics": capture_layout_diagnostics,
                     "capture_groups": capture_groups,
                     "capture_3d_maps": capture_3d_maps,
                     "verify_archives": verify_archives},
     }
-    await hass.config_entries.async_forward_entry_setups(entry, ["button"])
+    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    await hass.config_entries.async_unload_platforms(entry, ["button"])
+    for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+        await group.stop()
+    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light"]):
+        return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
-                    "capture_layout_diagnostics"):
+                    "capture_layout_diagnostics", "resume_movie"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
