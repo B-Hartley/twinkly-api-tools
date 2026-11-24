@@ -12,7 +12,7 @@ from pathlib import Path
 import sys
 
 from cloud_group_preflight import (
-    FILES, compare_points, coordinates, evaluate, mac, normalized_uid, objects_from,
+    FILES, CLOUD_LOCAL_TOLERANCE, compare_points, coordinates, evaluate, mac, normalized_uid, objects_from,
     read_stage,
 )
 
@@ -62,7 +62,7 @@ def verify(snapshot):
             raise ValueError("Local grouped 2D layout incomplete")
         layouts.append({k: local[k] for k in ("source", "synthesized", "coordinates")})
     if not compare_points(coordinates(layout), layouts[0]["coordinates"] +
-                          layouts[1]["coordinates"])["matching"]:
+                          layouts[1]["coordinates"], tolerance=CLOUD_LOCAL_TOLERANCE)["matching"]:
         raise ValueError("Cloud Area 2D coordinates differ from local group")
     return obj, layouts, macs
 
@@ -141,7 +141,7 @@ def read_archive(folder):
     if obj.get("ledCount") != manifest["led_count"]:
         raise ValueError("2D archive LED count changed")
     if not compare_points(coordinates(obj["layout"]), layouts[0]["coordinates"] +
-                          layouts[1]["coordinates"])["matching"]:
+                          layouts[1]["coordinates"], tolerance=CLOUD_LOCAL_TOLERANCE)["matching"]:
         raise ValueError("2D archive cloud/local geometry no longer agrees")
     return {"manifest": manifest, "area": obj, "layouts": layouts}
 
