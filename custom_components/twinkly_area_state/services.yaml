@@ -44,3 +44,7 @@ office_window_plan:
       required: true
       selector:
         text: {}
+
+resume_movie:
+  name: Resume native movie
+  description: Stop Office virtual streaming and return control to the native Twinkly movie.
