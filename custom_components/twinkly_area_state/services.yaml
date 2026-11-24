@@ -52,3 +52,7 @@ resume_movie:
 import_3d_maps:
   name: Import 3D map archives
   description: Import private CLI reference files from /config/twinkly_3d_import/by-mac. Verify live controller MAC and LED count without changing group membership or layouts.
+
+verify_cloud_session:
+  name: Verify cloud session
+  description: Read cloud installations, automatically renewing the cached cloud token if needed. Does not change light sets or groups.
