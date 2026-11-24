@@ -53,7 +53,7 @@ def connect_packet(client_id, username=None):
     return bytes([0x10]) + remaining_length(len(body)) + body
 
 
-def probe(port=8883, username=None, timeout=5):
+def probe(port=8883, username=None, timeout=5, ca_file=None):
     if port not in PORTS:
         raise ValueError("Only Twinkly's documented ports 1883/8883 supported")
     if username is not None and (not username or len(username) > 64 or
@@ -74,7 +74,10 @@ def probe(port=8883, username=None, timeout=5):
     try:
         sock.settimeout(timeout)
         if port == 8883:
-            sock = ssl.create_default_context().wrap_socket(sock, server_hostname=HOST)
+            # A user-reviewed CA bundle extends trust without disabling hostname
+            # or certificate-chain verification.
+            context = ssl.create_default_context(cafile=ca_file) if ca_file else ssl.create_default_context()
+            sock = context.wrap_socket(sock, server_hostname=HOST)
             result["tls_version"] = sock.version()
         sock.sendall(connect_packet(client_id, username=username))
         # MQTT 3.1.1 CONNACK must be fixed 4-byte packet.
@@ -102,12 +105,13 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--port", type=int, choices=PORTS, default=8883)
     p.add_argument("--username", help="Optional documented device MQTT username, without password")
+    p.add_argument("--ca-file", help="Optional independently verified CA PEM bundle for TLS trust")
     p.add_argument("--timeout", type=float, default=5)
     args = p.parse_args(argv)
     if not 0.5 <= args.timeout <= 15:
         p.error("--timeout must be between 0.5 and 15 seconds")
     try:
-        result = probe(args.port, args.username, args.timeout)
+        result = probe(args.port, args.username, args.timeout, ca_file=args.ca_file)
         print(json.dumps(result, indent=2, sort_keys=True))
         if result["connect_accepted"]:
             print("Connection accepted; subscription to any specific device is NOT tested.")
