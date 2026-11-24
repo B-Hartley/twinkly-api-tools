@@ -12,7 +12,7 @@ import sys
 import urllib.error
 
 from cloud_audit import cloud_get, objects_from
-from cloud_token_store import access_token as cached_access_token
+from cloud_token_store import renewable_access_token as cached_access_token
 from group_test import load_plan
 from twinkly_inspector import authenticate, request, save_json
 
@@ -99,7 +99,7 @@ def main():
         plan, _ = load_plan(args.plan)
         if len(plan["members"]) != 2 or plan["size"] != 420:
             raise ValueError("Expected two Office controllers and a 420-LED Area")
-        token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token()
+        token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token(timeout=args.timeout)
         if not token:
             raise RuntimeError("Cloud token unavailable. Run cloud_audit.py --login first.")
         raw = cloud_get(SELECTOR, token, args.timeout)
