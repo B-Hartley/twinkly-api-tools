@@ -42,4 +42,4 @@ class TwinklyAreaButton(ButtonEntity):
         )
 
     async def async_press(self):
-        await self._callback(ServiceCall(DOMAIN, {}, service=self._action))
+        await self._callback(ServiceCall(self.hass, DOMAIN, self._action, {}))
