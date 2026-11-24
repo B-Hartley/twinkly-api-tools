@@ -4,6 +4,7 @@ import ipaddress
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.helpers import selector
 
 from .const import DOMAIN, CONF_DEVICES_JSON
 
@@ -64,26 +65,65 @@ def configured_twinkly_devices(entries):
 
 
 class TwinklyAreaStateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Configure controller names/IPs without probing or changing lights."""
+    """Select existing native Twinkly controllers or configure LAN IPs manually."""
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+        devices = configured_twinkly_devices(
+            self.hass.config_entries.async_entries("twinkly"))
+        if devices:
+            return await self.async_step_native(user_input)
+        return await self.async_step_manual(user_input)
+
+    async def async_step_native(self, user_input=None):
+        devices = configured_twinkly_devices(
+            self.hass.config_entries.async_entries("twinkly"))
+        if not devices:
+            return await self.async_step_manual()
         errors = {}
-        if user_input:
+        if user_input is not None:
+            if user_input.get("manual_setup"):
+                return await self.async_step_manual()
+            selected = user_input.get("selected_ips", [])
+            if isinstance(selected, list) and selected:
+                picked = [d for d in devices if d["ip"] in selected]
+                if picked and len(picked) == len(set(selected)):
+                    return self.async_create_entry(
+                        title="Twinkly Area Manager",
+                        data={CONF_DEVICES_JSON: json.dumps(picked)})
+            errors["base"] = "invalid_devices"
+        options = [{"label": d["name"] + " (" + d["ip"] + ")",
+                    "value": d["ip"]} for d in devices]
+        return self.async_show_form(
+            step_id="native",
+            data_schema=vol.Schema({
+                vol.Required("selected_ips", default=[d["ip"] for d in devices]):
+                    selector.SelectSelector(selector.SelectSelectorConfig(
+                        options=options, multiple=True,
+                        mode=selector.SelectSelectorMode.LIST)),
+                vol.Optional("manual_setup", default=False): bool,
+            }),
+            errors=errors,
+        )
+
+    async def async_step_manual(self, user_input=None):
+        errors = {}
+        if user_input is not None:
             try:
                 devices = validate_devices(user_input[CONF_DEVICES_JSON])
-            except (ValueError, json.JSONDecodeError):
+            except (ValueError, json.JSONDecodeError, KeyError):
                 errors["base"] = "invalid_devices"
             else:
-                return self.async_create_entry(title="Twinkly Area States", data={
-                    CONF_DEVICES_JSON: json.dumps(devices)
-                })
-        native = configured_twinkly_devices(self.hass.config_entries.async_entries("twinkly"))
-        sample = json.dumps(native) if native else (
-            '[{"name":"Office Left","ip":"192.168.21.90"},'
-            '{"name":"Office Right","ip":"192.168.21.93"}]')
-        return self.async_show_form(step_id="user", data_schema=vol.Schema({
-            vol.Required(CONF_DEVICES_JSON, default=sample): str
-        }), errors=errors)
+                return self.async_create_entry(
+                    title="Twinkly Area Manager",
+                    data={CONF_DEVICES_JSON: json.dumps(devices)})
+        example = '[{"name":"Office Left","ip":"192.168.21.90"},{"name":"Office Right","ip":"192.168.21.93"}]'
+        return self.async_show_form(
+            step_id="manual",
+            data_schema=vol.Schema({
+                vol.Required(CONF_DEVICES_JSON, default=example): str,
+            }),
+            errors=errors,
+        )
