@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
-from .panes import DEFAULTS, STRANDS, split_indices, strand_indices, composite
+from .panes import DEFAULTS, pane_indices, composite
 from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
 
 _LOGGER=logging.getLogger(__name__)
@@ -100,9 +100,8 @@ class Group:
             name=" ".join(m["name"].casefold().split())
             if name in DEFAULTS:
                 config=data.get("_virtual_panes",{}).get(mac,{})
-                source=original if original.get("led_count")==m["led_count"] else saved
                 try:
-                    self.pane_maps[mac]=strand_indices(m["led_count"], STRANDS[name], config.get("reverse", name=="office right"))
+                    self.pane_maps[mac]=pane_indices(name,m["led_count"],config.get("reverse"))
                 except (ValueError,KeyError,TypeError) as exc:
                     self.pane_maps.pop(mac,None)
                     _LOGGER.warning("%s: pane map unavailable: %s",m["name"],exc)
