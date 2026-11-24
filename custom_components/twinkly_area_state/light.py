@@ -9,7 +9,7 @@ import os
 from homeassistant.components.light import LightEntity, ColorMode, LightEntityFeature
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, async_get as async_get_device_registry, format_mac
 from .const import DOMAIN
 from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS
 
@@ -220,15 +220,30 @@ class Group:
 
 class VirtualLight(LightEntity):
     _attr_should_poll=False
+    _attr_has_entity_name=True
     _attr_supported_features=LightEntityFeature.EFFECT
     def __init__(self,group,m):
         self.group=group
         self.member=m
-        self._attr_name="Twinkly "+m["name"]+" Virtual"
+        self._attr_name="Virtual light"
         self._attr_unique_id=m["mac"]+"_virtual"
         self._attr_color_mode=ColorMode.RGBW if m["width"]==4 else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
-        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,m["mac"])},name=m["name"]+" Virtual",manufacturer="Twinkly")
+        mac=format_mac(m["mac"])
+        connection=(CONNECTION_NETWORK_MAC,mac)
+        registry=async_get_device_registry(group.hass)
+        # Native Twinkly registers its hardware MAC as a network connection.
+        # Do not reuse the legacy virtual-device identifier when a native
+        # device exists: that would risk merging two registry devices.
+        existing=registry.async_get_device(connections={connection})
+        if existing is not None:
+            self._attr_device_info=DeviceInfo(connections={connection})
+        else:
+            # Keep the controller's device identity if native Twinkly has not
+            # been configured yet. A later native registration can match MAC.
+            self._attr_device_info=DeviceInfo(
+                identifiers={(DOMAIN,m["mac"])},connections={connection},
+                name=m["name"],manufacturer="Twinkly")
     @property
     def effect_list(self):
         return ["Solid", *self.group.patterns[self.member["mac"]]]
