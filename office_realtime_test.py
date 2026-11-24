@@ -29,9 +29,11 @@ def main():
     p.add_argument("--plan",default="private-area-plan.json")
     p.add_argument("--execute",action="store_true")
     p.add_argument("--finish",choices=["movie","restore"],default="movie")
-    p.add_argument("--effect",choices=["solid","rainbow"],default="rainbow")
+    p.add_argument("--effect",choices=["solid","rainbow","diagnostic"],default="rainbow")
     p.add_argument("--channels",type=int,choices=[3,4],required=True)
     p.add_argument("--transport",choices=["master","direct"],default="master")
+    p.add_argument("--vertical-axis",choices=["x","y","z"],default="y")
+    p.add_argument("--invert-vertical",action="store_true")
     a=p.parse_args()
     plan,uid=load_plan(a.plan,require_verified=a.execute)
     members=sorted(plan["members"],key=lambda m:m["offset"])
@@ -52,6 +54,9 @@ def main():
             raise RuntimeError("Regroup and verify first")
     for m in members:
         print(m["name"],m["offset"],m["leds"])
+    if a.effect=="diagnostic":
+        for t in (0,5,10):
+            rt.diagnostic_frame(members,t,a.channels,a.vertical_axis,a.invert_vertical)
     if not a.execute:
         print("Read-only preflight passed")
         return
@@ -75,8 +80,17 @@ def main():
             checked(m["ip"],MODE,token,method="POST",payload={"mode":"rt"})
         with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
             start=time.monotonic()
-            while (t:=time.monotonic()-start)<10:
-                frame=rt.frame_at(members,t,a.effect,a.channels)
+            phase=None
+            duration=20 if a.effect=="diagnostic" else 10
+            while (t:=time.monotonic()-start)<duration:
+                if a.effect=="diagnostic":
+                    current=0 if t<5 else 1 if t<10 else 2
+                    if phase!=current:
+                        print(["LEFT RED / RIGHT OFF","LEFT OFF / RIGHT GREEN","OPPOSING RAINBOWS"][current],flush=True)
+                        phase=current
+                    frame=rt.diagnostic_frame(members,t,a.channels,a.vertical_axis,a.invert_vertical)
+                else:
+                    frame=rt.frame_at(members,t,a.effect,a.channels)
                 for m,token,old in sessions:
                     data=frame if a.transport=="master" else frame[m["offset"]*a.channels:(m["offset"]+m["leds"])*a.channels]
                     for packet in rt.packets(token,data):
