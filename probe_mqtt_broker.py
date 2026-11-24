@@ -53,7 +53,9 @@ def connect_packet(client_id, username=None):
     return bytes([0x10]) + remaining_length(len(body)) + body
 
 
-def probe(port=8883, username=None, timeout=5, ca_file=None):
+def probe(port=8883, username=None, timeout=5, ca_file=None, legacy_ca=False):
+    if legacy_ca and (port != 8883 or not ca_file):
+        raise ValueError("--legacy-ca requires TLS port 8883 and an explicit CA file")
     if port not in PORTS:
         raise ValueError("Only Twinkly's documented ports 1883/8883 supported")
     if username is not None and (not username or len(username) > 64 or
@@ -68,6 +70,7 @@ def probe(port=8883, username=None, timeout=5, ca_file=None):
         "subscribe_attempted": False,
         "publish_attempted": False,
         "connect_accepted": False,
+        "legacy_ca_compatibility": bool(legacy_ca),
     }
     client_id = "inspect-" + secrets.token_hex(8)
     sock = socket.create_connection((HOST, port), timeout=timeout)
@@ -77,6 +80,13 @@ def probe(port=8883, username=None, timeout=5, ca_file=None):
             # A user-reviewed CA bundle extends trust without disabling hostname
             # or certificate-chain verification.
             context = ssl.create_default_context(cafile=ca_file) if ca_file else ssl.create_default_context()
+            if legacy_ca:
+                if not hasattr(ssl, "VERIFY_X509_STRICT"):
+                    raise RuntimeError("Python/OpenSSL does not expose VERIFY_X509_STRICT")
+                # Relax only the RFC 5280 strict-profile flag for an old CA
+                # with non-critical Basic Constraints. CERT_REQUIRED and
+                # check_hostname remain enabled. No CERT_NONE/unverified TLS.
+                context.verify_flags &= ~ssl.VERIFY_X509_STRICT
             sock = context.wrap_socket(sock, server_hostname=HOST)
             result["tls_version"] = sock.version()
         sock.sendall(connect_packet(client_id, username=username))
@@ -106,12 +116,15 @@ def main(argv=None):
     p.add_argument("--port", type=int, choices=PORTS, default=8883)
     p.add_argument("--username", help="Optional documented device MQTT username, without password")
     p.add_argument("--ca-file", help="Optional independently verified CA PEM bundle for TLS trust")
+    p.add_argument("--legacy-ca", action="store_true",
+                   help="With --ca-file only: disable strict X.509 profile checks for legacy CA; keep chain and hostname verification")
     p.add_argument("--timeout", type=float, default=5)
     args = p.parse_args(argv)
     if not 0.5 <= args.timeout <= 15:
         p.error("--timeout must be between 0.5 and 15 seconds")
     try:
-        result = probe(args.port, args.username, args.timeout, ca_file=args.ca_file)
+        result = probe(args.port, args.username, args.timeout, ca_file=args.ca_file,
+                       legacy_ca=args.legacy_ca)
         print(json.dumps(result, indent=2, sort_keys=True))
         if result["connect_accepted"]:
             print("Connection accepted; subscription to any specific device is NOT tested.")
