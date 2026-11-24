@@ -6,6 +6,7 @@ write playback mode and HTTP real-time frames; never change maps or groups.
 from __future__ import annotations
 
 import asyncio
+import aiohttp
 import base64
 import hashlib
 import ipaddress
@@ -142,7 +143,7 @@ async def query(session, ip, endpoint, *, method="GET", payload=None, token=None
                 if isinstance(data, dict) and data.get("code") not in (None, 1000):
                     return {"ok": False, "error": f"Device code {data.get('code')}"}
                 return {"ok": True, "data": data}
-        except (asyncio.TimeoutError, OSError, ValueError) as exc:
+        except (asyncio.TimeoutError, aiohttp.ClientError, OSError, ValueError) as exc:
             return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
     return {"ok": False, "error": "Controller read failed after retries"}
 
