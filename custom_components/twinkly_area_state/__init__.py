@@ -588,6 +588,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     raise ValueError("Existing captured group " + uid + " differs; refusing overwrite")
                 saved.setdefault(uid, record)
             await store.async_save(data)
+            for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+                group.load_maps(data)
+                group.notify()
             async_create(hass, f"Captured {len(records)} group(s), with LED layouts and movie "
                          "catalogues, from the local controllers. Cloud Area identity is "
                          "NOT verified by this HA action. Existing captures were not overwritten.",
