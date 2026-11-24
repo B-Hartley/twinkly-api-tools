@@ -82,8 +82,22 @@ def compare(initial, current):
             if fields:
                 modified.append({"name": expected[key].get("name"),
                                  "unique_id": key, "changed_fields": fields})
+        before_playlist = left["responses"].get("playlist", {})
+        after_playlist = right["responses"].get("playlist", {})
+        # Compare the playlist entries only: device-reported status codes and
+        # run-time selection can change without altering the actual playlist.
+        if before_playlist.get("ok") and after_playlist.get("ok"):
+            before_data = before_playlist.get("data", {})
+            after_data = after_playlist.get("data", {})
+            playlist_preserved = (
+                isinstance(before_data, dict) and isinstance(after_data, dict) and
+                before_data.get("entries") == after_data.get("entries")
+            )
+        else:
+            playlist_preserved = None
         report.append({"name": left["name"], "ip": left["ip"],
-                       "preserved": not missing and not modified,
+                       "playlist_preserved": playlist_preserved,
+                       "preserved": not missing and not modified and playlist_preserved is not False,
                        "missing": sorted(missing, key=lambda x: x["unique_id"]),
                        "modified": sorted(modified, key=lambda x: x["unique_id"]),
                        "new_count": len(actual.keys() - expected.keys()),
@@ -96,5 +110,6 @@ def print_comparison(phase, report):
     for entry in report:
         print(" ", entry["name"], "PASS" if entry["preserved"] else "CHANGED",
               "initial", entry["initial_count"], "current", entry["current_count"],
-              "lost", len(entry["missing"]), "modified", len(entry["modified"]))
+              "lost", len(entry["missing"]), "modified", len(entry["modified"]),
+              "playlist", entry["playlist_preserved"])
     return all(entry["preserved"] for entry in report)
