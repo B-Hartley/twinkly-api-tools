@@ -10,7 +10,7 @@ from pathlib import Path
 
 from cloud_audit import cloud_get, objects_from
 from cloud_auth import interactive_login
-from cloud_token_store import access_token as cached_access_token, store_session
+from cloud_token_store import renewable_access_token as cached_access_token, store_session
 from group_test import load_plan
 from twinkly_inspector import authenticate as lan_authenticate
 from twinkly_inspector import request, save_json, validate_ip
@@ -25,7 +25,7 @@ def get_cloud_token(login=False, timeout=10):
             store_session(session)
             print("Cloud session securely cached in Windows user profile.")
         return token
-    token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token()
+    token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token(timeout=timeout)
     if not token:
         raise ValueError("Twinkly cloud session expired or missing; use --login")
     if len(token) > 4096 or any(c.isspace() for c in token):
