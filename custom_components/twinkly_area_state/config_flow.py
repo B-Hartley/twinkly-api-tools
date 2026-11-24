@@ -138,13 +138,15 @@ class TwinklyCloudOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self,user_input=None):
         from .cloud_session import CloudSession
         from homeassistant.exceptions import HomeAssistantError
-        cloud=CloudSession(self.hass,self.config_entry.entry_id)
+        cloud=self.hass.data.get(DOMAIN,{}).get(self.config_entry.entry_id,{}).get("cloud") or CloudSession(self.hass,self.config_entry.entry_id)
         errors={}
         if user_input is not None:
             try:
                 if user_input.get("forget"):
                     await cloud.forget()
                 else:
+                    if not user_input.get("username") or not user_input.get("password"):
+                        raise HomeAssistantError("Both email and password are required")
                     await cloud.login(user_input["username"],user_input["password"])
                 return self.async_create_entry(title="",data=dict(self.config_entry.options))
             except (HomeAssistantError,KeyError):
