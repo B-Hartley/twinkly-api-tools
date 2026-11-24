@@ -67,7 +67,7 @@ def verify(area, members, allow_detached=False):
         raise ValueError("Cloud/local geometry or LED total differs")
     return uid,order,detached
 
-def capture(args):
+def capture(args, return_archive=False):
     token=get_cloud_token(login=args.login,timeout=args.timeout)
     inventory=objects_from(cloud_get("/v3/objects?mine=true&fields=layout,devices,capabilities",token,timeout=args.timeout))
     matches=[o for o in inventory if str(o.get("name","")).strip().casefold()==args.group.strip().casefold() and isinstance(o.get("devices"),list) and len(o["devices"])>1]
@@ -124,7 +124,7 @@ def capture(args):
         m=members[address]
         print(m["name"],m["gestalt"]["number_of_led"],"LEDs")
     print("Private archive:",dest/"reference.json")
-    return 0
+    return (doc, dest/"reference.json") if return_archive else 0
 
 def read_archive(path):
     doc=json.loads(Path(path).read_text(encoding="utf-8"))
