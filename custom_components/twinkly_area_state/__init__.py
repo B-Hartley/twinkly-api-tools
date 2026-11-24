@@ -609,6 +609,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     raise ValueError("Different 3D reference already saved for " + mac[-4:])
                 saved.setdefault(mac, record)
             await store.async_save(data)
+            for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+                group.load_maps(data)
+                group.notify()
             async_create(hass, f"Captured {len(records)} standalone 3D mapping(s). "
                          "Controllers currently grouped in 2D were not saved as 3D.",
                          title="Twinkly 3D mappings captured",
@@ -637,6 +640,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     archives.get("maps_3d", {}), incoming, identities)
                 archives["maps_3d"] = merged
                 await store.async_save(data)
+                for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+                    group.load_maps(data)
+                    group.notify()
             except (ValueError, OSError, TypeError, KeyError) as exc:
                 raise HomeAssistantError(f"3D archive import failed: {exc}") from exc
             async_create(hass, "Imported: " + (", ".join(added) or "none") +
