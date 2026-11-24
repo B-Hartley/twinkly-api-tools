@@ -284,7 +284,7 @@ def run(args):
         print("and looking for archived standalone 3D cloud mapping templates.")
         current_plan, current = checkpoint(
             "1 CHECK GROUPED", args.plan, "grouped-cloud", args.output, args.timeout)
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             current_plan = verified_retention_plan(current_plan, current)
             import movie_retention
             movie_retention.capture(current_plan, Path(args.output) / "movie-preflight",
@@ -309,7 +309,7 @@ def run(args):
     movie_mid_report = None
     try:
         plan, start = checkpoint("1 CHECK GROUPED", args.plan, "grouped-cloud", dest, args.timeout)
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             plan = verified_retention_plan(plan, start)
         original = find_area(start, plan)
         if args.group.casefold() not in (plan["group_name"].casefold(),
@@ -325,7 +325,7 @@ def run(args):
         for m in plan["members"]:
             save_json(dest / ("standalone-template-" + str(m["offset"]) + "-private.json"),
                       templates[m["name"]])
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             import movie_retention
             movie_baseline = movie_retention.capture(
                 plan, dest, "grouped-before", args.timeout, save_json)
@@ -386,12 +386,12 @@ def run(args):
                   "(response ID:", reply.get("id", "unavailable"), ")")
         plan, standalone = checkpoint("3 CHECK UNGROUPED", args.plan, "ungrouped-cloud",
                                        dest, args.timeout)
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             plan = verified_retention_plan(plan, start)
         for i, m in enumerate(plan["members"]):
             if not layout_matches(standalone[FILES[i + 1]]["layout"], m["standalone_layout"]):
                 raise RuntimeError("Original standalone 3D mapping not restored: " + m["name"])
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             import movie_retention
             midway = movie_retention.capture(
                 plan, dest, "standalone-middle", args.timeout, save_json)
@@ -453,7 +453,7 @@ def run(args):
         print("New cloud Area object:", reply.get("id", "unavailable"))
         plan, final = checkpoint("5 CHECK REGROUPED", args.plan, "grouped-cloud",
                                   dest, args.timeout)
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             plan = verified_retention_plan(plan, start)
         for i, member in enumerate(plan["members"]):
             before = start[FILES[i + 1]]["layout"]["coordinates"]
@@ -476,7 +476,7 @@ def run(args):
             raise RuntimeError("Final cloud Area geometry differs from initial mapping "
                                "beyond cloud/local precision tolerance; see saved comparison")
         movie_final_ok = True
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             import movie_retention
             final_movies = movie_retention.capture(
                 plan, dest, "regrouped-after", args.timeout, save_json)
@@ -489,7 +489,7 @@ def run(args):
                 "If playback works, finish.", "DONE")
         log["complete"] = True
         print("ROUND TRIP VERIFIED: cloud and LAN consistency; original Area geometry preserved.")
-        if args.check_movies:
+        if getattr(args, "check_movies", False):
             print("MOVIE RETENTION", "PASS (catalogue metadata only)" if movie_final_ok
                   else "FAIL: movies changed or missing")
             if not movie_final_ok:
