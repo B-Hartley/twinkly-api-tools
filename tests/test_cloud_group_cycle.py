@@ -104,6 +104,7 @@ class CycleTests(unittest.TestCase):
             patch("cloud_group_cycle.load_plan", return_value=(plan, "uid")),
             patch("cloud_group_cycle.checkpoint", return_value=(plan, snapshot)),
             patch("cloud_group_cycle.find_area", return_value=cloud),
+            patch("cloud_group_cycle.verified_grouped_plan", return_value=plan),
             patch("cloud_group_cycle.find_standalone_templates",
                   return_value={"Office Left": {}, "Office Right": {}}),
             patch("cloud_group_cycle.cloud_write") as write,
