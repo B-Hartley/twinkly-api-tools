@@ -222,8 +222,12 @@ def _validated_controller(item):
         raise ValueError(item.get("name", "Controller") + ": offline")
     replies = item.get("responses", {})
     for key in ("gestalt", "layout", "group"):
-        if not replies.get(key, {}).get("ok"):
-            raise ValueError(item["name"] + ": missing " + key + " response")
+        response = replies.get(key, {})
+        if not response.get("ok"):
+            detail = response.get("error", "not captured")
+            raise ValueError(item["name"] + ": " + key + " read failed (" +
+                             str(detail)[:180] + "); auth=" +
+                             str(item.get("authentication", "unknown")))
     identity = replies["gestalt"]["data"]
     layout = replies["layout"]["data"]
     group = replies["group"]["data"].get("group")
