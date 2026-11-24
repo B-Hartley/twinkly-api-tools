@@ -63,6 +63,26 @@ class MqttProbeTests(unittest.TestCase):
         self.assertIn(b"twinkly32", sock.sent[0])
         self.assertEqual(len(sock.sent), 1)
 
+    def test_custom_ca_is_verified_and_hostname_checked(self):
+        sock = DummySocket()
+        class Context:
+            def wrap_socket(self, connection, server_hostname):
+                self_hostname = server_hostname
+                if self_hostname != mqtt.HOST:
+                    raise AssertionError("Missing TLS hostname verification")
+                return connection
+        with patch("probe_mqtt_broker.socket.create_connection",
+                   return_value=sock), \
+             patch("probe_mqtt_broker.ssl.create_default_context",
+                   return_value=Context()) as ctx:
+            # DummySocket does not implement version(); mimic TLS metadata.
+            sock.version = lambda: "TLSv1.3"
+            result = mqtt.probe(8883, username="twinkly32", timeout=1,
+                                ca_file="reviewed-ca.pem")
+        ctx.assert_called_once_with(cafile="reviewed-ca.pem")
+        self.assertTrue(result["connect_accepted"])
+        self.assertEqual(result["tls_version"], "TLSv1.3")
+
     def test_refuse_other_ports_and_invalid_username(self):
         for port in (1, 8884, 1884):
             with self.assertRaises(ValueError):
