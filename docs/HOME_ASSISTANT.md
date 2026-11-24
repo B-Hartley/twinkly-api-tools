@@ -41,6 +41,31 @@ The previously available `save_state`, `restore_state` (read-only comparison), a
 
 The HA capture **does not validate Twinkly cloud Area membership**. Use the companion CLI to verify cloud and local geometry together before changing groups.
 
+## Layout response diagnostics
+
+If **Capture groups** or **Capture 3D maps** fails with malformed JSON, press
+**Capture layout diagnostics** on the Twinkly Area Manager device.
+
+This saves **exact raw response bytes** for `GET /xled/v1/led/layout/full` and
+a companion metadata file per configured physical controller. Files are written
+to `/config/twinkly_area_diagnostics/`, accessible through Home Assistant's
+File Editor, Samba share, or SSH. Each is uniquely timestamped, at most 1 MiB,
+and saved with private file permissions where supported. Responses from login,
+verify and other endpoints are never dumped.
+
+The raw layout file may contain **private LED positions** and hardware-related
+data. Review it before sharing. The saved metadata lists HTTP status, body size,
+content type, and parsing error; it does not contain tokens or request headers.
+The action never changes any light settings.
+
+## Branding
+
+A scalable `brand.svg` icon is included in the custom integration directory.
+Home Assistant's core integration-icon registry is managed separately by the
+Home Assistant Brands project; placing an SVG in a HACS integration does not
+automatically replace the generic icon in the Devices & Services integration
+catalogue. A formal brand contribution is needed for automatic display there.
+
 ## Group and Ungroup (companion Windows CLI)
 
 **Not yet exposed as Home Assistant buttons.** Group/ungroup require the unofficial
