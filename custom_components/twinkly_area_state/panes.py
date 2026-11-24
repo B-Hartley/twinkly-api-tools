@@ -3,12 +3,21 @@ import math
 
 STRANDS = {
     "office left": (3, 4, 3), "office right": (3, 4, 3),
-    "landing": (4, 6), "master bedroom left": (5, 5),
+    "landing": (6, 4), "master bedroom": (5, 5), "master bedroom left": (5, 5),
     "master bedroom right": (5, 5), "bar": (2, 3, 3, 2),
     "lounge": (3, 4, 3), "front right bush": (1, 1),
     "front right": (1, 1),
 }
 DEFAULTS = {name: len(parts) for name, parts in STRANDS.items()}
+# Physical left-to-right orientation in the verified joined Front Area map.
+REVERSED = frozenset({"office right", "lounge", "landing", "master bedroom", "front right", "front right bush"})
+
+def pane_indices(name, count, reverse=None):
+    name = " ".join(name.casefold().split())
+    expected = 600 if name in ("front right", "front right bush") else 210
+    if count != expected:
+        raise ValueError("Unexpected controller LED count for verified strand layout")
+    return strand_indices(count, STRANDS[name], name in REVERSED if reverse is None else reverse)
 
 def strand_indices(count, parts, reverse=False):
     if type(count) is not int or count <= 0 or not parts or any(type(p) is not int or p <= 0 for p in parts) or count % sum(parts):
