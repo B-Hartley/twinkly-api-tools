@@ -418,6 +418,13 @@ def run_reverse(args):
         if not compare_points(coordinates(area["layout"]),
                               coordinates(template["layout"]))["matching"]:
             raise RuntimeError("New group geometry differs from former 2D Area")
+        if getattr(args, "stop_after_group", False):
+            ops.approve("Check the Twinkly app: Office Group is joined and uploaded effects "
+                        "play correctly. No ungroup will be attempted.", "DONE-GROUP")
+            journal["complete"] = True
+            journal["workflow"] = "standalone-group"
+            print("GROUP PASS: grouped-cloud readback verified; 3D references remain archived.")
+            return 0
         ops.approve("Check the Twinkly app. The Office lights should now work as ONE Area. "
                     "If correct, proceed to ungroup.", "UNGROUP")
         # Build standalone requests before removing cloud Area.
