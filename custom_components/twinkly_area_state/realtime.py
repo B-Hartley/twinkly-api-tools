@@ -85,3 +85,37 @@ def colour_swap_frame(members, stage, channels=4):
         pixel=bytes(((0,)+rgb) if channels==4 else rgb)
         result.extend(pixel*m["leds"])
     return bytes(result)
+
+def basic_group_members(observations):
+    """Validate a complete local group without requiring a spatial map."""
+    import re
+    import uuid
+    members=[]
+    for device,gestalt,group in observations:
+        name=device["name"]
+        mac=str(gestalt.get("mac","")).lower().replace(":","").replace("-","")
+        count=gestalt.get("number_of_led")
+        role=group.get("mode")
+        offset=group.get("offset")
+        size=group.get("size")
+        if role=="master" and offset is None:
+            offset=0
+        try:
+            uid=str(uuid.UUID(str(group.get("uid"))))
+        except ValueError:
+            raise ValueError(f"{name}: invalid group UID") from None
+        if not re.fullmatch(r"[0-9a-f]{12}",mac) or type(count) is not int or count<=0:
+            raise ValueError(f"{name}: invalid controller identity or LED count")
+        if role not in ("master","slave") or type(offset) is not int or offset<0 or type(size) is not int:
+            raise ValueError(f"{name}: invalid group role, offset or size")
+        members.append(dict(device,mac=mac,led_count=count,role=role,offset=offset,
+                            size=size,uid=uid,width=pixel_width(gestalt)))
+    if len(members)!=2 or len({m["uid"] for m in members})!=1 or len({m["mac"] for m in members})!=2 or sum(m["role"]=="master" for m in members)!=1:
+        raise ValueError("Expected two distinct controllers in one group with one master")
+    total=sum(m["led_count"] for m in members)
+    end=0
+    for m in sorted(members,key=lambda m:m["offset"]):
+        if m["size"]!=total or m["offset"]!=end:
+            raise ValueError(f"{m['name']}: group size or LED offset mismatch")
+        end+=m["led_count"]
+    return members
