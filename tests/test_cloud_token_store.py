@@ -1,4 +1,5 @@
 """Offline DPAPI cache contract tests; Windows encryption is mocked."""
+import base64
 import json
 import tempfile
 import time
@@ -14,7 +15,8 @@ class CloudTokenStoreTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "session.dpapi"
             def encrypt(payload, decrypt=False):
-                return payload[4:] if decrypt else b"ENC:" + payload
+                return (base64.b64decode(payload[4:]) if decrypt else
+                        b"ENC:" + base64.b64encode(payload))
             with patch.object(cloud_token_store, "_dpapi", side_effect=encrypt):
                 cloud_token_store.store_session({
                     "access_token": "access-token",
