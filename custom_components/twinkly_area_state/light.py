@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
-from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS
+from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
 
 _LOGGER=logging.getLogger(__name__)
 MODE="/xled/v1/led/mode"
@@ -33,6 +33,8 @@ class Group:
         self.expiry={}
         self.effects={m["mac"]:"Solid" for m in members}
         self.geometry={}
+        self.combined_geometry={}
+        self.combined_selected=set()
         self.patterns={m["mac"]:{} for m in members}
         self.master=next(m for m in members if m["role"] in ("master","none"))
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
@@ -116,7 +118,8 @@ class Group:
         frame=bytes(round(c*brightness/255) if on else 0 for c in pattern) if pattern is not None else pixel*m["led_count"]
         effect=self.effects[m["mac"]]
         if effect in SPIRAL_EFFECTS and m["mac"] in self.geometry:
-            frame=spiral_frame(self.geometry[m["mac"]],m["width"],effect,now,rgbw,brightness if on else 0)
+            geometry=self.combined_geometry.get(m["mac"],self.geometry[m["mac"]]) if m["mac"] in self.combined_selected else self.geometry[m["mac"]]
+            frame=spiral_frame(geometry,m["width"],effect,now,rgbw,brightness if on else 0)
         for attempt in range(3):
             try:
                 async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
@@ -208,7 +211,7 @@ class Group:
             self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
             self.notify()
 
-async def update_together(targets,on,kwargs):
+async def update_together(targets,on,kwargs,combined=False):
     """Stage all zones under the common lock; start/send concurrently."""
     if not targets:
         return
@@ -223,7 +226,7 @@ async def update_together(targets,on,kwargs):
         for result in results:
             if isinstance(result,BaseException):
                 raise result
-        old=[(g,{k:(g.state[k],g.effects[k]) for k in values}) for g,values in changes]
+        old=[(g,{k:(g.state[k],g.effects[k],k in g.combined_selected) for k in values}) for g,values in changes]
         try:
             results=await asyncio.gather(*(g.mode("rt") for g in starting),return_exceptions=True)
             for result in results:
@@ -233,15 +236,23 @@ async def update_together(targets,on,kwargs):
                 for key,(state,effect) in values.items():
                     g.state[key]=state
                     g.effects[key]=effect
+                    if combined and key in g.combined_geometry:
+                        g.combined_selected.add(key)
+                    else:
+                        g.combined_selected.discard(key)
             results=await asyncio.gather(*(g.send() for g,_ in changes),return_exceptions=True)
             for result in results:
                 if isinstance(result,BaseException):
                     raise result
         except BaseException:
             for g,values in old:
-                for key,(state,effect) in values.items():
+                for key,(state,effect,was_combined) in values.items():
                     g.state[key]=state
                     g.effects[key]=effect
+                    if was_combined:
+                        g.combined_selected.add(key)
+                    else:
+                        g.combined_selected.discard(key)
             await asyncio.gather(*(g.restore() for g in starting),return_exceptions=True)
             # Active streams resend their previous state on the next tick.
             raise
@@ -259,14 +270,40 @@ class CombinedBush(LightEntity):
     _attr_supported_features=LightEntityFeature.EFFECT
     _attr_has_entity_name=True
 
-    def __init__(self,name,slug,targets):
+    def __init__(self,name,slug,targets,ordered_parts):
         self.targets=targets
-        self.parts=[(g,m) for g,members in targets for m in members]
+        self.parts=ordered_parts
+        self.combined_map=None
         self._attr_unique_id="combined_"+slug
         self._attr_name=None
         self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly",model="Combined virtual bush")
         self._attr_color_mode=ColorMode.RGBW if all(m["width"]==4 for _,m in self.parts) else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
+
+    def load_maps(self,data):
+        # Definitions order is top then bottom; derived wire order is bottom first.
+        (tg,top),(bg,bottom)=self.parts
+        originals=data.get("_area_manager",{}).get("maps_3d",{})
+        self.combined_map=None
+        for g,m in self.parts:
+            g.combined_geometry.pop(m["mac"],None)
+        try:
+            br,tr=originals[bottom["mac"]],originals[top["mac"]]
+            if br["led_count"]!=bottom["led_count"] or tr["led_count"]!=top["led_count"]:
+                raise ValueError("Archive LED count differs")
+            model=combined_bush_map(br["layout"],tr["layout"],bottom["led_count"],top["led_count"])
+            geo=spiral_geometry(model,bottom["led_count"]+top["led_count"])
+            bg.combined_geometry[bottom["mac"]]=geo[:bottom["led_count"]]
+            tg.combined_geometry[top["mac"]]=geo[bottom["led_count"]:]
+            self.combined_map=model
+        except (KeyError,ValueError,TypeError) as exc:
+            _LOGGER.warning("%s: combined 3D map unavailable: %s",self._attr_unique_id,exc)
+
+    @property
+    def extra_state_attributes(self):
+        return {"combined_3d_ready":self.combined_map is not None,
+                "combined_led_count":sum(m["led_count"] for _,m in self.parts),
+                "map_alignment":"estimated equal height, shared Y-up and azimuth"}
 
     @property
     def available(self):
@@ -297,6 +334,8 @@ class CombinedBush(LightEntity):
     @property
     def effect_list(self):
         common=set.intersection(*(set(g.patterns[m["mac"]]) for g,m in self.parts))
+        if self.combined_map is None:
+            common.difference_update(SPIRAL_EFFECTS)
         return ["Solid", *sorted(common)]
 
     @property
@@ -307,10 +346,10 @@ class CombinedBush(LightEntity):
     async def async_turn_on(self,**kwargs):
         if "effect" in kwargs and kwargs["effect"] not in self.effect_list:
             raise HomeAssistantError("Effect is not available on both bush halves")
-        await update_together(self.targets,True,kwargs)
+        await update_together(self.targets,True,kwargs,combined=True)
 
     async def async_turn_off(self,**kwargs):
-        await update_together(self.targets,False,{})
+        await update_together(self.targets,False,{},combined=True)
 
 
 class VirtualLight(LightEntity):
@@ -439,10 +478,12 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 targets.append((g,[m]))
             else:
                 existing.append(m)
-        entity=CombinedBush(name,slug,targets)
+        entity=CombinedBush(name,slug,targets,[match[0] for match in matches])
+        entity.load_maps(data)
         for g,_ in targets:
             # Share notifications, but add the combined entity only once.
             g.entities.append(entity)
         combined.append(entity)
+    ctx["combined_bushes"]=combined
     individual=[e for group in groups for e in group.entities if isinstance(e,VirtualLight)]
     async_add_entities(individual+combined)
