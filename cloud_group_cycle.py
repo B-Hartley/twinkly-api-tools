@@ -107,7 +107,8 @@ def find_standalone_templates(plan, identity, roots):
             continue
         # Private archives may contain one or several nested snapshot stages.
         paths = list(base.rglob("objects-private.json")) + list(
-            base.rglob("cloud-objects-PRIVATE.json"))
+            base.rglob("cloud-objects-PRIVATE.json")) + list(
+            base.rglob("standalone-template-*-private.json"))
         if len(paths) > 1000:
             raise ValueError("Too many historical cloud snapshots; narrow the archive roots")
         for path in paths:
@@ -115,7 +116,9 @@ def find_standalone_templates(plan, identity, roots):
                 if path.stat().st_size > MAX_BODY:
                     continue
                 data = json.loads(path.read_text(encoding="utf-8"))
-                records = objects_from(data)
+                records = ([data] if isinstance(data, dict) and
+                           isinstance(data.get("devices"), list)
+                           else objects_from(data))
             except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError):
                 continue
             for o in records:
@@ -267,6 +270,62 @@ def verified_retention_plan(plan, snapshot):
     return verified
 
 
+def verified_grouped_plan(plan, snapshot):
+    """Anchor the plan to immutable 2D + 3D references, never stale plan maps."""
+    import archive_2d_group as group_refs
+    import archive_3d_maps as standalone_refs
+
+    current_area = find_area(snapshot, plan)
+    ids = [mac(snapshot[FILES[i + 1]]["gestalt"].get("mac")) for i in range(2)]
+    if len(set(ids)) != 2 or any(not address for address in ids):
+        raise ValueError("Grouped controller identities are missing or duplicated")
+    root = Path("2d_group_archive")
+    archives = []
+    if root.is_dir():
+        manifests = list(root.rglob("manifest.json"))
+        if len(manifests) > 1000:
+            raise ValueError("Too many 2D archives; narrow the archive root")
+        for manifest in manifests:
+            try:
+                saved = group_refs.read_archive(manifest.parent)
+            except (ValueError, OSError, TypeError, KeyError, json.JSONDecodeError):
+                continue
+            info = saved["manifest"]
+            if info["macs_in_order"] != ids or info["led_count"] != plan["size"]:
+                continue
+            # Archive must describe precisely the geometry being protected.
+            if not compare_points(coordinates(saved["area"]["layout"]),
+                                  coordinates(current_area["layout"]))["matching"]:
+                continue
+            if any(not layout_matches(
+                    snapshot[FILES[i + 1]]["layout"], saved["layouts"][i])
+                    for i in range(2)):
+                continue
+            archives.append((manifest.stat().st_mtime, manifest.parent, saved))
+    if not archives:
+        raise ValueError(
+            "No matching immutable 2D group archive for the live Area. "
+            "Run 'python area_manager.py capture-group' while still grouped; "
+            "then repeat this read-only preflight.")
+    _, folder, _ = max(archives, key=lambda item: item[0])
+    print("MATCH grouped cloud/LAN to immutable 2D archive:", folder)
+    verified = copy.deepcopy(plan)
+    for i, member in enumerate(verified["members"]):
+        local = snapshot[FILES[i + 1]]
+        address, count = standalone_refs.identity(local["gestalt"])
+        if count != member["leds"]:
+            raise ValueError(member["name"] + ": LED count differs from private plan")
+        saved = standalone_refs.read_reference("3d-map-archive", address, count)
+        member["area_layout"] = {
+            k: copy.deepcopy(local["layout"][k])
+            for k in ("source", "synthesized", "coordinates")
+        }
+        member["standalone_layout"] = copy.deepcopy(saved["layout"])
+        print("MATCH immutable 3D reference:", member["name"],
+              "(" + str(count) + " LEDs; " + saved["provenance"] + ")")
+    return verified
+
+
 def run(args):
     plan, _ = load_plan(args.plan)
     if getattr(args, "stop_after_ungroup", False) and getattr(args, "stop_after_group", False):
@@ -284,8 +343,8 @@ def run(args):
         print("and looking for archived standalone 3D cloud mapping templates.")
         current_plan, current = checkpoint(
             "1 CHECK GROUPED", args.plan, "grouped-cloud", args.output, args.timeout)
+        current_plan = verified_grouped_plan(current_plan, current)
         if getattr(args, "check_movies", False):
-            current_plan = verified_retention_plan(current_plan, current)
             import movie_retention
             movie_retention.capture(current_plan, Path(args.output) / "movie-preflight",
                                     "grouped-readonly", args.timeout, save_json)
@@ -309,8 +368,8 @@ def run(args):
     movie_mid_report = None
     try:
         plan, start = checkpoint("1 CHECK GROUPED", args.plan, "grouped-cloud", dest, args.timeout)
-        if getattr(args, "check_movies", False):
-            plan = verified_retention_plan(plan, start)
+        plan = verified_grouped_plan(plan, start)
+        reference_plan = copy.deepcopy(plan)
         original = find_area(start, plan)
         if args.group.casefold() not in (plan["group_name"].casefold(),
                                          str(original["name"]).casefold()):
@@ -320,7 +379,7 @@ def run(args):
         installation = original["installation"]["id"]
         identity = [mac(start[FILES[i + 1]]["gestalt"]["mac"]) for i in range(2)]
         templates = find_standalone_templates(
-            plan, identity, ("cloud-audits", "cloud-preflight-backups"))
+            plan, identity, ("cloud-audits", "cloud-preflight-backups", "office-join-cycle"))
         save_json(dest / "original-area-private.json", original)
         for m in plan["members"]:
             save_json(dest / ("standalone-template-" + str(m["offset"]) + "-private.json"),
@@ -384,8 +443,9 @@ def run(args):
             save_json(dest / "cycle-status-private.json", log)
             print("Cloud standalone created:", member_name,
                   "(response ID:", reply.get("id", "unavailable"), ")")
-        plan, standalone = checkpoint("3 CHECK UNGROUPED", args.plan, "ungrouped-cloud",
-                                       dest, args.timeout)
+        _, standalone = checkpoint("3 CHECK UNGROUPED", args.plan, "ungrouped-cloud",
+                                    dest, args.timeout)
+        plan = copy.deepcopy(reference_plan)
         if getattr(args, "check_movies", False):
             plan = verified_retention_plan(plan, start)
         for i, m in enumerate(plan["members"]):
@@ -455,8 +515,9 @@ def run(args):
         log["stages"].append("Cloud Area created")
         save_json(dest / "cycle-status-private.json", log)
         print("New cloud Area object:", reply.get("id", "unavailable"))
-        plan, final = checkpoint("5 CHECK REGROUPED", args.plan, "grouped-cloud",
-                                  dest, args.timeout)
+        _, final = checkpoint("5 CHECK REGROUPED", args.plan, "grouped-cloud",
+                               dest, args.timeout)
+        plan = copy.deepcopy(reference_plan)
         if getattr(args, "check_movies", False):
             plan = verified_retention_plan(plan, start)
         for i, member in enumerate(plan["members"]):

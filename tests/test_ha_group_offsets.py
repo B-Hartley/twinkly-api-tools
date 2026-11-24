@@ -27,10 +27,10 @@ def sample(slave_offset=210, master_offset=None):
     if master_offset is not None:
         master_group["offset"] = master_offset
     return {"devices": [
-        {"status": "captured", "name": "Office left", "mac": "a" * 12,
+        {"status": "captured", "name": "Office left", "ip": "192.168.1.90", "mac": "a" * 12,
          "led_count": 210, "layout": {"source": "2d"},
          "group": master_group, "responses": {}},
-        {"status": "captured", "name": "Office right", "mac": "b" * 12,
+        {"status": "captured", "name": "Office right", "ip": "192.168.1.93", "mac": "b" * 12,
          "led_count": 210, "layout": {"source": "2d"},
          "group": {"mode": "slave", "uid": UID, "size": 420,
                    "offset": slave_offset}, "responses": {}},
