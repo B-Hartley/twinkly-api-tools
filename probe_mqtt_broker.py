@@ -74,9 +74,11 @@ def probe(port=8883, username=None, timeout=5, ca_file=None, legacy_ca=False):
     }
     client_id = "inspect-" + secrets.token_hex(8)
     sock = socket.create_connection((HOST, port), timeout=timeout)
+    stage = "tcp-connected"
     try:
         sock.settimeout(timeout)
         if port == 8883:
+            stage = "tls-handshake"
             # A user-reviewed CA bundle extends trust without disabling hostname
             # or certificate-chain verification.
             context = ssl.create_default_context(cafile=ca_file) if ca_file else ssl.create_default_context()
@@ -89,7 +91,10 @@ def probe(port=8883, username=None, timeout=5, ca_file=None, legacy_ca=False):
                 context.verify_flags &= ~ssl.VERIFY_X509_STRICT
             sock = context.wrap_socket(sock, server_hostname=HOST)
             result["tls_version"] = sock.version()
+            stage = "tls-verified"
+        stage = "mqtt-connect-send"
         sock.sendall(connect_packet(client_id, username=username))
+        stage = "mqtt-connack-read"
         # MQTT 3.1.1 CONNACK must be fixed 4-byte packet.
         reply = b""
         while len(reply) < 4:
@@ -107,6 +112,8 @@ def probe(port=8883, username=None, timeout=5, ca_file=None, legacy_ca=False):
             # Normal client DISCONNECT, no retained subscription or publish.
             sock.sendall(b"\xe0\x00")
         return result
+    except (OSError, RuntimeError) as exc:
+        raise RuntimeError(f"Failed at {stage}: {type(exc).__name__}: {exc}") from exc
     finally:
         sock.close()
 
