@@ -350,7 +350,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
 
     async def collect(name):
-        result = await asyncio.gather(*(capture(session, d) for d in devices))
+        # Capture sequentially: the device's local API tokens can be affected by
+        # other active clients; avoid overlapping session setup unnecessarily.
+        result = []
+        for device in devices:
+            result.append(await capture(session, device))
         return {"name": name, "captured_utc": datetime.now(timezone.utc).isoformat(),
                 "devices": result}
 
