@@ -115,6 +115,16 @@ class MqttProbeTests(unittest.TestCase):
         self.assertTrue(ctx.verify_flags & ssl.VERIFY_X509_TRUSTED_FIRST)
         self.assertTrue(result["legacy_ca_compatibility"])
 
+    def test_reset_reports_precise_mqtt_stage(self):
+        class ResetSocket(DummySocket):
+            def recv(self, count):
+                raise ConnectionResetError(10054, "Remote host reset")
+        sock = ResetSocket()
+        with patch("probe_mqtt_broker.socket.create_connection", return_value=sock):
+            with self.assertRaisesRegex(RuntimeError, "Failed at mqtt-connack-read"):
+                mqtt.probe(1883, timeout=1)
+        self.assertTrue(sock.closed)
+
     def test_refuse_other_ports_and_invalid_username(self):
         for port in (1, 8884, 1884):
             with self.assertRaises(ValueError):
