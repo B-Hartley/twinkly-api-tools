@@ -31,3 +31,20 @@ class RealtimeTests(unittest.TestCase):
             rt.frame_at([{"offset":1,"leds":210}],5)
     def test_rgbw(self):
         self.assertEqual(rt.frame_at(self.members,5,"solid",4),bytes([0,255,208,128])*420)
+
+class DiagnosticTests(unittest.TestCase):
+    members=[{"name":name,"offset":i*3,"leds":3,
+              "area_layout":{"coordinates":[{"y":y} for y in (0,.25,.75)]}}
+             for i,name in enumerate(("Office Left","Office Right"))]
+    def test_isolation(self):
+        self.assertEqual(rt.diagnostic_frame(self.members,0),bytes([255,0,0])*3+bytes(9))
+        self.assertEqual(rt.diagnostic_frame(self.members,5),bytes(9)+bytes([0,255,0])*3)
+    def test_opposite_spatial_phase(self):
+        frame=rt.diagnostic_frame(self.members,10)
+        flipped=rt.diagnostic_frame(self.members,10,invert=True)
+        self.assertEqual(frame[:9],flipped[9:])
+        self.assertEqual(frame[9:],flipped[:9])
+        self.assertNotEqual(frame[3:6],frame[12:15])
+    def test_invalid_axis(self):
+        with self.assertRaises(KeyError):
+            rt.diagnostic_frame(self.members,10,axis="z")
