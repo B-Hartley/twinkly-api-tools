@@ -431,7 +431,17 @@ def _capture_local_groups(state):
         if grouped[0]["size"] != grouped[1]["size"] or grouped[0]["size"] != sum(
                 x["led_count"] for x in grouped):
             raise ValueError("Group " + uid + ": inconsistent LED count")
-        ordered = sorted(grouped, key=lambda x: x["offset"] if type(x["offset"]) is int else -1)
+        # Twinkly omits the master's offset when it starts at LED 0.
+        # Only normalise that documented role-specific omission; missing or
+        # malformed slave offsets must still fail rather than be guessed.
+        for participant in grouped:
+            if participant["role"] == "master" and participant["offset"] is None:
+                participant["offset"] = 0
+            if type(participant["offset"]) is not int or participant["offset"] < 0:
+                raise ValueError(
+                    "Group " + uid + ": missing or invalid offset for " + participant["name"]
+                )
+        ordered = sorted(grouped, key=lambda x: x["offset"])
         next_offset = 0
         for participant in ordered:
             if participant["offset"] != next_offset:
