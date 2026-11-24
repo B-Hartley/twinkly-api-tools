@@ -45,7 +45,10 @@ def verify(area, members):
         if observed_offset is None and i==0:
             observed_offset=0
         if normalized_uid(group.get("uid"))!=uid or group.get("mode")!=role or group.get("size")!=total or observed_offset!=offset:
-            raise ValueError(entry["name"]+": group UID, role, size or offset mismatch")
+            raise ValueError(f"{entry['name']}: expected UID={uid}, role={role}, "
+                             f"size={total}, offset={offset}; observed "
+                             f"UID={group.get('uid')}, role={group.get('mode')}, "
+                             f"size={group.get('size')}, offset={observed_offset}")
         coords=local.get("coordinates")
         if local.get("source")!="2d" or type(local.get("synthesized")) is not bool or not isinstance(coords,list) or len(coords)!=n:
             raise ValueError(entry["name"]+": invalid local 2D map")
@@ -83,6 +86,18 @@ def capture(args):
         members[address]={**device,"gestalt":g,
             "group":checked(ip,"/xled/v1/application/group",args.timeout,local_token),
             "layout":checked(ip,"/xled/v1/led/layout/full",args.timeout,local_token)}
+    print("Cloud Area:",area.get("name"),"UID:",area.get("uuid"),"LEDs:",area.get("ledCount"))
+    print("Cloud list order versus local group configuration:")
+    for i,slot in enumerate(area["devices"]):
+        address=mac(slot.get("device",{}).get("mac"))
+        m=members.get(address)
+        if m is None:
+            print(f"  [{i}] Missing configured light set {str(address)[-4:]}")
+            continue
+        g=m["group"]["group"]
+        print(f"  [{i}] {m['name']}: LEDs={m['gestalt'].get('number_of_led')}, "
+              f"part={slot.get('part')}, role={g.get('mode')}, offset={g.get('offset')}, "
+              f"size={g.get('size')}, UID={g.get('uid')}, layout={m['layout'].get('source')}")
     uid,order=verify(area,members)
     payload={"area":area,"members":[members[a] for a in order]}
     dest=Path(args.root)/"multi-area"/uid/(dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
