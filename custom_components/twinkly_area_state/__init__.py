@@ -57,6 +57,32 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
+def parse_twinkly_json(raw):
+    """Parse one JSON object; tolerate only the known extraneous connection header.
+
+    Some Twinkly firmware appends an HTTP 'Connection: close' header to the
+    response body. Never truncate incomplete JSON or accept arbitrary garbage.
+    """
+    body = raw.decode("utf-8")
+    try:
+        return json.loads(body)
+    except json.JSONDecodeError as original:
+        try:
+            data, end = json.JSONDecoder().raw_decode(body.lstrip())
+        except json.JSONDecodeError:
+            raise ValueError(
+                f"Malformed device JSON (bytes={len(raw)}, "
+                f"pos={original.pos}, reason={original.msg})") from None
+        suffix = body.lstrip()[end:].strip()
+        if suffix.lower() != "connection: close":
+            raise ValueError(
+                f"Malformed device JSON (bytes={len(raw)}, "
+                f"pos={original.pos}, trailing_data={bool(suffix)}, "
+                "unrecognised_suffix)") from None
+        _LOGGER.debug("Accepted Twinkly known Connection-close body suffix")
+        return data
+
+
 async def query(session, ip, endpoint, *, method="GET", payload=None, token=None):
     """Make a bounded local request with no redirects."""
     headers = {"Accept": "application/json"}
@@ -71,7 +97,7 @@ async def query(session, ip, endpoint, *, method="GET", payload=None, token=None
             raw = await resp.content.read(MAX_RESPONSE + 1)
             if len(raw) > MAX_RESPONSE:
                 return {"ok": False, "error": "Response too large"}
-            data = json.loads(raw)
+            data = parse_twinkly_json(raw)
             if isinstance(data, dict) and data.get("code") not in (None, 1000):
                 return {"ok": False, "error": f"Device code {data.get('code')}"}
             return {"ok": True, "data": data}
