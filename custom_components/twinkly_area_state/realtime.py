@@ -185,3 +185,14 @@ def spiral_frame(geometry,width,effect,elapsed,rgbw,brightness):
         pixel=(w,r,g,b) if width==4 else (r,g,b)
         result.extend(round(c*level) for c in pixel)
     return bytes(result)
+
+
+def standalone_member(device,gestalt,group):
+    """Standalone lights stream only to their own controller."""
+    import re
+    mac=str(gestalt.get("mac","")).lower().replace(":","").replace("-","")
+    count=gestalt.get("number_of_led")
+    if group.get("mode")!="none" or not re.fullmatch(r"[0-9a-f]{12}",mac) or type(count) is not int or count<=0:
+        raise ValueError("Invalid standalone controller metadata")
+    return dict(device,mac=mac,led_count=count,role="none",offset=0,size=count,
+                uid="standalone:"+mac,width=pixel_width(gestalt))
