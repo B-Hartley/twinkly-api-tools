@@ -614,6 +614,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                          title="Twinkly 3D mappings captured",
                          notification_id=f"{DOMAIN}_capture_3d")
 
+    async def import_3d_maps(call: ServiceCall):
+        from .archive_import import read_archives, merge_archives
+        from homeassistant.exceptions import HomeAssistantError
+        async with lock:
+            try:
+                incoming = await hass.async_add_executor_job(
+                    read_archives, hass.config.path("twinkly_3d_import"))
+                identities = {}
+                # Public identity reads only: no login, no layout or group writes.
+                for device in devices:
+                    reply = await query(session, device["ip"], ENDPOINTS["gestalt"])
+                    if reply["ok"] and isinstance(reply.get("data"), dict):
+                        g = reply["data"]
+                        mac = str(g.get("mac", "")).lower().replace(":", "").replace("-", "")
+                        count = g.get("number_of_led")
+                        if re.fullmatch(r"[0-9a-f]{12}", mac) and type(count) is int and count > 0:
+                            identities[mac] = count
+                data = await store.async_load() or {}
+                archives = data.setdefault("_area_manager", {"maps_3d": {}, "groups": {}})
+                merged, added, unchanged, skipped = merge_archives(
+                    archives.get("maps_3d", {}), incoming, identities)
+                archives["maps_3d"] = merged
+                await store.async_save(data)
+            except (ValueError, OSError, TypeError, KeyError) as exc:
+                raise HomeAssistantError(f"3D archive import failed: {exc}") from exc
+            async_create(hass, "Imported: " + (", ".join(added) or "none") +
+                         ". Already saved: " + (", ".join(unchanged) or "none") +
+                         ". Skipped: " + ("; ".join(skipped) or "none") +
+                         f". Total saved 3D references: {len(merged)}. "
+                         "Existing maps and controller groups were not changed.",
+                         title="Twinkly 3D archive import",
+                         notification_id=f"{DOMAIN}_import_3d")
+
     async def verify_archives(call: ServiceCall):
         async with lock:
             live = await collect("verify-live")
@@ -681,6 +714,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(DOMAIN, "capture_layout_diagnostics", capture_layout_diagnostics)
     hass.services.async_register(DOMAIN, "capture_groups", capture_groups)
     hass.services.async_register(DOMAIN, "capture_3d_maps", capture_3d_maps)
+    hass.services.async_register(DOMAIN, "import_3d_maps", import_3d_maps)
     hass.services.async_register(DOMAIN, "verify_archives", verify_archives)
     hass.services.async_register(DOMAIN, "save_state", save_state,
         schema=vol.Schema({vol.Required("name"): STATE_NAME}))
@@ -701,6 +735,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "actions": {"capture_layout_diagnostics": capture_layout_diagnostics,
                     "capture_groups": capture_groups,
                     "capture_3d_maps": capture_3d_maps,
+                    "import_3d_maps": import_3d_maps,
                     "verify_archives": verify_archives},
     }
     await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])
@@ -714,7 +749,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
-                    "capture_layout_diagnostics", "resume_movie"):
+                    "capture_layout_diagnostics", "resume_movie", "import_3d_maps"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
