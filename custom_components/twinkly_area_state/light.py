@@ -6,12 +6,12 @@ import base64
 import logging
 import os
 
-from homeassistant.components.light import LightEntity, ColorMode
+from homeassistant.components.light import LightEntity, ColorMode, LightEntityFeature
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from .const import DOMAIN
-from .realtime import pixel_width
+from .realtime import pixel_width, mapped_rainbow
 
 _LOGGER=logging.getLogger(__name__)
 MODE="/xled/v1/led/mode"
@@ -30,6 +30,8 @@ class Group:
         self.error=False
         self.previous=None
         self.expiry={}
+        self.effects={m["mac"]:"Solid" for m in members}
+        self.patterns={m["mac"]:{} for m in members}
         self.master=next(m for m in members if m["role"]=="master")
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
 
@@ -60,6 +62,22 @@ class Group:
             if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or (0 if group.get("offset") is None and m["role"]=="master" else group.get("offset"))!=m["offset"]):
                 raise HomeAssistantError("Group changed; reload integration before streaming")
 
+    def load_maps(self, data):
+        records=data.get("_area_manager",{}).get("groups",{})
+        for m in self.members:
+            patterns={}
+            record=records.get(m["uid"],{})
+            saved=next((x for x in record.get("members",[]) if x.get("mac")==m["mac"] and x.get("led_count")==m["led_count"] and x.get("offset")==m["offset"] and x.get("size")==m["size"] and x.get("role")==m["role"]),None)
+            if saved:
+                for name,axis,reverse in (("Static rainbow","y",False),("Static rainbow reversed","y",True),("Horizontal rainbow","x",False)):
+                    try:
+                        patterns[name]=mapped_rainbow(saved["layout"],m["led_count"],m["width"],axis,reverse)
+                    except (ValueError,KeyError,TypeError) as exc:
+                        _LOGGER.warning("%s: %s unavailable: %s",m["name"],name,exc)
+            self.patterns[m["mac"]]=patterns
+            if self.effects[m["mac"]] not in patterns:
+                self.effects[m["mac"]]="Solid"
+
     def notify(self):
         for e in self.entities:
             e.async_write_ha_state()
@@ -71,10 +89,12 @@ class Group:
             on,brightness,rgbw=self.state[m["mac"]]
             r,g,b,w=(round(c*brightness/255) if on else 0 for c in rgbw)
             pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
+            pattern=self.patterns[m["mac"]].get(self.effects[m["mac"]])
+            frame=bytes(round(c*brightness/255) if on else 0 for c in pattern) if pattern is not None else pixel*m["led_count"]
             for attempt in range(3):
                 try:
                     async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
-                            data=pixel*m["led_count"],headers={"X-Auth-Token":self.tokens[m["mac"]],
+                            data=frame,headers={"X-Auth-Token":self.tokens[m["mac"]],
                             "Content-Type":"application/octet-stream","Connection":"close"},
                             timeout=aiohttp.ClientTimeout(total=8,connect=4),allow_redirects=False) as resp:
                         from . import parse_twinkly_json
@@ -101,6 +121,10 @@ class Group:
     async def update(self,m,on,kwargs):
         async with self.lock:
             old=self.state[m["mac"]]
+            old_effect=self.effects[m["mac"]]
+            effect=kwargs.get("effect", "Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else old_effect)
+            if effect not in ["Solid", *self.patterns[m["mac"]]]:
+                raise HomeAssistantError("Effect requires a captured map for the current group")
             b=kwargs.get("brightness",old[1])
             c=kwargs.get("rgbw_color",kwargs.get("rgb_color",old[2]))
             c=tuple(c)+(0,) if len(c)==3 else tuple(c)
@@ -111,9 +135,11 @@ class Group:
                     raise HomeAssistantError("Group already in unsupported mode; stop external streaming first")
                 try:
                     await self.mode("rt")
+                    self.effects[m["mac"]]=effect
                     self.state[m["mac"]]=(on,b,c)
                     await self.send()
                 except Exception:
+                    self.effects[m["mac"]]=old_effect
                     self.state[m["mac"]]=old
                     await self.restore()
                     raise
@@ -121,6 +147,7 @@ class Group:
                 self.error=False
                 self.task=self.hass.async_create_background_task(self.run(),"Twinkly virtual light frames")
             else:
+                self.effects[m["mac"]]=effect
                 self.state[m["mac"]]=(on,b,c)
                 try:
                     await self.send()
@@ -170,6 +197,7 @@ class Group:
 
 class VirtualLight(LightEntity):
     _attr_should_poll=False
+    _attr_supported_features=LightEntityFeature.EFFECT
     def __init__(self,group,m):
         self.group=group
         self.member=m
@@ -178,6 +206,12 @@ class VirtualLight(LightEntity):
         self._attr_color_mode=ColorMode.RGBW if m["width"]==4 else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
         self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,m["mac"])},name=m["name"]+" Virtual",manufacturer="Twinkly")
+    @property
+    def effect_list(self):
+        return ["Solid", *self.group.patterns[self.member["mac"]]]
+    @property
+    def effect(self):
+        return self.group.effects[self.member["mac"]]
     @property
     def available(self):
         return not self.group.error
@@ -227,6 +261,7 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 observations.append((m,gestalt,group["group"]))
             members=basic_group_members(observations)
             group=Group(hass,members,ctx["lock"],query)
+            group.load_maps(await ctx["store"].async_load() or {})
             group.entities=[VirtualLight(group,m) for m in members]
         except (ValueError,KeyError,TypeError,StopIteration) as exc:
             _LOGGER.warning("Office virtual lights not created: %s",exc)
