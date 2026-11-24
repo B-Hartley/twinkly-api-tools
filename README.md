@@ -460,3 +460,31 @@ The reverse-engineered API documents default usernames
 **not** establish current publicly usable broker credentials. The probe
 does not use or request passwords. Do not paste private passwords
 from controller config into public issues or chat.
+
+### Broker TLS certificate verification failure
+
+On 2026-11-24, an Office G-family controller reported
+`mqtt.twinkly.com:8883` with username `twinkly32` and no password field.
+A Windows Python probe reached TLS negotiation but reported
+`CERTIFICATE_VERIFY_FAILED: self-signed certificate in certificate chain`.
+**This is a trust-chain error before MQTT CONNECT or username authentication.**
+
+Inspect the certificate chain without changing either controller:
+
+```powershell
+Test-NetConnection mqtt.twinkly.com -Port 8883
+# If OpenSSL is installed:
+openssl s_client -connect mqtt.twinkly.com:8883 -servername mqtt.twinkly.com -showcerts
+```
+
+Do not accept a self-signed/root CA merely because the endpoint offered it.
+If you independently verify the correct broker CA PEM and its source, the
+probe accepts an optional trust bundle while **retaining TLS verification**:
+
+```powershell
+python .\probe_mqtt_broker.py --port 8883 --username twinkly32 --ca-file ".\verified-twinkly-ca.pem"
+```
+
+Never use a trust-all TLS bypass for MQTT credentials or control. A network
+interception device or a broker using a private CA are both possibilities.
+The README example CA filename is illustrative, not included in Git.
