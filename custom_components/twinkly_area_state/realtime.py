@@ -26,7 +26,7 @@ def frame_at(members, t, effect="rainbow", channels=3):
     return bytes(result)
 
 def diagnostic_frame(members, t, channels=3, axis="y", invert=False):
-    """Five seconds per solid isolation test, then opposing moving rainbows."""
+    """Ten seconds per solid isolation test, then opposing moving rainbows."""
     import math
     if channels not in (3,4) or axis not in ("x","y","z"):
         raise ValueError("Unsupported format or axis")
@@ -42,16 +42,16 @@ def diagnostic_frame(members, t, channels=3, axis="y", invert=False):
         lo,hi=min(values),max(values)
         left=name=="office left"
         for v in values:
-            if t<5:
+            if t<10:
                 rgb=(255,0,0) if left else (0,0,0)
-            elif t<10:
+            elif t<20:
                 rgb=(0,0,0) if left else (0,255,0)
             else:
                 height=(v-lo)/(hi-lo)
                 if invert:
                     height=1-height
                 phase=height if left else -height
-                rgb=tuple(int(c*255) for c in colorsys.hsv_to_rgb((phase+(t-10)*.25)%1,1,1))
+                rgb=tuple(int(c*255) for c in colorsys.hsv_to_rgb((phase+(t-20)*.25)%1,1,1))
             if channels==4:
                 result.append(0)
             result.extend(rgb)
