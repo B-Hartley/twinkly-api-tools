@@ -365,6 +365,12 @@ def run_reverse(args):
         template, area_layouts = archived_group_reference(
             plan, ids, ("cloud-preflight-backups", "cloud-audits"))
         plan = apply_area_reference(plan, area_layouts)
+        if getattr(args, "check_movies", False):
+            import movie_retention
+            movie_before = movie_retention.capture(
+                plan, destination, "standalone-before", args.timeout, save_json)
+        else:
+            movie_before = None
         installation = installation_id(standalones)
         validate_cloud_payload_inputs(template, standalones, plan)
         save_json(destination / "initial-cloud-standalones-private.json", standalones)
@@ -418,7 +424,20 @@ def run_reverse(args):
         if not compare_points(coordinates(area["layout"]),
                               coordinates(template["layout"]))["matching"]:
             raise RuntimeError("New group geometry differs from former 2D Area")
+        movie_retained = True
+        if movie_before is not None:
+            import movie_retention
+            movie_after = movie_retention.capture(
+                plan, destination, "grouped-after", args.timeout, save_json)
+            comparison = movie_retention.compare(movie_before, movie_after)
+            save_json(destination / "movie-retention-after-group-private.json", comparison)
+            movie_retained = movie_retention.print_comparison("after group", comparison)
+            journal["movie_retention_pass"] = movie_retained
+            save_json(destination / "reverse-cycle-status-private.json", journal)
         if getattr(args, "stop_after_group", False):
+            if not movie_retained:
+                raise RuntimeError("Cloud group created but one or more movie catalogues changed. "
+                                   "Stop; no automatic retry or ungroup.")
             ops.approve("Check the Twinkly app: Office Group is joined and uploaded effects "
                         "play correctly. No ungroup will be attempted.", "DONE-GROUP")
             journal["complete"] = True
