@@ -269,6 +269,12 @@ def verified_retention_plan(plan, snapshot):
 
 def run(args):
     plan, _ = load_plan(args.plan)
+    if getattr(args, "stop_after_ungroup", False) and getattr(args, "stop_after_group", False):
+        raise ValueError("Choose one one-way operation")
+    if getattr(args, "stop_after_ungroup", False) and getattr(args, "start_ungrouped", False):
+        raise ValueError("--stop-after-ungroup requires grouped start")
+    if getattr(args, "stop_after_group", False) and not getattr(args, "start_ungrouped", False):
+        raise ValueError("--stop-after-group requires standalone start")
     if getattr(args, "check_movies", False) and getattr(args, "start_ungrouped", False):
         raise ValueError("--check-movies is only supported for grouped -> ungrouped -> regrouped")
     if len(plan["members"]) != 2 or not 0 < args.timeout <= 30:
@@ -394,6 +400,14 @@ def run(args):
             if not movie_retention.print_comparison("after ungroup", movie_mid_report):
                 print("WARNING: Some movie UUIDs or metadata changed after ungrouping.")
                 print("Regrouping may NOT restore lost animation frames.")
+        if getattr(args, "stop_after_ungroup", False):
+            approve("Confirm both standalone 3D layouts and effects in the Twinkly app. "
+                    "No regroup will be attempted.", "DONE-UNGROUP")
+            log["complete"] = True
+            log["result"] = "ungrouped"
+            save_json(dest / "cycle-status-private.json", log)
+            print("UNGROUP PASS: two standalone cloud/LAN controllers; geometry and movies checked.")
+            return 0
         approve("Inspect the Twinkly app: there should now be TWO independent Office "
                 "controllers with their original 3D layouts. If correct, allow regroup.", "GROUP")
         # Local regroup: 2d layout first, then master/slave roles.
@@ -501,6 +515,10 @@ def main(argv=None):
     p.add_argument("--execute", action="store_true")
     p.add_argument("--acknowledge-risk", action="store_true")
     p.add_argument("--confirm-group")
+    p.add_argument("--stop-after-ungroup", action="store_true",
+                   help="End after verified grouped -> standalone operation")
+    p.add_argument("--stop-after-group", action="store_true",
+                   help="End after verified standalone -> group operation")
     p.add_argument("--check-movies", action="store_true",
                    help="Experimental movie catalogue comparison at all three stages; no raw frame backup")
     p.add_argument("--start-ungrouped", action="store_true",
