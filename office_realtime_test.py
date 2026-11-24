@@ -29,13 +29,16 @@ def main():
     p.add_argument("--plan",default="private-area-plan.json")
     p.add_argument("--execute",action="store_true")
     p.add_argument("--finish",choices=["movie","restore"],default="movie")
-    p.add_argument("--effect",choices=["solid","rainbow","diagnostic"],default="rainbow")
+    p.add_argument("--effect",choices=["solid","rainbow","diagnostic","colour-swap"],default="rainbow")
     p.add_argument("--channels",type=int,choices=[3,4],help="Override only if investigating device metadata")
     p.add_argument("--transport",choices=["master","direct"],default="direct")
     p.add_argument("--rt-mode",choices=["master","both"],default="master",help="Which controllers receive the RT mode command")
+    p.add_argument("--wire",choices=["udp","http"],default="udp")
     p.add_argument("--vertical-axis",choices=["x","y","z"],default="y")
     p.add_argument("--invert-vertical",action="store_true")
     a=p.parse_args()
+    if a.wire=="http" and a.transport!="direct":
+        p.error("HTTP test requires direct transport")
     plan,uid=load_plan(a.plan,require_verified=a.execute)
     members=sorted(plan["members"],key=lambda m:m["offset"])
     if len(members)!=2 or {m["name"].lower() for m in members}!={"office left","office right"}:
@@ -90,6 +93,14 @@ def main():
         if (m is master or a.rt_mode=="both") and old not in ("off","movie","playlist","color","effect","rt"):
             raise RuntimeError("Unsupported original mode: "+old)
         sessions.append((m,token,old))
+    import urllib.request
+    import json
+    def http_frame(ip, token, data):
+        req=urllib.request.Request(f"http://{ip}/xled/v1/led/rt/frame",data=data,headers={"X-Auth-Token":token,"Content-Type":"application/octet-stream"},method="POST")
+        with urllib.request.urlopen(req,timeout=3) as response:
+            reply=json.loads(response.read())
+        if reply.get("code")!=1000:
+            raise RuntimeError(f"{ip}: HTTP frame rejected: {reply}")
     attempted=[]
     completed=False
     try:
@@ -100,9 +111,15 @@ def main():
         with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
             start=time.monotonic()
             phase=None
-            duration=30 if a.effect=="diagnostic" else 10
+            duration=40 if a.effect=="colour-swap" else 30 if a.effect=="diagnostic" else 10
             while (t:=time.monotonic()-start)<duration:
-                if a.effect=="diagnostic":
+                if a.effect=="colour-swap":
+                    current=min(3,int(t//10))
+                    frame=rt.colour_swap_frame(members,current,a.channels)
+                    if phase!=current:
+                        print(["LEFT RED / RIGHT BLUE","LEFT BLUE / RIGHT RED","LEFT GREEN / RIGHT PURPLE","LEFT PURPLE / RIGHT GREEN"][current],flush=True)
+                        phase=current
+                elif a.effect=="diagnostic":
                     current=0 if t<10 else 1 if t<20 else 2
                     frame=rt.diagnostic_frame(members,t,a.channels,a.vertical_axis,a.invert_vertical)
                     if phase!=current:
@@ -119,9 +136,12 @@ def main():
                     data=frame if a.transport=="master" else frame[m["offset"]*a.channels:(m["offset"]+m["leds"])*a.channels]
                     if len(data)!=(plan["size"] if a.transport=="master" else m["leds"])*a.channels:
                         raise RuntimeError("Unexpected frame length")
-                    for packet in rt.packets(token,data):
-                        sock.sendto(packet,(m["ip"],7777))
-                time.sleep(.04)
+                    if a.wire=="http":
+                        http_frame(m["ip"],token,data)
+                    else:
+                        for packet in rt.packets(token,data):
+                            sock.sendto(packet,(m["ip"],7777))
+                time.sleep(.25 if a.wire=="http" else .04)
         completed=True
     finally:
         errors=[]
