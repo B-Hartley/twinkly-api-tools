@@ -9,7 +9,7 @@ import os
 from homeassistant.components.light import LightEntity, ColorMode, LightEntityFeature
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, async_get as async_get_device_registry, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from .const import DOMAIN
 from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS
 
@@ -33,7 +33,7 @@ class Group:
         self.effects={m["mac"]:"Solid" for m in members}
         self.geometry={}
         self.patterns={m["mac"]:{} for m in members}
-        self.master=next(m for m in members if m["role"]=="master")
+        self.master=next(m for m in members if m["role"] in ("master","none"))
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
 
     async def call(self,m,path,**kw):
@@ -60,6 +60,10 @@ class Group:
             await self.login(m)
             d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
             group=d["group"]
+            if m["role"]=="none":
+                if group.get("mode")!="none":
+                    raise HomeAssistantError("Standalone controller joined a group; reload integration")
+                continue
             if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or (0 if group.get("offset") is None and m["role"]=="master" else group.get("offset"))!=m["offset"]):
                 raise HomeAssistantError("Group changed; reload integration before streaming")
 
@@ -231,19 +235,11 @@ class VirtualLight(LightEntity):
         self._attr_supported_color_modes={self._attr_color_mode}
         mac=format_mac(m["mac"])
         connection=(CONNECTION_NETWORK_MAC,mac)
-        registry=async_get_device_registry(group.hass)
-        # Native Twinkly registers its hardware MAC as a network connection.
-        # Do not reuse the legacy virtual-device identifier when a native
-        # device exists: that would risk merging two registry devices.
-        existing=registry.async_get_device(connections={connection})
-        if existing is not None:
-            self._attr_device_info=DeviceInfo(connections={connection})
-        else:
-            # Keep the controller's device identity if native Twinkly has not
-            # been configured yet. A later native registration can match MAC.
-            self._attr_device_info=DeviceInfo(
-                identifiers={(DOMAIN,m["mac"])},connections={connection},
-                name=m["name"],manufacturer="Twinkly")
+        # HA 2026.8+ devices belong to one config entry. Keep a named
+        # companion device, with the physical MAC for cross-reference.
+        self._attr_device_info=DeviceInfo(
+            identifiers={(DOMAIN,m["mac"])},connections={connection},
+            name=m["name"]+" (Virtual)",manufacturer="Twinkly")
     @property
     def effect_list(self):
         return ["Solid", *self.group.patterns[self.member["mac"]]]
@@ -275,7 +271,13 @@ async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
     from .realtime import basic_group_members
     ctx=hass.data[DOMAIN][entry.entry_id]
-    selected=ctx["devices"]
+    from .config_flow import configured_twinkly_devices
+    from .realtime import standalone_member
+    # Keep configured private addresses and include newly added native controllers.
+    by_ip={d["ip"]:d for d in ctx["devices"]}
+    for d in configured_twinkly_devices(hass.config_entries.async_entries("twinkly")):
+        by_ip.setdefault(d["ip"],d)
+    selected=list(by_ip.values())
     session=async_get_clientsession(hass)
     async def read(m,path,**kw):
         reply=await query(session,m["ip"],path,**kw)
@@ -296,17 +298,22 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 group=(await read(m,"/xled/v1/application/group",token=token))["group"]
                 if group.get("mode") in ("master","slave"):
                     observations.setdefault(str(group.get("uid","")).lower(),[]).append((m,gestalt,group))
+                elif group.get("mode")=="none":
+                    member=standalone_member(m,gestalt,group)
+                    observations["standalone:"+member["mac"]]=[(m,gestalt,group)]
+                else:
+                    _LOGGER.warning("%s: unsupported group role %s",m["name"],group.get("mode"))
             except (ValueError,KeyError,TypeError, OSError) as exc:
                 _LOGGER.warning("%s: virtual light discovery skipped: %s",m["name"],exc)
         data=await ctx["store"].async_load() or {}
         for uid,items in observations.items():
             try:
-                members=basic_group_members(items)
+                members=[standalone_member(*items[0])] if uid.startswith("standalone:") else basic_group_members(items)
                 group=Group(hass,members,ctx["lock"],query)
                 group.load_maps(data)
                 group.entities=[VirtualLight(group,m) for m in members]
                 groups.append(group)
             except (ValueError,KeyError,TypeError,StopIteration) as exc:
-                _LOGGER.warning("Virtual group %s not created: %s",uid,exc)
+                _LOGGER.warning("Virtual group %s not created: %s; discovered %s",uid,exc,[(m["name"],g.get("mode"),g.get("offset"),g.get("size"),hw.get("number_of_led")) for m,hw,g in items])
     ctx["virtual_groups"]=groups
     async_add_entities([e for group in groups for e in group.entities])
