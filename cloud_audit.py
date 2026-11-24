@@ -20,7 +20,7 @@ import urllib.parse
 import urllib.request
 
 from cloud_auth import interactive_login
-from cloud_token_store import access_token as cached_access_token, store_session, clear_session
+from cloud_token_store import renewable_access_token as cached_access_token, store_session, clear_session
 from group_test import load_plan, layout_matches
 from twinkly_inspector import save_json
 
@@ -174,11 +174,11 @@ def main():
             else:
                 print("Token lifetime unknown: not caching session.")
         else:
-            token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token()
+            token = os.environ.get("TWINKLY_CLOUD_TOKEN", "").strip() or cached_access_token(timeout=args.timeout)
             if token:
                 print("Using existing Twinkly cloud access token.")
             else:
-                raise ValueError("Cached token expired or missing; use --login. Refresh endpoint is not verified.")
+                raise ValueError("Cached session missing or cannot renew; use --login.")
         if not token or any(c.isspace() for c in token) or len(token) > 4096:
             raise ValueError("Use --login or a valid TWINKLY_CLOUD_TOKEN")
         plan, _ = load_plan(args.plan)
