@@ -33,6 +33,7 @@ class TwinklyAreaButton(ButtonEntity):
         self._attr_name = title
         self._attr_icon = icon
         self._callback = callback
+        self._action = action
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             name="Twinkly Area Manager",
@@ -41,4 +42,4 @@ class TwinklyAreaButton(ButtonEntity):
         )
 
     async def async_press(self):
-        await self._callback(ServiceCall(self.hass, DOMAIN, {}, context=None))
+        await self._callback(ServiceCall(DOMAIN, {}, service=self._action))
