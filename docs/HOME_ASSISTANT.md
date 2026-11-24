@@ -1,78 +1,91 @@
-# Home Assistant / HACS (experimental)
+# Twinkly Area Manager for Home Assistant (experimental)
 
-HACS can install this repository as a **custom integration**, after adding `B-Hartley/twinkly-api-tools` as a custom integration repository. After installation restart Home Assistant and go to **Settings → Devices & services → Add integration → Twinkly Area State Inspector**.
+Home Assistant custom integration in `custom_components/twinkly_area_state/`.
+Works **alongside** the built-in [Twinkly integration](https://www.home-assistant.io/integrations/twinkly/).
+It does **not** replace, patch or import the native Twinkly light integration.
 
-The configuration form expects a **JSON array**, e.g.:
+## Install through Home Assistant Marketplace / HACS
+
+1. In Home Assistant, open **Settings → Marketplace** (or HACS, depending on your installation).
+2. Open **Custom repositories** and add `https://github.com/B-Hartley/twinkly-api-tools` as an **Integration**.
+3. Install **Twinkly Area Manager** and restart Home Assistant.
+4. Open **Settings → Devices & services → Add integration → Twinkly Area Manager**.
+5. The form will prefill controllers already configured in Home Assistant's **Twinkly** integration where their private LAN IP addresses are available. Review/remove controllers before saving. If no existing controllers are found, enter a JSON list, for example:
 
 ```json
 [
-  {"name":"Office Left","ip":"192.168.21.10"},
-  {"name":"Office Right","ip":"192.168.21.11"},
-  {"name":"BackR Bush Bottom","ip":"192.168.21.12"}
+  {"name":"Office Left","ip":"192.168.21.90"},
+  {"name":"Office Right","ip":"192.168.21.93"}
 ]
 ```
 
-Use your actual device IPs. The default config doesn't automatically read `devices.json` in the Git repo: enter devices in the HA configuration form. A single integration instance manages all the named controllers.
+Only private IPv4 addresses are accepted. Assign static DHCP leases. The integration does not start a second LAN discovery scanner; it reuses existing Home Assistant device entries where possible.
 
-## Actions (Developer Tools → Actions)
+**This is a custom-repository install**, not a claim of listing in the public Marketplace catalogue. All installed Python files live inside `custom_components/twinkly_area_state/`. Home Assistant runs it on HAOS/Linux; Windows-only DPAPI CLI credentials are **not** imported.
 
-Capture existing Front state (run while Front is still grouped):
+## Home Assistant UI / actions
 
-```yaml
-action: twinkly_area_state.save_state
-data:
-  name: frontgroup
+A **Twinkly Area Manager** device contains three buttons, also available as actions in
+Developer Tools → Actions:
+
+| Button | Action | What it does |
+| --- | --- | --- |
+| Capture groups | `twinkly_area_state.capture_groups` | Save discovered local master/slave grouped 2D coordinates and installed movie/playlist metadata |
+| Capture 3D maps | `twinkly_area_state.capture_3d_maps` | Save original 3D maps only when controllers are truly standalone and currently using 3D |
+| Verify maps and groups | `twinkly_area_state.verify_archives` | Check the applicable saved layouts against current local controller data |
+
+They operate through the Twinkly **local REST API only**, without modifying light, grouping, cloud or movie settings. The local login/verify handshake uses POST as required by the Twinkly API. Captured mappings and metadata are stored privately in HA's `.storage/twinkly_area_state.states` and belong in your HA backup.
+
+The previously available `save_state`, `restore_state` (read-only comparison), and `office_window_plan` (non-destructive proposal) actions remain.
+
+The HA capture **does not validate Twinkly cloud Area membership**. Use the companion CLI to verify cloud and local geometry together before changing groups.
+
+## Group and Ungroup (companion Windows CLI)
+
+**Not yet exposed as Home Assistant buttons.** Group/ungroup require the unofficial
+Twinkly cloud API, authenticated account access, private source archives, and
+multi-step confirmations. A HACS install contains only the HA component, not
+the root-level Windows scripts. It would be unsafe to expose working-but-unattended
+cloud mutations from HA without a supported credential and recovery architecture.
+
+On the Windows machine with the repository, private `private-area-plan.json`, DPAPI
+Twinkly session and immutable 2D/3D archives:
+
+```powershell
+git pull
+
+# Read-only, including cloud verification:
+python .\area_manager.py verify
+
+# Capture the currently verified grouped 2D Area:
+python .\area_manager.py capture-group
+
+# Capture currently standalone 3D controllers from local config:
+python .\area_manager.py capture-3d --devices ".\devices.json" --names "Office Left" "Office Right"
+
+# From GROUPED to STANDALONE, read-only preflight first:
+python .\area_manager.py ungroup --group "Office Group"
+
+# One-way ungroup, only with explicit acknowledgement and operator checkpoints:
+python .\area_manager.py ungroup --group "Office Group" --check-movies --execute --acknowledge-risk --confirm-group "Office Group"
+
+# From STANDALONE to GROUPED, read-only preflight first:
+python .\area_manager.py group --group "Office Group"
+
+# One-way group with explicit operator checkpoints:
+python .\area_manager.py group --group "Office Group" --execute --acknowledge-risk --confirm-group "Office Group"
 ```
 
-Capture an ungrouped state (**only if you voluntarily ungroup**, since automatic restoration is not available):
+Do not run both commands automatically. **Never rerun after an ambiguous or partial cloud write**: inspect the private backups and live preflight first. Uploaded movies survived the Office round trip on the tested hardware, but the raw movie RGBW frames remain unbacked up. Group/ungroup is currently limited to **exactly two controllers** with previously verified geometry and cloud metadata.
 
-```yaml
-action: twinkly_area_state.save_state
-data:
-  name: ungrouped
-```
+## Next stage to enable full Group / Ungroup buttons
 
-Audit whether the saved state matches current controllers; ***this does NOT restore the group***:
+A dedicated, permissioned cloud executor with a HA-supported account-authentication flow, idempotency protection, operation journal, emergency recovery, and a positive confirmation interaction must be built and tested. It should reuse the same validated Python group operations, not duplicate or modify the built-in Twinkly light integration. Until then, no destructive HA button is registered.
 
-```yaml
-action: twinkly_area_state.restore_state
-data:
-  name: frontgroup
-```
+## Security and limitations
 
-For a disposable office-window geometry proposal, keep both office windows independent and camera-mapped first. Capture:
-
-```yaml
-action: twinkly_area_state.save_state
-data:
-  name: office_individual
-```
-
-Then:
-
-```yaml
-action: twinkly_area_state.office_window_plan
-data:
-  name: office_individual
-  left: Office Left
-  right: Office Right
-```
-
-The plan scales both mappings to an equal 1x1 footprint and places them horizontally with one full window-width empty space between them, at X=0..1 and X=2..3 respectively. It preserves each source LED's original Z in the in-memory calculation (does not claim physical 3D accuracy). **It does not create an actual Area group or save a restorable group.**
-
-Results are reported as **persistent notifications** in Home Assistant. Saved snapshots are stored in HA's local `.storage` under `twinkly_area_state.states` and should remain in your normal HA backups. Snapshots are not sent to GitHub, cloud, or Twinkly; capture requires local Twinkly login/verify POSTs, which may invalidate another client session.
-
-## Safety
-
-- This is **experimental**, not published in the HACS default catalog.
-- Restore action is intentionally read-only. It checks mapping and identity but never issues group creation or layout updates.
-- **Do not delete any existing mapped Area group based on this integration.** We still need a proven reversible round-trip against a disposable group.
-- Offline controllers are skipped and named in capture notification. Missing layouts are reported.
-- Named captures overwrite that **same name** (create a new name to keep prior captures).
-- HA snapshot data contains device identifiers and physical mapping coordinates. Keep HA backups private.
-- Groups, LED maps, colour effects, and Home Assistant light control are not changed.
-- Future regroup support must use observed and validated protocol writes and require explicit opt-in after testing.
-
-## Current limitations
-
-The experimental integration saves raw data and offers readiness checks; it cannot yet automatically switch between group/ungroup states. Also, the office proposal is a calculation rather than a Twinkly API operation. A real, safe switcher requires testing the create-group protocol on **Office Left** and **Office Right** first.
+- Snapshot and archive contents include device MACs and LED positions; keep HA backups private.
+- Effects are identified by UUID/metadata only; their actual RGBW movie frames aren't backed up.
+- 3D captures must come from real, independent 3D mappings or separately verified saved references.
+- Group capture is **local-only** in HA; cloud validation belongs to the companion CLI.
+- Capture and verify actions are safe to repeat; actual grouping changes always require deliberate confirmation.
