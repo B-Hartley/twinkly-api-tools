@@ -31,3 +31,6 @@ cloud-preflight-backups/
 
 # Private, immutable effect/movie catalogue snapshots (not raw movie frames)
 effects-archive/
+
+# Locally observed MQTT broker certificates; confirm trust independently
+ledworks-observed-ca.pem
