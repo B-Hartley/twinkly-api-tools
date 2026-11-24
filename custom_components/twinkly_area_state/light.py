@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
-from .panes import DEFAULTS, pane_indices, composite
+from .panes import DEFAULTS, pane_indices, pane_label, composite
 from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
 
 _LOGGER=logging.getLogger(__name__)
@@ -484,7 +484,7 @@ class PaneLight(VirtualLight):
     def __init__(self,group,m,index):
         super().__init__(group,m)
         self.index=index
-        self._attr_name=f"Pane {index+1}"
+        self._attr_name=pane_label(m["name"],index)
         self._attr_unique_id=f"{m['mac']}_pane_{index+1}"
 
     @property
