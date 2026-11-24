@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Interactive Twinkly cloud password login (unofficial, experimental).
 
-POSTs only to the fixed HTTPS endpoint https://api.twinkly.com/v2/auth.
+POSTs only to the fixed HTTPS login and refresh endpoints.
 Never logs credentials or follows redirects. The caller may explicitly
 store access and refresh tokens in the Windows DPAPI-protected token cache.
 """
@@ -46,7 +46,7 @@ def authenticate(username, password, timeout=10, return_session=False):
     token = data.get("access_token")
     if not isinstance(token, str) or not token or len(token) > 4096 or any(c.isspace() for c in token):
         raise RuntimeError("Cloud login did not return valid access token")
-    # Refresh endpoint is unverified; token may be retained securely for future support.
+    # Keep the refresh token securely for subsequent renewal.
     if return_session:
         lifetime = data.get('expires_in')
         if not isinstance(lifetime, (int, float)) or isinstance(lifetime, bool) or not 0 < lifetime <= 2592000:
@@ -66,3 +66,36 @@ def interactive_login(username=None, timeout=10, return_session=False):
     finally:
         # Python cannot guarantee erasure of immutable strings from memory.
         del password
+
+
+def refresh_session(refresh_token, timeout=10):
+    """Confirmed Twinkly token-only JSON refresh; never retry a rotating token."""
+    if not isinstance(refresh_token,str) or not refresh_token or len(refresh_token)>4096 or any(c.isspace() for c in refresh_token):
+        raise ValueError("Missing valid refresh token; use --login")
+    if not 0<timeout<=30:
+        raise ValueError("Timeout out of range")
+    req=urllib.request.Request(BASE+"/v2/auth/refresh",
+        data=json.dumps({"refresh_token":refresh_token}).encode("utf-8"),
+        headers={"Content-Type":"application/json","Accept":"application/json",
+                 "User-Agent":"twinkly-api-tools-cloud-auth/0.2"},method="POST")
+    try:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect()).open(req,timeout=timeout) as response:
+            raw=response.read(MAX_RESPONSE+1)
+            if response.status!=200 or len(raw)>MAX_RESPONSE:
+                raise RuntimeError("Unexpected cloud refresh response")
+        data=json.loads(raw)
+    except urllib.error.HTTPError as exc:
+        raise RuntimeError(f"Cloud refresh HTTP {exc.code}; use --login if renewal is rejected") from None
+    except (ValueError,OSError) as exc:
+        raise RuntimeError("Cloud refresh response unavailable or invalid; do not blindly retry a rotating token") from None
+    if not isinstance(data,dict) or str(data.get("token_type","")).casefold()!="bearer":
+        raise RuntimeError("Unexpected cloud refresh reply")
+    access=data.get("access_token")
+    replacement=data.get("refresh_token")
+    lifetime=data.get("expires_in")
+    for token in (access,replacement):
+        if not isinstance(token,str) or not token or len(token)>4096 or any(c.isspace() for c in token):
+            raise RuntimeError("Invalid renewed cloud token")
+    if isinstance(lifetime,bool) or not isinstance(lifetime,(int,float)) or not 0<lifetime<=2592000:
+        raise RuntimeError("Invalid renewed token lifetime")
+    return {"access_token":access,"refresh_token":replacement,"expires_in":lifetime}
