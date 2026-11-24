@@ -7,6 +7,21 @@
         "data": {
           "devices_json": "Controller names and IPs (JSON)"
         }
+      },
+      "native": {
+        "title": "Choose Twinkly controllers",
+        "description": "Choose which physical Twinkly controllers this Area Manager should monitor. These come from the built-in Twinkly integration; no additional network scan is performed.",
+        "data": {
+          "selected_ips": "Controllers to manage",
+          "manual_setup": "Enter IP addresses manually instead"
+        }
+      },
+      "manual": {
+        "title": "Enter Twinkly controller IP addresses",
+        "description": "Enter a JSON array of controller names and private LAN IPv4 addresses. Use Home Assistant's native Twinkly integration first if automatic discovery is available.",
+        "data": {
+          "devices_json": "Controller list (JSON)"
+        }
       }
     },
     "error": {
