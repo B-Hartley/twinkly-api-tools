@@ -62,10 +62,11 @@ class EffectsCaptureTests(unittest.TestCase):
     def test_missing_catalogue_explicitly_unavailable(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = self.make_snapshot(tmp)
-            target = next(source.rglob("movies_catalogue.json"))
+            target = source / "controllers" / "192_168_1_10" / "responses" / "movies_catalogue.json"
             target.unlink()
             _, records = archive_effects.load_snapshot(source)
             self.assertFalse(records[0]["responses"]["movies_catalogue"]["ok"])
+            self.assertTrue(records[1]["responses"]["movies_catalogue"]["ok"])
 
     def test_duplicate_hardware_identity_blocks(self):
         with tempfile.TemporaryDirectory() as tmp:
