@@ -83,6 +83,38 @@ class MqttProbeTests(unittest.TestCase):
         self.assertTrue(result["connect_accepted"])
         self.assertEqual(result["tls_version"], "TLSv1.3")
 
+    def test_legacy_ca_requires_explicit_tls_and_ca_file(self):
+        with self.assertRaisesRegex(ValueError, "requires TLS"):
+            mqtt.probe(8883, legacy_ca=True)
+        with self.assertRaisesRegex(ValueError, "requires TLS"):
+            mqtt.probe(1883, ca_file="ca.pem", legacy_ca=True)
+
+    def test_legacy_ca_only_removes_strict_flag(self):
+        import ssl
+        if not hasattr(ssl, "VERIFY_X509_STRICT"):
+            self.skipTest("OpenSSL has no strict flag")
+        sock = DummySocket()
+        sock.version = lambda: "TLSv1.3"
+        class Context:
+            verify_flags = ssl.VERIFY_X509_STRICT | ssl.VERIFY_X509_TRUSTED_FIRST
+            verify_mode = ssl.CERT_REQUIRED
+            check_hostname = True
+            def wrap_socket(self, connection, server_hostname):
+                self.assert_hostname = server_hostname
+                return connection
+        ctx = Context()
+        with patch("probe_mqtt_broker.socket.create_connection", return_value=sock), \
+             patch("probe_mqtt_broker.ssl.create_default_context", return_value=ctx) as create:
+            result = mqtt.probe(8883, username="twinkly32", timeout=1,
+                                ca_file="reviewed-ca.pem", legacy_ca=True)
+        create.assert_called_once_with(cafile="reviewed-ca.pem")
+        self.assertEqual(ctx.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(ctx.check_hostname)
+        self.assertEqual(ctx.assert_hostname, mqtt.HOST)
+        self.assertFalse(ctx.verify_flags & ssl.VERIFY_X509_STRICT)
+        self.assertTrue(ctx.verify_flags & ssl.VERIFY_X509_TRUSTED_FIRST)
+        self.assertTrue(result["legacy_ca_compatibility"])
+
     def test_refuse_other_ports_and_invalid_username(self):
         for port in (1, 8884, 1884):
             with self.assertRaises(ValueError):
