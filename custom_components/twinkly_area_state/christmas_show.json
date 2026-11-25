@@ -22,7 +22,8 @@
     "light.twinkly_front_left_bush",
     "light.twinkly_back_left_bush",
     "light.twinkly_light_tree",
-    "light.twinkly_front_right_bush",
+    "light.twinkly_front_right_left_bush",
+    "light.twinkly_front_right_right_bush",
     "light.twinkly_mid_right",
     "light.twinkly_back_right_bush",
     "light.twinkly_icicles",
@@ -57,7 +58,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -249,7 +251,19 @@
         {
           "at": 4,
           "targets": [
-            "light.twinkly_front_right_bush"
+            "light.twinkly_front_right_left_bush"
+          ],
+          "rgb": [
+            180,
+            0,
+            255
+          ],
+          "brightness": 100
+        },
+        {
+          "at": 4.4,
+          "targets": [
+            "light.twinkly_front_right_right_bush"
           ],
           "rgb": [
             180,
@@ -356,7 +370,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -391,7 +406,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -433,7 +449,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -468,7 +485,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -503,7 +521,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -538,7 +557,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -573,7 +593,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -608,7 +629,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -643,7 +665,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -678,7 +701,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -713,7 +737,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -748,7 +773,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -783,7 +809,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -818,7 +845,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -853,7 +881,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -888,7 +917,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -923,7 +953,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -965,7 +996,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -994,7 +1026,8 @@
           "targets": [
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
@@ -1018,7 +1051,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1118,7 +1152,19 @@
         {
           "at": 4,
           "targets": [
-            "light.twinkly_front_right_bush"
+            "light.twinkly_front_right_left_bush"
+          ],
+          "rgb": [
+            255,
+            120,
+            0
+          ],
+          "brightness": 70
+        },
+        {
+          "at": 4.4,
+          "targets": [
+            "light.twinkly_front_right_right_bush"
           ],
           "rgb": [
             255,
@@ -1155,18 +1201,6 @@
           "at": 7,
           "targets": [
             "light.twinkly_back_right_bush"
-          ],
-          "rgb": [
-            255,
-            120,
-            0
-          ],
-          "brightness": 70
-        },
-        {
-          "at": 8,
-          "targets": [
-            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1222,6 +1256,18 @@
             0
           ],
           "brightness": 100
+        },
+        {
+          "at": 8,
+          "targets": [
+            "light.twinkly_icicles"
+          ],
+          "rgb": [
+            255,
+            120,
+            0
+          ],
+          "brightness": 70
         },
         {
           "at": 8,
@@ -1409,7 +1455,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1444,7 +1491,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1497,7 +1545,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1543,7 +1592,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1589,7 +1639,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1635,7 +1686,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1681,7 +1733,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1727,7 +1780,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1773,7 +1827,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1819,7 +1874,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1865,7 +1921,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1911,7 +1968,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -1957,7 +2015,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2003,7 +2062,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2049,7 +2109,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2095,7 +2156,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2141,7 +2203,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2187,7 +2250,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2233,7 +2297,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2279,7 +2344,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2325,7 +2391,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2371,7 +2438,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2417,7 +2485,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2463,7 +2532,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2509,7 +2579,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2555,7 +2626,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2601,7 +2673,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2647,7 +2720,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2693,7 +2767,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2739,7 +2814,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2785,7 +2861,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2831,7 +2908,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2877,7 +2955,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2923,7 +3002,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -2969,7 +3049,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -3015,7 +3096,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -3061,7 +3143,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
@@ -3103,7 +3186,8 @@
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
-            "light.twinkly_front_right_bush",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
             "light.twinkly_mid_right",
             "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
