@@ -103,8 +103,12 @@ class Show:
                     if cue.get("off") or options.get("brightness_pct",2)==0:
                         await self.call("light","turn_off",cue["targets"])
                     else:
-                        await self.call("light","turn_on",cue["targets"],
-                            rgb_color=cue["rgb"],brightness=max(1,round(cue["brightness"]*options.get("brightness_pct",2)/100)))
+                        data={"brightness":max(1,round(cue["brightness"]*options.get("brightness_pct",2)/100))}
+                        if "rgb" in cue:
+                            data["rgb_color"]=cue["rgb"]
+                        if "effect" in cue:
+                            data["effect"]=cue["effect"]
+                        await self.call("light","turn_on",cue["targets"],**data)
                 await asyncio.sleep(max(0,start+section["duration"]-loop.time()))
         except asyncio.CancelledError:
             try:
