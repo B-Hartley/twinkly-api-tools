@@ -99,6 +99,14 @@ def put_object(object_id, payload, token, timeout):
                 raise RuntimeError(f"Cloud PUT HTTP {response.status}")
             return response.read(MAX_BODY + 1)
     except urllib.error.HTTPError as error:
+        # Response may echo credentials or private device data: save locally only.
+        stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        dest = Path("cloud-audits") / "layout-writes" / (stamp + "-http-error")
+        dest.mkdir(parents=True, exist_ok=False)
+        raw = error.read(65537)
+        (dest / "response-private.txt").write_bytes(raw[:65536])
+        print(f"Private HTTP error body saved: {dest / 'response-private.txt'}")
+        print("Inspect locally; do not share raw response or credentials.")
         raise RuntimeError(f"Cloud PUT returned HTTP {error.code}") from None
 
 
