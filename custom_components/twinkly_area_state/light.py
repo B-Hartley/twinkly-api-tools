@@ -583,13 +583,8 @@ async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
     from .realtime import basic_group_members
     ctx=hass.data[DOMAIN][entry.entry_id]
-    from .config_flow import configured_twinkly_devices
     from .realtime import standalone_member
-    # Keep configured private addresses and include newly added native controllers.
-    by_ip={d["ip"]:d for d in ctx["devices"]}
-    for d in configured_twinkly_devices(hass.config_entries.async_entries("twinkly")):
-        by_ip.setdefault(d["ip"],d)
-    selected=list(by_ip.values())
+    selected=list(ctx["devices"])
     session=async_get_clientsession(hass)
     async def read(m,path,**kw):
         reply=await query(session,m["ip"],path,**kw)
