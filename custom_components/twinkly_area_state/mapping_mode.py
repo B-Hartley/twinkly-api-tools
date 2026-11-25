@@ -42,8 +42,9 @@ class MappingMode:
                     if e.entry_id not in self.owned:
                         self.owned.append(e.entry_id)
                         await self.save()
-                    await entries.async_set_disabled_by(e.entry_id,ConfigEntryDisabler.USER)
-                if e.state in (ConfigEntryState.LOADED,ConfigEntryState.SETUP_IN_PROGRESS):
+                    if not await entries.async_set_disabled_by(e.entry_id,ConfigEntryDisabler.USER):
+                        raise RuntimeError("native unload failed; restart may be required")
+                if e.state in (ConfigEntryState.LOADED,ConfigEntryState.SETUP_IN_PROGRESS,ConfigEntryState.FAILED_UNLOAD):
                     raise RuntimeError("native integration has not unloaded; restart may be required")
             except Exception as exc:
                 self.issues.append(f"{e.title}: native suspension: {exc}")
@@ -96,7 +97,8 @@ class MappingMode:
                 try:
                     e=entries.async_get_entry(eid)
                     if e is not None and e.disabled_by==ConfigEntryDisabler.USER:
-                        await entries.async_set_disabled_by(eid,None)
+                        if not await entries.async_set_disabled_by(eid,None):
+                            raise RuntimeError("native reload failed for "+e.title)
                     self.owned.remove(eid)
                     await self.save()
                 except Exception as exc:
