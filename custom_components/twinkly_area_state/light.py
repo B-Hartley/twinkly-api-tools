@@ -6,12 +6,12 @@ import base64
 import logging
 import os
 import socket
+from homeassistant.util import slugify
 
 from homeassistant.components.light import LightEntity, ColorMode, LightEntityFeature
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
-from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .panes import DEFAULTS, pane_indices, pane_label, composite
 from .realtime import packets, pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
@@ -32,11 +32,18 @@ class Group:
         self.active=False
         self.error=False
         self.previous=None
+        self.movies={}
+        self.native_effect=None
+        self.native_brightness=255
+        self.movie_paths={}
         self.expiry={}
         self.effects={m["mac"]:"Solid" for m in members}
         self.geometry={}
         self.pane_maps={}
         self.pane_states={}
+        self.pane_effects={}
+        self.pane_patterns={}
+        self.pane_geometry={}
         self.pane_overrides=set()
         self.combined_geometry={}
         self.combined_selected=set()
@@ -60,20 +67,28 @@ class Group:
         lifetime=d.get("authentication_token_expires_in",14400)
         self.expiry[m["mac"]]=time.monotonic()+max(1,float(lifetime)-30)
 
+    async def validate_member(self,m):
+        g=await self.call(m,"/xled/v1/gestalt")
+        if str(g.get("mac","")).lower().replace(":","").replace("-","")!=m["mac"] or g.get("number_of_led")!=m["led_count"] or pixel_width(g)!=m["width"]:
+            raise HomeAssistantError("Controller identity or pixel format changed")
+        await self.login(m)
+        d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
+        group=d["group"]
+        if m["role"]=="none":
+            if group.get("mode")!="none":
+                raise HomeAssistantError("Standalone controller joined a group; reload integration")
+            return
+        if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or (0 if group.get("offset") is None and m["role"]=="master" else group.get("offset"))!=m["offset"]):
+            raise HomeAssistantError("Group changed; reload integration before streaming")
+
     async def validate(self):
-        for m in self.members:
-            g=await self.call(m,"/xled/v1/gestalt")
-            if str(g.get("mac","")).lower().replace(":","").replace("-","")!=m["mac"] or g.get("number_of_led")!=m["led_count"] or pixel_width(g)!=m["width"]:
-                raise HomeAssistantError("Controller identity or pixel format changed")
-            await self.login(m)
-            d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
-            group=d["group"]
-            if m["role"]=="none":
-                if group.get("mode")!="none":
-                    raise HomeAssistantError("Standalone controller joined a group; reload integration")
-                continue
-            if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or (0 if group.get("offset") is None and m["role"]=="master" else group.get("offset"))!=m["offset"]):
-                raise HomeAssistantError("Group changed; reload integration before streaming")
+        await self.all_members(self.validate_member)
+
+    async def all_members(self, callback):
+        results=await asyncio.gather(*(callback(m) for m in self.members),return_exceptions=True)
+        for result in results:
+            if isinstance(result,BaseException):
+                raise result
 
     def load_maps(self, data):
         archives=data.get("_area_manager",{})
@@ -106,13 +121,34 @@ class Group:
                 except (ValueError,KeyError,TypeError) as exc:
                     self.pane_maps.pop(mac,None)
                     _LOGGER.warning("%s: pane map unavailable: %s",m["name"],exc)
+            if name in DEFAULTS:
+                for i,indices in enumerate(self.pane_maps.get(mac,[])):
+                    key=(mac,i)
+                    zone={}
+                    self.pane_geometry.pop(key,None)
+                    if saved:
+                        for label,axis,reverse in (("Static rainbow","y",False),("Static rainbow reversed","y",True),("Horizontal rainbow","x",False)):
+                            try:
+                                layout=dict(saved["layout"],coordinates=[saved["layout"]["coordinates"][j] for j in indices])
+                                zone[label]=mapped_rainbow(layout,len(indices),m["width"],axis,reverse)
+                            except (ValueError,KeyError,TypeError,IndexError):
+                                pass
+                    if original.get("led_count")==m["led_count"]:
+                        try:
+                            layout=dict(original["layout"],coordinates=[original["layout"]["coordinates"][j] for j in indices])
+                            self.pane_geometry[key]=spiral_geometry(layout,len(indices))
+                            zone.update({label:None for label in SPIRAL_EFFECTS})
+                        except (ValueError,KeyError,TypeError,IndexError):
+                            pass
+                    self.pane_patterns[key]=zone
+                    if self.pane_effects.get(key) not in zone:
+                        self.pane_effects[key]="Solid"
             self.patterns[mac]=patterns
             if self.effects[m["mac"]] not in patterns:
                 self.effects[m["mac"]]="Solid"
 
     def notify(self):
-        for e in self.entities:
-            e.async_write_ha_state()
+        self.notify_registered()
 
     def member_on(self, mac):
         if mac in self.pane_overrides:
@@ -133,8 +169,7 @@ class Group:
         self.pane_overrides.clear()
         self.pane_states.clear()
         try:
-            await self.login(self.master)
-            await self.mode("off")
+            await self.shutdown("off")
             self.error=False
         except Exception:
             # Never restart streaming just because the physical off failed.
@@ -169,7 +204,17 @@ class Group:
                 enabled,level,color=self.pane_states[(mac,i)]
                 r,g,b,w=(round(c*level/255) if enabled else 0 for c in color)
                 pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
-                composite(frame,m["width"],indices,pixel*m["led_count"])
+                key=(mac,i)
+                effect=self.pane_effects.get(key,"Solid")
+                pattern=self.pane_patterns.get(key,{}).get(effect)
+                if effect in SPIRAL_EFFECTS and key in self.pane_geometry:
+                    zone=spiral_frame(self.pane_geometry[key],m["width"],effect,now,color,level if enabled else 0)
+                elif pattern is not None:
+                    zone=bytes(round(c*level/255) if enabled else 0 for c in pattern)
+                else:
+                    zone=pixel*len(indices)
+                for k,j in enumerate(indices):
+                    frame[j*m["width"]:(j+1)*m["width"]]=zone[k*m["width"]:(k+1)*m["width"]]
             frame=bytes(frame)
         if m["role"] != "none":
             # Grouped firmware may reject local-sized HTTP frames. Use the
@@ -201,12 +246,46 @@ class Group:
                     raise HomeAssistantError(f"{m['name']}: frame connection failed after 3 attempts") from exc
                 await asyncio.sleep(.5*(attempt+1))
 
+    async def member_mode(self,m,value):
+        if time.monotonic()>=self.expiry.get(m["mac"],0):
+            await self.login(m)
+        try:
+            await self.call(m,MODE,method="POST",token=self.tokens[m["mac"]],payload={"mode":value})
+        except HomeAssistantError as exc:
+            if "HTTP 401" not in str(exc) and "HTTP 403" not in str(exc):
+                raise
+            await self.login(m)
+            await self.call(m,MODE,method="POST",token=self.tokens[m["mac"]],payload={"mode":value})
+
+    async def black_frames(self,duration):
+        if self.master["role"]=="none":
+            return
+        loop=asyncio.get_running_loop()
+        end=loop.time()+duration
+        with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
+            sock.setblocking(False)
+            while loop.time()<end:
+                start=loop.time()
+                for m in self.members:
+                    for packet in packets(self.tokens[m["mac"]],bytes(m["width"]*m["led_count"])):
+                        await loop.sock_sendto(sock,packet,(m["ip"],7777))
+                await asyncio.sleep(max(0,start+1/15-loop.time()))
+
     async def mode(self,value):
-        await self.call(self.master,MODE,method="POST",token=self.tokens[self.master["mac"]],payload={"mode":value})
+        await self.all_members(lambda m:self.member_mode(m,value))
+        if value=="rt":
+            await self.black_frames(2)
+
+    async def shutdown(self,value):
+        try:
+            if self.master["role"]!="none":
+                await self.all_members(self.login)
+                await self.black_frames(1)
+        finally:
+            await self.all_members(lambda m:self.member_mode(m,value))
 
     async def restore(self):
-        await self.login(self.master)
-        await self.mode(self.previous or "off")
+        await self.shutdown(self.previous or "off")
 
     def prepare(self,members,on,kwargs):
         """Compute all requested changes before sending any frame."""
@@ -223,9 +302,95 @@ class Group:
             changes[key]=((on,b,c),effect)
         return changes
 
+    async def refresh_movies(self):
+        """Read only; match group movies by UUID, never by local numeric ID."""
+        catalogues=[]
+        for m in self.members:
+            mac=m["mac"]
+            if time.monotonic()>=self.expiry.get(mac,0):
+                await self.login(m)
+            token=self.tokens[mac]
+            data=await self.call(m,"/xled/v1/movies",token=token)
+            catalogue={}
+            for movie in data.get("movies",[]):
+                uid=movie.get("unique_id")
+                ident=movie.get("id")
+                if isinstance(uid,str) and uid and type(ident) is int and ident>=0:
+                    catalogue[uid]=(ident,movie.get("name") or uid)
+            catalogues.append(catalogue)
+        common=set.intersection(*(set(c) for c in catalogues))
+        self.movies={}
+        for uid in sorted(common):
+            label="Movie: "+catalogues[0][uid][1]
+            if label in self.movies:
+                label+=" ("+uid+")"
+            self.movies[label]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+        self.notify_registered()
+
+    def notify_registered(self):
+        for e in self.entities:
+            if e.hass is not None and e.entity_id:
+                e.async_write_ha_state()
+
+    async def movie_current_path(self,m):
+        mac=m["mac"]
+        for path in ("/xled/v1/movies/current","/xled/v1/led/movies/current"):
+            try:
+                await self.call(m,path,token=self.tokens[mac])
+                return path
+            except HomeAssistantError:
+                continue
+        raise HomeAssistantError(m["name"]+": movie selection endpoint unavailable")
+
+    async def native_level(self,value):
+        async def set_level(m):
+            await self.call(m,"/xled/v1/led/out/brightness",method="POST",
+                token=self.tokens[m["mac"]],payload={"mode":"enabled","type":"A","value":value})
+        await self.all_members(set_level)
+
+    async def play_movie(self,effect,brightness):
+        async with self.lock:
+            await self.validate()
+            await self.refresh_movies()
+            if effect not in self.movies:
+                raise HomeAssistantError("Movie not present on every physical group member")
+            paths=await asyncio.gather(*(self.movie_current_path(m) for m in self.members))
+            if self.active or self.error:
+                await self.finish_idle()
+            try:
+                await self.native_level(round(brightness*100/255))
+                for m,path in zip(self.members,paths):
+                    await self.call(m,path,method="POST",token=self.tokens[m["mac"]],
+                        payload={"id":self.movies[effect][m["mac"]]})
+                await self.mode("movie")
+            except BaseException:
+                self.native_effect=None
+                try:
+                    await self.mode("off")
+                finally:
+                    self.notify_registered()
+                raise
+            self.native_effect=effect
+            self.native_brightness=brightness
+            self.notify_registered()
+
+    async def native_off(self):
+        async with self.lock:
+            if self.native_effect is None:
+                return
+            await self.validate()
+            await self.mode("off")
+            self.native_effect=None
+            self.notify_registered()
+
     async def prepare_start(self):
         await self.validate()
         self.previous=(await self.call(self.master,MODE,token=self.tokens[self.master["mac"]]))["mode"]
+        if self.native_effect is not None:
+            await self.mode("off")
+            await self.native_level(100)
+            self.native_effect=None
+            self.previous="off"
         if self.previous not in ("off","movie","playlist","color","effect"):
             raise HomeAssistantError("Group already in unsupported mode; stop external streaming first")
 
@@ -246,16 +411,23 @@ class Group:
                 await self.prepare_start()
             old_states=self.pane_states.copy()
             old_overrides=self.pane_overrides.copy()
+            old_effects=self.pane_effects.copy()
             try:
                 if mac not in self.pane_overrides:
                     for i in range(len(self.pane_maps[mac])):
                         self.pane_states[(mac,i)]=self.state[mac]
+                        self.pane_effects[(mac,i)]=self.effects[mac] if self.effects[mac] in self.pane_patterns.get((mac,i),{}) else "Solid"
                 self.pane_overrides.add(mac)
                 old=self.pane_states[(mac,index)]
                 color=tuple(kwargs.get("rgbw_color",kwargs.get("rgb_color",old[2])))
                 if len(color)==3:
                     color+=(0,)
-                self.pane_states[(mac,index)]=(on,kwargs.get("brightness",old[1]),color)
+                key=(mac,index)
+                effect=kwargs.get("effect","Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else self.pane_effects.get(key,"Solid"))
+                if effect not in ("Solid",*self.pane_patterns.get(key,{})):
+                    raise HomeAssistantError("Effect requires a captured pane map")
+                self.pane_effects[key]=effect
+                self.pane_states[key]=(on,kwargs.get("brightness",old[1]),color)
                 if starting:
                     await self.mode("rt")
                 if self.any_on():
@@ -263,6 +435,7 @@ class Group:
             except BaseException:
                 self.pane_states=old_states
                 self.pane_overrides=old_overrides
+                self.pane_effects=old_effects
                 if starting:
                     await asyncio.gather(self.restore(),return_exceptions=True)
                 raise
@@ -278,8 +451,8 @@ class Group:
     async def run(self):
         failures=0
         while self.active:
-            moving=any(self.state[k][0] and effect in MOVING_SPIRALS for k,effect in self.effects.items())
-            await asyncio.sleep((.2 if moving else .75) if failures==0 else min(10,2**failures))
+            moving=any(self.state[k][0] and effect in MOVING_SPIRALS for k,effect in self.effects.items()) or any(key[0] in self.pane_overrides and state[0] and self.pane_effects.get(key) in MOVING_SPIRALS for key,state in self.pane_states.items())
+            await asyncio.sleep((1/15 if self.master["role"]!="none" else (.2 if moving else .75)) if failures==0 else min(10,2**failures))
             async with self.lock:
                 if not self.active:
                     return
@@ -318,8 +491,7 @@ class Group:
             if self.task:
                 self.task.cancel()
                 self.task=None
-            await self.login(self.master)
-            await self.mode("movie" if movie else self.previous or "off")
+            await self.shutdown("movie" if movie else "off")
             self.error=False
             self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
             self.pane_overrides.clear()
@@ -390,6 +562,13 @@ async def update_together(targets,on,kwargs,combined=False):
                 raise result
 
 
+def controller_slug(name):
+    slug=slugify(name)
+    return {"front_right":"front_right_bush","backr_bush_top":"back_right_top",
+            "backr_bush_bottom":"back_right_bottom","back_bush_top":"back_right_top",
+            "back_bush_bottom":"back_right_bottom","backl_bush":"back_left_bush"}.get(slug,slug)
+
+
 class CombinedBush(LightEntity):
     """One logical bush containing two independently addressable controllers."""
     _attr_should_poll=False
@@ -401,8 +580,10 @@ class CombinedBush(LightEntity):
         self.parts=ordered_parts
         self.combined_map=None
         self._attr_unique_id="combined_"+slug
+        self.entity_id="light.twinkly_"+slug
+        self.show_key=self.entity_id
         self._attr_name=None
-        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly",model="Combined virtual bush")
+        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly",model="Combined bush")
         self._attr_color_mode=ColorMode.RGBW if all(m["width"]==4 for _,m in self.parts) else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
 
@@ -485,49 +666,39 @@ class VirtualLight(LightEntity):
     def __init__(self,group,m):
         self.group=group
         self.member=m
-        self._attr_name="Virtual light"
+        self._attr_name=None
         self._attr_unique_id=m["mac"]+"_virtual"
+        self.entity_id="light.twinkly_"+controller_slug(m["name"])
+        self.show_key=self.entity_id
         self._attr_color_mode=ColorMode.RGBW if m["width"]==4 else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
         mac=format_mac(m["mac"])
         connection=(CONNECTION_NETWORK_MAC,mac)
-        # Attach the entity directly to the native device, not a second
-        # device registration owned by this integration.
-        registry=dr.async_get(group.hass)
-        matches={}
-        for entry in group.hass.config_entries.async_entries("twinkly"):
-            for device in dr.async_entries_for_config_entry(registry,entry.entry_id):
-                if connection in device.connections or any(
-                    domain=="twinkly" and format_mac(value)==mac
-                    for domain,value in device.identifiers
-                ):
-                    matches[device.id]=device
-        if len(matches)==1:
-            self.device_entry=next(iter(matches.values()))
-            self._attr_device_info=None
-        else:
-            self._attr_device_info=DeviceInfo(
-                identifiers={(DOMAIN,m["mac"])},connections={connection},
-                name=m["name"]+" (Virtual)",manufacturer="Twinkly")
-            _LOGGER.warning("%s: expected one native device, found %s; using companion",m["name"],len(matches))
+        # Own the device registration even when the native integration is absent.
+        # MAC connection merges an existing device without changing entity unique IDs.
+        self._attr_device_info=DeviceInfo(
+            identifiers={(DOMAIN,m["mac"])},connections={connection},
+            name=m["name"],manufacturer="Twinkly")
     @property
     def effect_list(self):
-        return ["Solid", *self.group.patterns[self.member["mac"]]]
+        return ["Solid", *self.group.patterns[self.member["mac"]], *(self.group.movies if self.member["role"]=="none" else {})]
     @property
     def effect(self):
-        return self.group.effects[self.member["mac"]]
+        return self.group.native_effect if self.member["role"]=="none" and self.group.native_effect else self.group.effects[self.member["mac"]]
     @property
     def available(self):
         return not self.group.error
     @property
     def is_on(self):
         mac=self.member["mac"]
+        if self.member["role"]=="none" and self.group.native_effect:
+            return True
         if mac in self.group.pane_overrides:
             return self.group.active and any(self.group.pane_states[(mac,i)][0] for i in range(len(self.group.pane_maps.get(mac,[]))))
         return self.group.active and self.group.state[mac][0]
     @property
     def brightness(self):
-        return self.group.state[self.member["mac"]][1]
+        return self.group.native_brightness if self.member["role"]=="none" and self.group.native_effect else self.group.state[self.member["mac"]][1]
     @property
     def rgbw_color(self):
         return self.group.state[self.member["mac"]][2]
@@ -535,9 +706,16 @@ class VirtualLight(LightEntity):
     def rgb_color(self):
         return self.rgbw_color[:3]
     async def async_turn_on(self,**kwargs):
+        if self.member["role"]=="none":
+            effect=kwargs.get("effect",self.group.native_effect if not ("rgb_color" in kwargs or "rgbw_color" in kwargs) else None)
+            if effect and effect.startswith("Movie: "):
+                await self.group.play_movie(effect,kwargs.get("brightness",self.group.native_brightness))
+                return
         await self.group.update(self.member,True,kwargs)
     async def async_turn_off(self,**kwargs):
-        if self.group.active or self.group.error:
+        if self.member["role"]=="none" and self.group.native_effect:
+            await self.group.native_off()
+        elif self.group.active or self.group.error:
             await self.group.update(self.member,False,{})
 
 class PaneLight(VirtualLight):
@@ -547,7 +725,13 @@ class PaneLight(VirtualLight):
         super().__init__(group,m)
         self.index=index
         self._attr_name=pane_label(m["name"],index)
+        self._attr_supported_features=LightEntityFeature.EFFECT
         self._attr_unique_id=f"{m['mac']}_pane_{index+1}"
+        stem=controller_slug(m["name"])
+        if stem=="front_right_bush":
+            stem="front_right"
+        self.entity_id="light.twinkly_"+stem+"_"+slugify(self._attr_name)
+        self.show_key=self.entity_id
 
     @property
     def available(self):
@@ -573,11 +757,16 @@ class PaneLight(VirtualLight):
 
     @property
     def effect_list(self):
-        return None
+        if not self._attr_supported_features:
+            return None
+        return ["Solid",*self.group.pane_patterns.get((self.member["mac"],self.index),{})]
 
     @property
     def effect(self):
-        return None
+        if not self._attr_supported_features:
+            return None
+        key=(self.member["mac"],self.index)
+        return self.group.pane_effects.get(key,"Solid") if key[0] in self.group.pane_overrides else self.group.effects[key[0]]
 
     @property
     def extra_state_attributes(self):
@@ -589,6 +778,62 @@ class PaneLight(VirtualLight):
 
     async def async_turn_off(self,**kwargs):
         await self.group.update_pane(self.member,self.index,False,{})
+
+class PhysicalGroupLight(LightEntity):
+    _attr_has_entity_name=True
+    _attr_name=None
+    _attr_should_poll=False
+    _attr_supported_features=LightEntityFeature.EFFECT
+    _attr_color_mode=ColorMode.RGB
+    _attr_supported_color_modes={ColorMode.RGB}
+
+    def __init__(self,group,name):
+        self.group=group
+        self._attr_unique_id="physical_group_"+group.master["uid"]
+        self.entity_id="light.twinkly_"+slugify(name)
+        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly")
+
+    @property
+    def is_on(self):
+        return bool(self.group.native_effect or (self.group.active and self.group.any_on()))
+
+    @property
+    def available(self):
+        return not self.group.error
+
+    @property
+    def effect_list(self):
+        common=set.intersection(*(set(self.group.patterns[m["mac"]]) for m in self.group.members))
+        return ["Solid",*sorted(common),*self.group.movies]
+
+    @property
+    def effect(self):
+        if self.group.native_effect:
+            return self.group.native_effect
+        effects=set(self.group.effects.values())
+        return next(iter(effects)) if len(effects)==1 else None
+
+    @property
+    def brightness(self):
+        return self.group.native_brightness if self.group.native_effect else round(sum(s[1] for s in self.group.state.values())/len(self.group.members))
+
+    @property
+    def rgb_color(self):
+        return self.group.state[self.group.master["mac"]][2][:3]
+
+    async def async_turn_on(self,**kwargs):
+        effect=kwargs.get("effect",self.group.native_effect if "rgb_color" not in kwargs else None)
+        if effect and effect.startswith("Movie: "):
+            await self.group.play_movie(effect,kwargs.get("brightness",self.brightness))
+        else:
+            await update_together([(self.group,self.group.members)],True,kwargs)
+
+    async def async_turn_off(self,**kwargs):
+        if self.group.native_effect:
+            await self.group.native_off()
+        else:
+            await update_together([(self.group,self.group.members)],False,{})
+
 
 async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
@@ -631,14 +876,21 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 group.load_maps(data)
                 group.entities=[VirtualLight(group,m) for m in members]
                 group.entities.extend(PaneLight(group,m,i) for m in members for i in range(DEFAULTS.get(" ".join(m["name"].casefold().split()),0)))
+                if len(members)>1:
+                    name=items[0][2].get("name") or ("Front" if len(members)==15 else "Group "+uid[:8])
+                    group.entities.append(PhysicalGroupLight(group,name))
+                try:
+                    await group.refresh_movies()
+                except (HomeAssistantError,ValueError,KeyError,TypeError) as exc:
+                    _LOGGER.warning("Movie catalogue unavailable for %s: %s",uid,exc)
                 groups.append(group)
             except (ValueError,KeyError,TypeError,StopIteration) as exc:
                 _LOGGER.warning("Virtual group %s not created: %s; discovered %s",uid,exc,[(m["name"],g.get("mode"),g.get("offset"),g.get("size"),hw.get("number_of_led")) for m,hw,g in items])
     ctx["virtual_groups"]=groups
     combined=[]
     definitions=(
-        ("Virtual Front Left Bush","front_left_bush",({"front left top"},{"front left bottom"})),
-        ("Virtual Back Right Bush","back_right_bush",({"back bush top","backr bush top","back right bush top"},{"back bush bottom","backr bush bottom","back right bush bottom"})),
+        ("Front Left Bush","front_left_bush",({"front left top"},{"front left bottom"})),
+        ("Back Right Bush","back_right_bush",({"back bush top","backr bush top","back right bush top"},{"back bush bottom","backr bush bottom","back right bush bottom"})),
     )
     for name,slug,aliases in definitions:
         matches=[[(g,m) for g in groups for m in g.members if " ".join(m["name"].casefold().split()) in names] for names in aliases]
@@ -660,5 +912,5 @@ async def async_setup_entry(hass,entry,async_add_entities):
             g.entities.append(entity)
         combined.append(entity)
     ctx["combined_bushes"]=combined
-    individual=[e for group in groups for e in group.entities if isinstance(e,VirtualLight)]
+    individual=[e for group in groups for e in group.entities if isinstance(e,(VirtualLight,PhysicalGroupLight))]
     async_add_entities(individual+combined)

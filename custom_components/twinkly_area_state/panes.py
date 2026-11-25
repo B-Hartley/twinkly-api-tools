@@ -12,6 +12,8 @@ DEFAULTS = {name: len(parts) for name, parts in STRANDS.items()}
 REVERSED = frozenset({"office right", "lounge", "landing", "master bedroom", "front right", "front right bush"})
 
 def pane_label(name, index):
+    if " ".join(name.casefold().split()) in ("front right", "front right bush"):
+        return ("Left Bush", "Right Bush")[index]
     if " ".join(name.casefold().split()) == "master bedroom":
         return ("Left", "Right")[index]
     return f"Pane {index+1}"

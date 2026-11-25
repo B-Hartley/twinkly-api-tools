@@ -2,32 +2,30 @@
   "name": "Christmas.exe",
   "speaker": "media_player.sonos_move",
   "targets": [
-    "light.master_bedroom_master_bedroom_left",
-    "light.master_bedroom_master_bedroom_right",
-    "light.landing_landing_pane_1",
-    "light.landing_landing_pane_2",
-    "light.office_office_left_pane_1",
-    "light.office_office_left_pane_2",
-    "light.office_office_left_pane_3",
-    "light.office_office_right_pane_1",
-    "light.office_office_right_pane_2",
-    "light.office_office_right_pane_3",
-    "light.lounge_lounge_pane_1",
-    "light.lounge_lounge_pane_2",
-    "light.lounge_lounge_pane_3",
-    "light.bar_bar_pane_1",
-    "light.bar_bar_pane_2",
-    "light.bar_bar_pane_3",
-    "light.bar_bar_pane_4",
-    "light.front_left_bottom_virtual_virtual_light",
-    "light.front_left_top_virtual_virtual_light",
-    "light.backl_bush_virtual_virtual_light",
-    "light.light_tree_virtual_virtual_light",
-    "light.front_right_virtual_virtual_light",
-    "light.mid_right_virtual_virtual_light",
-    "light.back_bush_bottom_virtual_virtual_light",
-    "light.back_bush_top_virtual_virtual_light",
-    "light.icicles_virtual_virtual_light"
+    "light.twinkly_master_bedroom_left",
+    "light.twinkly_master_bedroom_right",
+    "light.twinkly_landing_pane_1",
+    "light.twinkly_landing_pane_2",
+    "light.twinkly_office_left_pane_1",
+    "light.twinkly_office_left_pane_2",
+    "light.twinkly_office_left_pane_3",
+    "light.twinkly_office_right_pane_1",
+    "light.twinkly_office_right_pane_2",
+    "light.twinkly_office_right_pane_3",
+    "light.twinkly_lounge_pane_1",
+    "light.twinkly_lounge_pane_2",
+    "light.twinkly_lounge_pane_3",
+    "light.twinkly_bar_pane_1",
+    "light.twinkly_bar_pane_2",
+    "light.twinkly_bar_pane_3",
+    "light.twinkly_bar_pane_4",
+    "light.twinkly_front_left_bush",
+    "light.twinkly_back_left_bush",
+    "light.twinkly_light_tree",
+    "light.twinkly_front_right_bush",
+    "light.twinkly_mid_right",
+    "light.twinkly_back_right_bush",
+    "light.twinkly_icicles"
   ],
   "sections": [
     {
@@ -38,39 +36,37 @@
         {
           "at": 0,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "off": true
         },
         {
           "at": 1,
           "targets": [
-            "light.master_bedroom_master_bedroom_left"
+            "light.twinkly_master_bedroom_left"
           ],
           "rgb": [
             0,
@@ -82,7 +78,7 @@
         {
           "at": 3,
           "targets": [
-            "light.master_bedroom_master_bedroom_right"
+            "light.twinkly_master_bedroom_right"
           ],
           "rgb": [
             0,
@@ -101,7 +97,7 @@
         {
           "at": 0,
           "targets": [
-            "light.landing_landing_pane_1"
+            "light.twinkly_landing_pane_1"
           ],
           "rgb": [
             0,
@@ -113,7 +109,7 @@
         {
           "at": 0.5,
           "targets": [
-            "light.landing_landing_pane_2"
+            "light.twinkly_landing_pane_2"
           ],
           "rgb": [
             0,
@@ -125,7 +121,7 @@
         {
           "at": 1,
           "targets": [
-            "light.office_office_left_pane_1"
+            "light.twinkly_office_left_pane_1"
           ],
           "rgb": [
             0,
@@ -137,7 +133,7 @@
         {
           "at": 1.5,
           "targets": [
-            "light.office_office_left_pane_2"
+            "light.twinkly_office_left_pane_2"
           ],
           "rgb": [
             0,
@@ -149,7 +145,7 @@
         {
           "at": 2,
           "targets": [
-            "light.office_office_left_pane_3"
+            "light.twinkly_office_left_pane_3"
           ],
           "rgb": [
             0,
@@ -161,7 +157,7 @@
         {
           "at": 2.5,
           "targets": [
-            "light.office_office_right_pane_1"
+            "light.twinkly_office_right_pane_1"
           ],
           "rgb": [
             0,
@@ -173,7 +169,7 @@
         {
           "at": 3,
           "targets": [
-            "light.office_office_right_pane_2"
+            "light.twinkly_office_right_pane_2"
           ],
           "rgb": [
             0,
@@ -185,7 +181,7 @@
         {
           "at": 3.5,
           "targets": [
-            "light.office_office_right_pane_3"
+            "light.twinkly_office_right_pane_3"
           ],
           "rgb": [
             0,
@@ -204,7 +200,7 @@
         {
           "at": 0,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             255,
@@ -216,7 +212,7 @@
         {
           "at": 1,
           "targets": [
-            "light.front_left_top_virtual_virtual_light"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             0,
@@ -228,7 +224,7 @@
         {
           "at": 2,
           "targets": [
-            "light.backl_bush_virtual_virtual_light"
+            "light.twinkly_back_left_bush"
           ],
           "rgb": [
             0,
@@ -240,7 +236,7 @@
         {
           "at": 3,
           "targets": [
-            "light.light_tree_virtual_virtual_light"
+            "light.twinkly_light_tree"
           ],
           "rgb": [
             255,
@@ -252,7 +248,7 @@
         {
           "at": 4,
           "targets": [
-            "light.front_right_virtual_virtual_light"
+            "light.twinkly_front_right_bush"
           ],
           "rgb": [
             180,
@@ -264,7 +260,7 @@
         {
           "at": 5,
           "targets": [
-            "light.mid_right_virtual_virtual_light"
+            "light.twinkly_mid_right"
           ],
           "rgb": [
             0,
@@ -276,7 +272,7 @@
         {
           "at": 6,
           "targets": [
-            "light.back_bush_bottom_virtual_virtual_light"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             255,
@@ -288,7 +284,7 @@
         {
           "at": 7,
           "targets": [
-            "light.back_bush_top_virtual_virtual_light"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             0,
@@ -300,7 +296,7 @@
         {
           "at": 8,
           "targets": [
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -312,7 +308,7 @@
         {
           "at": 9,
           "targets": [
-            "light.master_bedroom_master_bedroom_left"
+            "light.twinkly_master_bedroom_left"
           ],
           "rgb": [
             255,
@@ -324,7 +320,7 @@
         {
           "at": 9.3,
           "targets": [
-            "light.master_bedroom_master_bedroom_right"
+            "light.twinkly_master_bedroom_right"
           ],
           "rgb": [
             0,
@@ -336,7 +332,7 @@
         {
           "at": 9.6,
           "targets": [
-            "light.landing_landing_pane_1"
+            "light.twinkly_landing_pane_1"
           ],
           "rgb": [
             0,
@@ -348,7 +344,7 @@
         {
           "at": 9.9,
           "targets": [
-            "light.landing_landing_pane_2"
+            "light.twinkly_landing_pane_2"
           ],
           "rgb": [
             255,
@@ -360,7 +356,7 @@
         {
           "at": 10.2,
           "targets": [
-            "light.office_office_left_pane_1"
+            "light.twinkly_office_left_pane_1"
           ],
           "rgb": [
             180,
@@ -372,7 +368,7 @@
         {
           "at": 10.5,
           "targets": [
-            "light.office_office_left_pane_2"
+            "light.twinkly_office_left_pane_2"
           ],
           "rgb": [
             0,
@@ -384,7 +380,7 @@
         {
           "at": 10.8,
           "targets": [
-            "light.office_office_left_pane_3"
+            "light.twinkly_office_left_pane_3"
           ],
           "rgb": [
             255,
@@ -396,7 +392,7 @@
         {
           "at": 11.1,
           "targets": [
-            "light.office_office_right_pane_1"
+            "light.twinkly_office_right_pane_1"
           ],
           "rgb": [
             0,
@@ -408,7 +404,7 @@
         {
           "at": 11.4,
           "targets": [
-            "light.office_office_right_pane_2"
+            "light.twinkly_office_right_pane_2"
           ],
           "rgb": [
             0,
@@ -420,7 +416,7 @@
         {
           "at": 11.7,
           "targets": [
-            "light.office_office_right_pane_3"
+            "light.twinkly_office_right_pane_3"
           ],
           "rgb": [
             255,
@@ -432,7 +428,7 @@
         {
           "at": 12,
           "targets": [
-            "light.lounge_lounge_pane_1"
+            "light.twinkly_lounge_pane_1"
           ],
           "rgb": [
             180,
@@ -444,7 +440,7 @@
         {
           "at": 12.3,
           "targets": [
-            "light.lounge_lounge_pane_2"
+            "light.twinkly_lounge_pane_2"
           ],
           "rgb": [
             0,
@@ -456,7 +452,7 @@
         {
           "at": 12.6,
           "targets": [
-            "light.lounge_lounge_pane_3"
+            "light.twinkly_lounge_pane_3"
           ],
           "rgb": [
             255,
@@ -468,7 +464,7 @@
         {
           "at": 12.9,
           "targets": [
-            "light.bar_bar_pane_1"
+            "light.twinkly_bar_pane_1"
           ],
           "rgb": [
             0,
@@ -480,7 +476,7 @@
         {
           "at": 13.2,
           "targets": [
-            "light.bar_bar_pane_2"
+            "light.twinkly_bar_pane_2"
           ],
           "rgb": [
             0,
@@ -492,7 +488,7 @@
         {
           "at": 13.5,
           "targets": [
-            "light.bar_bar_pane_3"
+            "light.twinkly_bar_pane_3"
           ],
           "rgb": [
             255,
@@ -504,7 +500,7 @@
         {
           "at": 13.8,
           "targets": [
-            "light.bar_bar_pane_4"
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             180,
@@ -523,32 +519,30 @@
         {
           "at": 0,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -560,32 +554,30 @@
         {
           "at": 3,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -604,32 +596,30 @@
         {
           "at": 0,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -641,32 +631,30 @@
         {
           "at": 1,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -678,32 +666,30 @@
         {
           "at": 2,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -715,32 +701,30 @@
         {
           "at": 3,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -752,32 +736,30 @@
         {
           "at": 4,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -789,32 +771,30 @@
         {
           "at": 5,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -826,32 +806,30 @@
         {
           "at": 6,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -863,32 +841,30 @@
         {
           "at": 7,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -900,32 +876,30 @@
         {
           "at": 8,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -937,32 +911,30 @@
         {
           "at": 9,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -974,32 +946,30 @@
         {
           "at": 10,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -1011,32 +981,30 @@
         {
           "at": 11,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -1048,32 +1016,30 @@
         {
           "at": 12,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1085,32 +1051,30 @@
         {
           "at": 13,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -1122,32 +1086,30 @@
         {
           "at": 14,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -1166,32 +1128,30 @@
         {
           "at": 0,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1203,23 +1163,23 @@
         {
           "at": 2,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_3"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_3"
           ],
           "off": true
         },
         {
           "at": 3,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -1238,44 +1198,42 @@
         {
           "at": 0,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "off": true
         },
         {
           "at": 1,
           "targets": [
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "off": true
         },
         {
           "at": 3,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right"
           ],
           "off": true
         }
@@ -1295,7 +1253,7 @@
         {
           "at": 0,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             255,
@@ -1307,7 +1265,7 @@
         {
           "at": 1,
           "targets": [
-            "light.front_left_top_virtual_virtual_light"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             255,
@@ -1319,7 +1277,7 @@
         {
           "at": 2,
           "targets": [
-            "light.backl_bush_virtual_virtual_light"
+            "light.twinkly_back_left_bush"
           ],
           "rgb": [
             255,
@@ -1331,7 +1289,7 @@
         {
           "at": 3,
           "targets": [
-            "light.light_tree_virtual_virtual_light"
+            "light.twinkly_light_tree"
           ],
           "rgb": [
             255,
@@ -1343,7 +1301,7 @@
         {
           "at": 4,
           "targets": [
-            "light.front_right_virtual_virtual_light"
+            "light.twinkly_front_right_bush"
           ],
           "rgb": [
             255,
@@ -1355,7 +1313,7 @@
         {
           "at": 5,
           "targets": [
-            "light.mid_right_virtual_virtual_light"
+            "light.twinkly_mid_right"
           ],
           "rgb": [
             255,
@@ -1367,7 +1325,7 @@
         {
           "at": 6,
           "targets": [
-            "light.back_bush_bottom_virtual_virtual_light"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             255,
@@ -1379,7 +1337,7 @@
         {
           "at": 7,
           "targets": [
-            "light.back_bush_top_virtual_virtual_light"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             255,
@@ -1391,7 +1349,7 @@
         {
           "at": 8,
           "targets": [
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1403,7 +1361,7 @@
         {
           "at": 7,
           "targets": [
-            "light.master_bedroom_master_bedroom_left"
+            "light.twinkly_master_bedroom_left"
           ],
           "rgb": [
             0,
@@ -1415,7 +1373,7 @@
         {
           "at": 7.25,
           "targets": [
-            "light.master_bedroom_master_bedroom_right"
+            "light.twinkly_master_bedroom_right"
           ],
           "rgb": [
             0,
@@ -1427,7 +1385,7 @@
         {
           "at": 7.5,
           "targets": [
-            "light.landing_landing_pane_1"
+            "light.twinkly_landing_pane_1"
           ],
           "rgb": [
             0,
@@ -1439,7 +1397,7 @@
         {
           "at": 7.75,
           "targets": [
-            "light.landing_landing_pane_2"
+            "light.twinkly_landing_pane_2"
           ],
           "rgb": [
             0,
@@ -1451,7 +1409,7 @@
         {
           "at": 8,
           "targets": [
-            "light.office_office_left_pane_1"
+            "light.twinkly_office_left_pane_1"
           ],
           "rgb": [
             0,
@@ -1463,7 +1421,7 @@
         {
           "at": 8.25,
           "targets": [
-            "light.office_office_left_pane_2"
+            "light.twinkly_office_left_pane_2"
           ],
           "rgb": [
             0,
@@ -1475,7 +1433,7 @@
         {
           "at": 8.5,
           "targets": [
-            "light.office_office_left_pane_3"
+            "light.twinkly_office_left_pane_3"
           ],
           "rgb": [
             0,
@@ -1487,7 +1445,7 @@
         {
           "at": 8.75,
           "targets": [
-            "light.office_office_right_pane_1"
+            "light.twinkly_office_right_pane_1"
           ],
           "rgb": [
             0,
@@ -1499,7 +1457,7 @@
         {
           "at": 9,
           "targets": [
-            "light.office_office_right_pane_2"
+            "light.twinkly_office_right_pane_2"
           ],
           "rgb": [
             0,
@@ -1511,7 +1469,7 @@
         {
           "at": 9.25,
           "targets": [
-            "light.office_office_right_pane_3"
+            "light.twinkly_office_right_pane_3"
           ],
           "rgb": [
             0,
@@ -1523,7 +1481,7 @@
         {
           "at": 9.5,
           "targets": [
-            "light.lounge_lounge_pane_1"
+            "light.twinkly_lounge_pane_1"
           ],
           "rgb": [
             0,
@@ -1535,7 +1493,7 @@
         {
           "at": 9.75,
           "targets": [
-            "light.lounge_lounge_pane_2"
+            "light.twinkly_lounge_pane_2"
           ],
           "rgb": [
             0,
@@ -1547,7 +1505,7 @@
         {
           "at": 10,
           "targets": [
-            "light.lounge_lounge_pane_3"
+            "light.twinkly_lounge_pane_3"
           ],
           "rgb": [
             0,
@@ -1559,7 +1517,7 @@
         {
           "at": 10.25,
           "targets": [
-            "light.bar_bar_pane_1"
+            "light.twinkly_bar_pane_1"
           ],
           "rgb": [
             0,
@@ -1571,7 +1529,7 @@
         {
           "at": 10.5,
           "targets": [
-            "light.bar_bar_pane_2"
+            "light.twinkly_bar_pane_2"
           ],
           "rgb": [
             0,
@@ -1583,7 +1541,7 @@
         {
           "at": 10.75,
           "targets": [
-            "light.bar_bar_pane_3"
+            "light.twinkly_bar_pane_3"
           ],
           "rgb": [
             0,
@@ -1595,7 +1553,7 @@
         {
           "at": 11,
           "targets": [
-            "light.bar_bar_pane_4"
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -1614,32 +1572,30 @@
         {
           "at": 0,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1651,32 +1607,30 @@
         {
           "at": 4,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1695,23 +1649,23 @@
         {
           "at": 0,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -1723,15 +1677,13 @@
         {
           "at": 0,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -1743,23 +1695,23 @@
         {
           "at": 1,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -1771,15 +1723,13 @@
         {
           "at": 1,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1791,23 +1741,23 @@
         {
           "at": 2,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -1819,15 +1769,13 @@
         {
           "at": 2,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -1839,23 +1787,23 @@
         {
           "at": 3,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -1867,15 +1815,13 @@
         {
           "at": 3,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -1887,23 +1833,23 @@
         {
           "at": 4,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             180,
@@ -1915,15 +1861,13 @@
         {
           "at": 4,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -1935,23 +1879,23 @@
         {
           "at": 5,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -1963,15 +1907,13 @@
         {
           "at": 5,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -1983,23 +1925,23 @@
         {
           "at": 6,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -2011,15 +1953,13 @@
         {
           "at": 6,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2031,23 +1971,23 @@
         {
           "at": 7,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2059,15 +1999,13 @@
         {
           "at": 7,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -2079,23 +2017,23 @@
         {
           "at": 8,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2107,15 +2045,13 @@
         {
           "at": 8,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -2127,23 +2063,23 @@
         {
           "at": 9,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -2155,15 +2091,13 @@
         {
           "at": 9,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2175,23 +2109,23 @@
         {
           "at": 10,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             180,
@@ -2203,15 +2137,13 @@
         {
           "at": 10,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -2223,23 +2155,23 @@
         {
           "at": 11,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2251,15 +2183,13 @@
         {
           "at": 11,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2271,23 +2201,23 @@
         {
           "at": 12,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -2299,15 +2229,13 @@
         {
           "at": 12,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2319,23 +2247,23 @@
         {
           "at": 13,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2347,15 +2275,13 @@
         {
           "at": 13,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -2367,23 +2293,23 @@
         {
           "at": 14,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2395,15 +2321,13 @@
         {
           "at": 14,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -2415,23 +2339,23 @@
         {
           "at": 15,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -2443,15 +2367,13 @@
         {
           "at": 15,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2463,23 +2385,23 @@
         {
           "at": 16,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             180,
@@ -2491,15 +2413,13 @@
         {
           "at": 16,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -2511,23 +2431,23 @@
         {
           "at": 17,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2539,15 +2459,13 @@
         {
           "at": 17,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2559,23 +2477,23 @@
         {
           "at": 18,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -2587,15 +2505,13 @@
         {
           "at": 18,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2607,23 +2523,23 @@
         {
           "at": 19,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2635,15 +2551,13 @@
         {
           "at": 19,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -2655,23 +2569,23 @@
         {
           "at": 20,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2683,15 +2597,13 @@
         {
           "at": 20,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -2703,23 +2615,23 @@
         {
           "at": 21,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -2731,15 +2643,13 @@
         {
           "at": 21,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2751,23 +2661,23 @@
         {
           "at": 22,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             180,
@@ -2779,15 +2689,13 @@
         {
           "at": 22,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -2799,23 +2707,23 @@
         {
           "at": 23,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2827,15 +2735,13 @@
         {
           "at": 23,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2847,23 +2753,23 @@
         {
           "at": 24,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -2875,15 +2781,13 @@
         {
           "at": 24,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -2895,23 +2799,23 @@
         {
           "at": 25,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2923,15 +2827,13 @@
         {
           "at": 25,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -2943,23 +2845,23 @@
         {
           "at": 26,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -2971,15 +2873,13 @@
         {
           "at": 26,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -2991,23 +2891,23 @@
         {
           "at": 27,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -3019,15 +2919,13 @@
         {
           "at": 27,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -3039,23 +2937,23 @@
         {
           "at": 28,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             180,
@@ -3067,15 +2965,13 @@
         {
           "at": 28,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -3087,23 +2983,23 @@
         {
           "at": 29,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -3115,15 +3011,13 @@
         {
           "at": 29,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -3135,23 +3029,23 @@
         {
           "at": 30,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -3163,15 +3057,13 @@
         {
           "at": 30,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -3183,23 +3075,23 @@
         {
           "at": 31,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -3211,15 +3103,13 @@
         {
           "at": 31,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -3231,23 +3121,23 @@
         {
           "at": 32,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             0,
@@ -3259,15 +3149,13 @@
         {
           "at": 32,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             180,
@@ -3279,23 +3167,23 @@
         {
           "at": 33,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             255,
@@ -3307,15 +3195,13 @@
         {
           "at": 33,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             0,
@@ -3327,23 +3213,23 @@
         {
           "at": 34,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
           ],
           "rgb": [
             180,
@@ -3355,15 +3241,13 @@
         {
           "at": 34,
           "targets": [
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
@@ -3382,32 +3266,30 @@
         {
           "at": 0,
           "targets": [
-            "light.master_bedroom_master_bedroom_left",
-            "light.master_bedroom_master_bedroom_right",
-            "light.landing_landing_pane_1",
-            "light.landing_landing_pane_2",
-            "light.office_office_left_pane_1",
-            "light.office_office_left_pane_2",
-            "light.office_office_left_pane_3",
-            "light.office_office_right_pane_1",
-            "light.office_office_right_pane_2",
-            "light.office_office_right_pane_3",
-            "light.lounge_lounge_pane_1",
-            "light.lounge_lounge_pane_2",
-            "light.lounge_lounge_pane_3",
-            "light.bar_bar_pane_1",
-            "light.bar_bar_pane_2",
-            "light.bar_bar_pane_3",
-            "light.bar_bar_pane_4",
-            "light.front_left_bottom_virtual_virtual_light",
-            "light.front_left_top_virtual_virtual_light",
-            "light.backl_bush_virtual_virtual_light",
-            "light.light_tree_virtual_virtual_light",
-            "light.front_right_virtual_virtual_light",
-            "light.mid_right_virtual_virtual_light",
-            "light.back_bush_bottom_virtual_virtual_light",
-            "light.back_bush_top_virtual_virtual_light",
-            "light.icicles_virtual_virtual_light"
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_front_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_icicles"
           ],
           "rgb": [
             255,
