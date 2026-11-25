@@ -5,6 +5,7 @@ import time
 import base64
 import logging
 import os
+import socket
 
 from homeassistant.components.light import LightEntity, ColorMode, LightEntityFeature
 from homeassistant.exceptions import HomeAssistantError
@@ -13,7 +14,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .panes import DEFAULTS, pane_indices, pane_label, composite
-from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
+from .realtime import packets, pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
 
 _LOGGER=logging.getLogger(__name__)
 MODE="/xled/v1/led/mode"
@@ -170,6 +171,16 @@ class Group:
                 pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
                 composite(frame,m["width"],indices,pixel*m["led_count"])
             frame=bytes(frame)
+        if m["role"] != "none":
+            # Grouped firmware may reject local-sized HTTP frames. Use the
+            # native segmented real-time transport to each member instead.
+            datagrams = packets(self.tokens[m["mac"]], frame)
+            loop = asyncio.get_running_loop()
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.setblocking(False)
+                for datagram in datagrams:
+                    await loop.sock_sendto(sock, datagram, (m["ip"], 7777))
+            return
         for attempt in range(3):
             try:
                 async with self.session.post(f"http://{m['ip']}/xled/v1/led/rt/frame",
@@ -583,13 +594,8 @@ async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
     from .realtime import basic_group_members
     ctx=hass.data[DOMAIN][entry.entry_id]
-    from .config_flow import configured_twinkly_devices
     from .realtime import standalone_member
-    # Keep configured private addresses and include newly added native controllers.
-    by_ip={d["ip"]:d for d in ctx["devices"]}
-    for d in configured_twinkly_devices(hass.config_entries.async_entries("twinkly")):
-        by_ip.setdefault(d["ip"],d)
-    selected=list(by_ip.values())
+    selected=list(ctx["devices"])
     session=async_get_clientsession(hass)
     async def read(m,path,**kw):
         reply=await query(session,m["ip"],path,**kw)

@@ -75,3 +75,7 @@ import_3d_maps:
 verify_cloud_session:
   name: Verify cloud session
   description: Read cloud installations, automatically renewing the cached cloud token if needed. Does not change light sets or groups.
+
+rescan_controllers:
+  name: Rescan native Twinkly controllers
+  description: Reload Area Manager to refresh controller inventory and virtual lights. Stops any active show.
