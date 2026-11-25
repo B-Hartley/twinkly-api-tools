@@ -26,7 +26,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.persistent_notification import async_create
 
 from .const import DOMAIN, CONF_DEVICES_JSON
-from .config_flow import validate_devices
+from .config_flow import validate_devices, configured_twinkly_devices
+from .inventory import merge_controller_inventory
 
 _LOGGER = logging.getLogger(__name__)
 ENDPOINTS = {
@@ -532,6 +533,8 @@ def _verify_archives(state, archives):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Register capture, audit, and explicitly non-destructive restore-plan actions."""
     devices = validate_devices(entry.data[CONF_DEVICES_JSON])
+    native = configured_twinkly_devices(hass.config_entries.async_entries("twinkly"))
+    devices = merge_controller_inventory(devices, native)
     store = Store(hass, 1, f"{DOMAIN}.states")
     lock = asyncio.Lock()
     session = async_get_clientsession(hass)
@@ -781,6 +784,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_create(hass, "Cloud authentication verified. Cached tokens will renew automatically when required.",
                      title="Twinkly cloud session", notification_id=f"{DOMAIN}_cloud_session")
 
+    async def rescan_controllers(call: ServiceCall):
+        # Reload outside the capture lock: platform discovery acquires it.
+        if not await hass.config_entries.async_reload(entry.entry_id):
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError("Twinkly Area Manager reload failed")
+        current = hass.data[DOMAIN][entry.entry_id]["devices"]
+        async_create(hass, f"Controller inventory: {len(current)} — " +
+                     ", ".join(d["name"] for d in current),
+                     title="Twinkly controller rescan",
+                     notification_id=f"{DOMAIN}_rescan")
+
+    hass.services.async_register(DOMAIN, "rescan_controllers", rescan_controllers)
     hass.services.async_register(DOMAIN, "verify_cloud_session", verify_cloud_session)
     hass.services.async_register(DOMAIN, "resume_movie", resume_movie)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
@@ -819,7 +834,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
-                    "start_christmas_show", "stop_christmas_show"):
+                    "start_christmas_show", "stop_christmas_show", "rescan_controllers"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
