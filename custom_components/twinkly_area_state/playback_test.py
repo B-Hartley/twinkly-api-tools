@@ -54,7 +54,8 @@ def register_playback_actions(hass,ctx):
         await stop_playback_test(ctx)
     hass.services.async_register(DOMAIN,"configure_playback",configure,schema=vol.Schema(SETTINGS))
     hass.services.async_register(DOMAIN,"test_playback",test,schema=vol.Schema({
-        **SETTINGS,
+        **{k:v for k,v in SETTINGS.items() if k.schema!="transport"},
+        vol.Optional("transport",default="udp-per-controller"):vol.In(TRANSPORTS),
         vol.Required("controller"):str,
         vol.Optional("duration",default=10):vol.All(vol.Coerce(int),vol.Range(min=2,max=60)),
         vol.Optional("brightness_pct",default=2):vol.All(vol.Coerce(int),vol.Range(min=1,max=10)),
@@ -93,6 +94,8 @@ async def run_test(hass,ctx,g,opts):
             if ctx.get("mapping"):
                 ctx["mapping"].guard()
             g.playback={k:opts[k] for k in ("transport","fps","packet_spacing_ms","brightness_limit_pct")}
+            if g.playback["transport"].endswith("master-combined") and len({m["width"] for m in g.members})!=1:
+                raise HomeAssistantError("Combined transport requires uniform RGB/RGBW format")
             await g.prepare_start()
             entered=True
             await g.mode("rt")
