@@ -25,7 +25,8 @@
     "light.twinkly_front_right_bush",
     "light.twinkly_mid_right",
     "light.twinkly_back_right_bush",
-    "light.twinkly_icicles"
+    "light.twinkly_icicles",
+    "light.twinkly_front"
   ],
   "sections": [
     {
@@ -308,206 +309,15 @@
         {
           "at": 9,
           "targets": [
-            "light.twinkly_master_bedroom_left"
+            "light.twinkly_front"
           ],
+          "effect": "Window Chase",
           "rgb": [
             255,
-            0,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 9.3,
-          "targets": [
-            "light.twinkly_master_bedroom_right"
-          ],
-          "rgb": [
-            0,
-            255,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 9.6,
-          "targets": [
-            "light.twinkly_landing_pane_1"
-          ],
-          "rgb": [
-            0,
-            70,
-            255
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 9.9,
-          "targets": [
-            "light.twinkly_landing_pane_2"
-          ],
-          "rgb": [
-            255,
-            160,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 10.2,
-          "targets": [
-            "light.twinkly_office_left_pane_1"
-          ],
-          "rgb": [
             180,
-            0,
-            255
+            80
           ],
-          "brightness": 100
-        },
-        {
-          "at": 10.5,
-          "targets": [
-            "light.twinkly_office_left_pane_2"
-          ],
-          "rgb": [
-            0,
-            255,
-            255
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 10.8,
-          "targets": [
-            "light.twinkly_office_left_pane_3"
-          ],
-          "rgb": [
-            255,
-            0,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 11.1,
-          "targets": [
-            "light.twinkly_office_right_pane_1"
-          ],
-          "rgb": [
-            0,
-            255,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 11.4,
-          "targets": [
-            "light.twinkly_office_right_pane_2"
-          ],
-          "rgb": [
-            0,
-            70,
-            255
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 11.7,
-          "targets": [
-            "light.twinkly_office_right_pane_3"
-          ],
-          "rgb": [
-            255,
-            160,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 12,
-          "targets": [
-            "light.twinkly_lounge_pane_1"
-          ],
-          "rgb": [
-            180,
-            0,
-            255
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 12.3,
-          "targets": [
-            "light.twinkly_lounge_pane_2"
-          ],
-          "rgb": [
-            0,
-            255,
-            255
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 12.6,
-          "targets": [
-            "light.twinkly_lounge_pane_3"
-          ],
-          "rgb": [
-            255,
-            0,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 12.9,
-          "targets": [
-            "light.twinkly_bar_pane_1"
-          ],
-          "rgb": [
-            0,
-            255,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 13.2,
-          "targets": [
-            "light.twinkly_bar_pane_2"
-          ],
-          "rgb": [
-            0,
-            70,
-            255
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 13.5,
-          "targets": [
-            "light.twinkly_bar_pane_3"
-          ],
-          "rgb": [
-            255,
-            160,
-            0
-          ],
-          "brightness": 100
-        },
-        {
-          "at": 13.8,
-          "targets": [
-            "light.twinkly_bar_pane_4"
-          ],
-          "rgb": [
-            180,
-            0,
-            255
-          ],
-          "brightness": 100
+          "brightness": 180
         }
       ]
     },
@@ -516,6 +326,13 @@
       "duration": 5,
       "voice": "All systems online.",
       "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
         {
           "at": 0,
           "targets": [
