@@ -74,6 +74,10 @@ def collect(a, token):
             missing[d["name"]] = (d, expected)
         else:
             normalized = dict(role)
+            # Master firmware omits offset; its implicit start is zero.
+            # Never infer a missing slave offset.
+            if i == 0 and mode == "master" and "offset" not in normalized:
+                normalized["offset"] = 0
             normalized["uid"] = str(uuid.UUID(str(role.get("uid"))))
             if any(normalized.get(k) != v for k, v in expected.items()):
                 raise ValueError(d["name"] + ": unexpected existing group role/size/offset/UUID")
