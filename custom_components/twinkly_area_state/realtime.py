@@ -123,7 +123,7 @@ def basic_group_members(observations):
 def mapped_rainbow(layout, count, width, axis="y", reverse=False):
     """Return full-brightness static rainbow in original wire pixel order."""
     import math
-    if width not in (3,4) or axis not in ("x","y","z") or layout.get("source")!="2d":
+    if width not in (3,4) or axis not in ("x","y","z") or layout.get("source") not in ("2d","3d"):
         raise ValueError("Unsupported rainbow mapping")
     coords=layout.get("coordinates",[])
     if len(coords)!=count:
@@ -224,3 +224,9 @@ def combined_bush_map(bottom, top, bottom_count, top_count, seam=0.5, top_rotati
             result.append({"x":x*cos-z*sin,"y":start+(y-min(ys))*scale,
                            "z":x*sin+z*cos})
     return {"source":"3d","synthesized":True,"coordinates":result}
+
+VERTICAL_RAINBOW = "Solid rainbow top to bottom"
+
+def vertical_rainbow(layout,count,width):
+    """Y-up map: red at top, violet at bottom, every pixel lit."""
+    return mapped_rainbow(layout,count,width,"y",True)
