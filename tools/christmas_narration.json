@@ -1,0 +1,16 @@
+{
+  "narration": [
+    {"id":"01_welcome","at":0.7,"until":8.7,"text":"Ho, ho, ho! Good evening, everyone. Santa here, with a little Christmas magic... just for you!"},
+    {"id":"02_bushes","at":9.0093,"until":18.8,"text":"Bushes... wake up! One by one, let's see those lovely Christmas colours."},
+    {"id":"03_windows","at":19.3654,"until":31.8,"text":"Windows... it's your turn to shine! One pane at a time. That's the way!"},
+    {"id":"04_tree","at":32.2990,"until":36.0,"text":"Christmas tree... show us your sparkle!"},
+    {"id":"05_icicles","at":36.4553,"until":41.6,"text":"Icicles... twinkle like a frosty winter's night."},
+    {"id":"06_colours","at":42.0629,"until":50.0,"text":"Splendid! Now, let's bring those Christmas colours together."},
+    {"id":"07_rainbows","at":58.7233,"until":65.5,"text":"Rainbows... fill the windows with Christmas magic!"},
+    {"id":"08_window_chase","at":74.1181,"until":82.0,"text":"Windows... send that golden sparkle round the house, and back again!"},
+    {"id":"09_garden_chase","at":87.9572,"until":90.7,"text":"Bushes... join the chase!"},
+    {"id":"10_return_windows","at":90.9572,"until":96.7,"text":"Windows... catch that Christmas sparkle!"},
+    {"id":"11_finale","at":98.0,"until":102.0,"text":"And now... a grand Christmas finale!"},
+    {"id":"12_farewell","at":130.0,"until":139.6,"text":"From all of us at the North Pole... have a wonderful Christmas! Good night, everyone. Ho, ho, ho!"}
+  ]
+}

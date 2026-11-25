@@ -79,3 +79,51 @@ verify_cloud_session:
 rescan_controllers:
   name: Rescan native Twinkly controllers
   description: Reload Area Manager to refresh controller inventory and virtual lights. Stops any active show.
+
+start_christmas_show:
+  name: Start Santa's Christmas Magic
+  description: Prepare the display, then run the 140-second soundtrack and synchronised light score. Requires the version 2 audio pack and at least one shared stored Front movie. Starts only when explicitly called.
+  fields:
+    audio:
+      name: Play soundtrack
+      description: Disable only for an intentional silent lighting rehearsal.
+      default: true
+      selector:
+        boolean: {}
+    audio_base:
+      name: Soundtrack folder URL
+      description: The speaker-accessible folder containing christmas_show_v2.mp3.
+      example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
+      selector:
+        text: {}
+    brightness_pct:
+      name: Show brightness
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    volume:
+      name: Speaker volume
+      default: 0.05
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+    offset_ms:
+      name: Light timing adjustment
+      description: Positive delays the lights; negative advances them. Adjust only after a local rehearsal.
+      default: 0
+      selector:
+        number:
+          min: -2000
+          max: 2000
+          step: 50
+          unit_of_measurement: ms
+
+stop_christmas_show:
+  name: Stop Santa's Christmas Magic
+  description: Stop the soundtrack and turn off this show's display, including a stored movie left running after the finale.
