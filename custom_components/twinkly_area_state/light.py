@@ -807,6 +807,7 @@ class PhysicalGroupLight(LightEntity):
         self.group=group
         self._attr_unique_id="physical_group_"+group.master["uid"]
         self.entity_id="light.twinkly_"+slugify(name)
+        self.show_key=self.entity_id
         self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly")
 
     @property
