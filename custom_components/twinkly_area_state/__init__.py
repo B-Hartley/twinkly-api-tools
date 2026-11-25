@@ -492,18 +492,25 @@ def _capture_live_3d(state):
 def _verify_archives(state, archives):
     """Compare live state with saved mapping for whichever state is currently active."""
     current = {}
-    for item in state["devices"]:
-        mac, count, layout, group = _validated_controller(item)
-        current[mac] = {"count": count, "layout": layout, "group": group}
     notes = []
+    for item in state["devices"]:
+        try:
+            mac, count, layout, group = _validated_controller(item)
+        except (ValueError, TypeError, KeyError, AttributeError) as exc:
+            notes.append(str(exc))
+            continue
+        if mac in current:
+            notes.append("Duplicate controller identity: " + item["name"])
+            continue
+        current[mac] = {"count": count, "layout": layout, "group": group}
     saved_3d = archives.get("maps_3d", {})
     for mac, ref in saved_3d.items():
         observed = current.get(mac)
         if not observed:
-            notes.append("Missing controller " + mac[-4:])
+            notes.append("Missing or unavailable controller " + ref.get("name", mac[-4:]))
         elif observed["group"].get("mode") == "none":
             if observed["layout"]["source"] != "3d" or not _geometry_matches(observed["layout"], ref["layout"]):
-                notes.append("3D reference differs for " + mac[-4:])
+                notes.append("3D reference differs for " + ref.get("name", mac[-4:]))
     saved_groups = archives.get("groups", {})
     for uid, group in saved_groups.items():
         live_members = [(m, current.get(m["mac"])) for m in group["members"]]
@@ -629,6 +636,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def import_3d_maps(call: ServiceCall):
         from .archive_import import read_archives, merge_archives
         from homeassistant.exceptions import HomeAssistantError
+        overwrite = call.data.get("overwrite", False)
+        allow_unverified = call.data.get("allow_unverified", False)
+        if (overwrite or allow_unverified) and call.data.get("confirmation") != "IMPORT":
+            raise HomeAssistantError("Type IMPORT to confirm replacement or unverified import")
         async with lock:
             try:
                 incoming = await hass.async_add_executor_job(
@@ -646,7 +657,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = await store.async_load() or {}
                 archives = data.setdefault("_area_manager", {"maps_3d": {}, "groups": {}})
                 merged, added, unchanged, skipped = merge_archives(
-                    archives.get("maps_3d", {}), incoming, identities)
+                    archives.get("maps_3d", {}), incoming, identities,
+                    overwrite=overwrite, allow_unverified=allow_unverified)
+                previous = archives.get("maps_3d", {})
+                replaced = [mac for mac in previous if mac in merged and merged[mac] != previous[mac]]
+                if replaced:
+                    backups = archives.setdefault("maps_3d_replacement_backups", {})
+                    backups[datetime.now(timezone.utc).isoformat()] = {
+                        mac: previous[mac] for mac in replaced}
+                unverified = [record["name"] for mac, record in incoming.items()
+                              if mac not in identities and mac in merged and merged[mac] == record]
                 archives["maps_3d"] = merged
                 await store.async_save(data)
                 ctx = hass.data[DOMAIN][entry.entry_id]
@@ -662,7 +682,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                          ". Already saved: " + (", ".join(unchanged) or "none") +
                          ". Skipped: " + ("; ".join(skipped) or "none") +
                          f". Total saved 3D references: {len(merged)}. "
-                         "Existing maps and controller groups were not changed.",
+                         "Replaced (old references backed up): " +
+                         (", ".join(merged[mac]["name"] for mac in replaced) or "none") +
+                         ". Imported without live identity verification: " +
+                         (", ".join(unverified) or "none") +
+                         ". Controller layouts and groups were not changed.",
                          title="Twinkly 3D archive import",
                          notification_id=f"{DOMAIN}_import_3d")
 
@@ -733,7 +757,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(DOMAIN, "capture_layout_diagnostics", capture_layout_diagnostics)
     hass.services.async_register(DOMAIN, "capture_groups", capture_groups)
     hass.services.async_register(DOMAIN, "capture_3d_maps", capture_3d_maps)
-    hass.services.async_register(DOMAIN, "import_3d_maps", import_3d_maps)
+    hass.services.async_register(DOMAIN, "import_3d_maps", import_3d_maps,
+        schema=vol.Schema({vol.Optional("overwrite", default=False): bool,
+                           vol.Optional("allow_unverified", default=False): bool,
+                           vol.Optional("confirmation", default=""): str}))
     hass.services.async_register(DOMAIN, "verify_archives", verify_archives)
     hass.services.async_register(DOMAIN, "save_state", save_state,
         schema=vol.Schema({vol.Required("name"): STATE_NAME}))

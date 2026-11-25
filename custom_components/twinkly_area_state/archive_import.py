@@ -37,24 +37,28 @@ def read_archives(root):
             "archive_created_utc":str(doc.get("created_utc","unknown"))}
     return result
 
-def merge_archives(saved, incoming, identities):
-    """Only import confirmed configured hardware; preserve all prior references."""
+def merge_archives(saved, incoming, identities, *, overwrite=False, allow_unverified=False):
+    """Keep legacy defaults; explicit options permit offline imports and replacements."""
     merged=dict(saved)
     added=[]
     unchanged=[]
     skipped=[]
     for mac, record in incoming.items():
         name=record["name"]
-        if mac not in identities:
+        if mac not in identities and not allow_unverified:
             skipped.append(name+": not verified among configured controllers")
             continue
-        if identities[mac]!=record["led_count"]:
+        if mac in identities and identities[mac]!=record["led_count"]:
             skipped.append(name+": live LED count differs")
             continue
         if mac in merged:
             old=merged[mac]
             if old.get("led_count")!=record["led_count"] or digest(old["layout"])!=record["sha256"]:
-                skipped.append(name+": conflicting existing reference preserved")
+                if not overwrite:
+                    skipped.append(name+": conflicting existing reference preserved")
+                    continue
+                merged[mac]=record
+                added.append(name)
             else:
                 unchanged.append(name)
             continue
