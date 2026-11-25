@@ -38,3 +38,17 @@ class WindowChaseTests(unittest.TestCase):
         self.assertEqual(wc.chase_frame(m,self.zones,11.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([0]*8+[0,255,0,0]*2))
         self.assertEqual(wc.chase_frame(m,self.zones,12.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([0,255,0,0]*2+[0]*8))
         self.assertEqual(wc.chase_frame(self.members[0],self.zones,22.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([255,0,0]*2+[0]*6))
+
+    def test_house_route(self):
+        names=["front left top","front left bottom","back left bush","light tree","front right bush","mid right","back bush top","back bush bottom","icicles"]
+        extra=[dict(name=n,mac=n,led_count=4,width=3) for n in names]
+        maps={**self.maps,"front right bush":[[0,1],[2,3]]}
+        zones=wc.house_zones(self.members+extra,maps)
+        self.assertEqual(len(zones),20)
+        self.assertEqual({mac for mac,_ in zones[12]},{"front left top","front left bottom"})
+        for m in extra[:2]:
+            self.assertEqual(wc.chase_frame(m,zones,12.1*wc.PANE_SECONDS,255,(255,0,0,0),loop=True),bytes([255,0,0]*4))
+        self.assertEqual(zones[15],(("front right bush",(0,1)),))
+        self.assertEqual(zones[16],(("front right bush",(2,3)),))
+        self.assertEqual(wc.chase_frame(self.members[0],zones,20.1*wc.PANE_SECONDS,255,(255,0,0,0),loop=True),bytes([255,0,0]*2+[0]*6))
+        self.assertEqual(wc.house_zones(self.members+extra[:-1],maps),[])
