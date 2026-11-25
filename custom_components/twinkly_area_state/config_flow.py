@@ -136,6 +136,54 @@ class TwinklyAreaStateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class TwinklyCloudOptionsFlow(config_entries.OptionsFlow):
     """Optional cloud authentication without storing the account password."""
     async def async_step_init(self,user_input=None):
+        return self.async_show_menu(step_id="init", menu_options=["controllers","cloud"])
+
+    async def async_step_controllers(self,user_input=None):
+        from homeassistant.helpers.aiohttp_client import async_get_clientsession
+        from . import query
+        import asyncio
+        errors={}
+        raw=self.config_entry.data[CONF_DEVICES_JSON]
+        if user_input is not None:
+            raw=user_input.get(CONF_DEVICES_JSON,"")
+            try:
+                devices=validate_devices(raw)
+            except (ValueError,TypeError,KeyError):
+                errors["base"]="invalid_devices"
+            else:
+                if user_input.get("test_only"):
+                    session=async_get_clientsession(self.hass)
+                    async def check(device):
+                        try:
+                            result=await query(session,device["ip"],"/xled/v1/gestalt")
+                            if result["ok"]:
+                                return f'{device["name"]}: {result["data"].get("number_of_led","?")} LEDs'
+                        except Exception:
+                            pass
+                        return f'{device["name"]}: unreachable'
+                    results=await asyncio.gather(*(check(d) for d in devices))
+                    return self.async_show_form(step_id="controllers",data_schema=self.controller_schema(raw),
+                        description_placeholders={"results":"; ".join(results)})
+                self.hass.config_entries.async_update_entry(self.config_entry,data={
+                    **self.config_entry.data,CONF_DEVICES_JSON:json.dumps(devices)})
+                self.hass.async_create_task(self.hass.config_entries.async_reload(self.config_entry.entry_id))
+                return self.async_create_entry(title="",data=dict(self.config_entry.options))
+        return self.async_show_form(step_id="controllers",data_schema=self.controller_schema(raw),
+            errors=errors,description_placeholders={"results":""})
+
+    @staticmethod
+    def controller_schema(raw):
+        try:
+            raw=json.dumps(json.loads(raw),indent=2)
+        except (ValueError,TypeError):
+            pass
+        return vol.Schema({
+            vol.Required(CONF_DEVICES_JSON,default=raw):selector.TextSelector(
+                selector.TextSelectorConfig(multiline=True)),
+            vol.Optional("test_only",default=False):bool,
+        })
+
+    async def async_step_cloud(self,user_input=None):
         from .cloud_session import CloudSession
         from homeassistant.exceptions import HomeAssistantError
         cloud=self.hass.data.get(DOMAIN,{}).get(self.config_entry.entry_id,{}).get("cloud") or CloudSession(self.hass,self.config_entry.entry_id)
@@ -151,7 +199,7 @@ class TwinklyCloudOptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(title="",data=dict(self.config_entry.options))
             except (HomeAssistantError,KeyError):
                 errors["base"]="cloud_auth_failed"
-        return self.async_show_form(step_id="init",data_schema=vol.Schema({
+        return self.async_show_form(step_id="cloud",data_schema=vol.Schema({
             vol.Optional("username"):str,
             vol.Optional("password"):selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)),
             vol.Optional("forget",default=False):bool,
