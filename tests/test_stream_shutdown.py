@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock
 source=Path(__file__).resolve().parents[1]/"custom_components/twinkly_area_state/light.py"
 tree=ast.parse(source.read_text(encoding="utf-8"))
 nodes=[n for n in tree.body if getattr(n,"name",None) in ("Group","update_together")]
-ns={"asyncio":asyncio,"time":time,"WINDOW_CHASE":"Window Chase"}
+ns={"asyncio":asyncio,"time":time,"WINDOW_CHASE":"Window Chase","HOUSE_CHASE":"House and Garden Chase","CHASE_EFFECTS":("Window Chase","House and Garden Chase")}
 exec(compile(ast.Module(body=nodes,type_ignores=[]),str(source),"exec"),ns)
 Group=ns["Group"]
 update=ns["update_together"]
@@ -31,6 +31,7 @@ def group(two=False):
     g.combined_geometry={}
     g.chase_started=0.0
     g.chase_zones=[]
+    g.house_zones=[]
     g.active=True
     g.error=False
     g.task=Mock()
