@@ -31,6 +31,7 @@ class Group:
         self.entities=[]
         self.task=None
         self.active=False
+        self.hold_idle=False
         self.error=False
         self.previous=None
         self.movies={}
@@ -187,6 +188,14 @@ class Group:
 
     def any_on(self):
         return any(self.member_on(m["mac"]) for m in self.members)
+
+    async def idle_or_hold(self):
+        """Keep a black frame stream only during a bounded show transition."""
+        if getattr(self,"hold_idle",False) and self.active and not self.error:
+            await self.send()
+            self.notify()
+            return
+        await self.finish_idle()
 
     async def finish_idle(self):
         """Called under lock after committing the last off request."""
@@ -476,7 +485,7 @@ class Group:
                     await asyncio.gather(self.restore(),return_exceptions=True)
                 raise
             if not self.any_on():
-                await self.finish_idle()
+                await self.idle_or_hold()
                 return
             if starting:
                 self.active=True
@@ -591,7 +600,7 @@ async def update_together(targets,on,kwargs,combined=False):
         # Off operations are committed before hardware shutdown; never roll back
         # to a streaming state if an off command fails.
         idle=[g for g,_ in changes if not g.any_on()]
-        results=await asyncio.gather(*(g.finish_idle() for g in idle),return_exceptions=True)
+        results=await asyncio.gather(*(g.idle_or_hold() for g in idle),return_exceptions=True)
         for g in starting:
             g.active=True
             g.error=False
