@@ -16,7 +16,11 @@ from .show_lights import ShowLights
 _LOGGER = logging.getLogger(__name__)
 AUDIO_START_TIMEOUT = 10.0
 MAX_CUE_LATENESS = 1.5
-MAX_POSITION_DRIFT = 2.0
+# Sonos positions are quantised to seconds. Ignore normal sampling noise,
+# slew the local clock rather than jump, and reject only major discontinuities.
+POSITION_DEADBAND = 0.45
+MAX_POSITION_DRIFT = 8.0
+CLOCK_SLEW_RATE = 0.5
 
 
 def media_identity(value):
@@ -97,6 +101,8 @@ class Show:
         self.lights = None
         self.last_error = None
         self._drift_since = None
+        self._clock_correction = 0.0
+        self._clock_checked_at = None
         self._last_audio_progress = None
         self._audio_ended = False
         self._lifecycle_lock = asyncio.Lock()
@@ -211,7 +217,8 @@ class Show:
     def check_audio(self, audio):
         speaker, url, epoch, duration = audio
         state = self.hass.states.get(speaker)
-        elapsed = monotonic() - epoch
+        now = monotonic()
+        elapsed = now - epoch - self._clock_correction
         # Sonos reports whole seconds; allow its end event within the final second.
         if state and state.state in ("idle", "off") and elapsed >= duration - 1.0:
             return
@@ -244,22 +251,31 @@ class Show:
         sample = media_position(state)
         if sample is None:
             raise HomeAssistantError("The soundtrack playback position became unavailable")
-        drift = abs(sample[0] - elapsed)
-        if drift > MAX_POSITION_DRIFT:
+        error = sample[0] - elapsed
+        dt = 0.0 if self._clock_checked_at is None else max(0.0, now - self._clock_checked_at)
+        self._clock_checked_at = now
+        if abs(error) > MAX_POSITION_DRIFT:
             if self._drift_since is None:
-                self._drift_since = monotonic()
-            elif monotonic() - self._drift_since >= 1.0:
+                self._drift_since = now
+            elif now - self._drift_since >= 1.0:
                 raise HomeAssistantError("The soundtrack position jumped; restart the show to resynchronise")
-        else:
-            self._drift_since = None
-            self._last_audio_progress = (monotonic(), sample[0])
+            return
+        self._drift_since = None
+        # Positive error means audio is ahead: bring future light deadlines
+        # forward. Negative error delays them. Bound the rate so the show
+        # clock always runs forward and never replays an already-fired cue.
+        residual = max(0.0, abs(error) - POSITION_DEADBAND)
+        adjustment = min(residual, CLOCK_SLEW_RATE * min(dt, 0.5))
+        if adjustment:
+            self._clock_correction -= math.copysign(adjustment, error)
+        self._last_audio_progress = (now, sample[0])
 
     async def wait_until(self, deadline, audio=None):
         while True:
             self.guard()
             if audio is not None:
                 self.check_audio(audio)
-            remaining = deadline - monotonic()
+            remaining = deadline + (self._clock_correction if audio else 0.0) - monotonic()
             if remaining <= 0:
                 return
             await sleep(min(0.25, remaining))
@@ -268,7 +284,7 @@ class Show:
         for at, cues in timeline:
             deadline = epoch + at
             await self.wait_until(deadline, audio)
-            lateness = monotonic() - deadline
+            lateness = monotonic() - deadline - (self._clock_correction if audio else 0.0)
             # Never rush through a backlog of obsolete scenes after a timeout.
             # The prepared all-black opening is safe to repeat after audio startup.
             if lateness > MAX_CUE_LATENESS and not (at == 0 and all(c.get("off") for c in cues)):
@@ -312,6 +328,8 @@ class Show:
         original_media = None
         completed = False
         self._drift_since = None
+        self._clock_correction = 0.0
+        self._clock_checked_at = None
         self._last_audio_progress = None
         self._audio_ended = False
         try:
