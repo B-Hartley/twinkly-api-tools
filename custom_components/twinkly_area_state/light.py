@@ -6,6 +6,7 @@ import base64
 import logging
 import os
 import socket
+from homeassistant.util import slugify
 
 from homeassistant.components.light import LightEntity, ColorMode, LightEntityFeature
 from homeassistant.exceptions import HomeAssistantError
@@ -472,6 +473,13 @@ async def update_together(targets,on,kwargs,combined=False):
                 raise result
 
 
+def controller_slug(name):
+    slug=slugify(name)
+    return {"front_right":"front_right_bush","backr_bush_top":"back_right_top",
+            "backr_bush_bottom":"back_right_bottom","back_bush_top":"back_right_top",
+            "back_bush_bottom":"back_right_bottom","backl_bush":"back_left_bush"}.get(slug,slug)
+
+
 class CombinedBush(LightEntity):
     """One logical bush containing two independently addressable controllers."""
     _attr_should_poll=False
@@ -483,6 +491,8 @@ class CombinedBush(LightEntity):
         self.parts=ordered_parts
         self.combined_map=None
         self._attr_unique_id="combined_"+slug
+        self.entity_id="light.twinkly_"+slug
+        self.show_key=self.entity_id
         self._attr_name=None
         self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly",model="Combined bush")
         self._attr_color_mode=ColorMode.RGBW if all(m["width"]==4 for _,m in self.parts) else ColorMode.RGB
@@ -569,6 +579,8 @@ class VirtualLight(LightEntity):
         self.member=m
         self._attr_name=None
         self._attr_unique_id=m["mac"]+"_virtual"
+        self.entity_id="light.twinkly_"+controller_slug(m["name"])
+        self.show_key=self.entity_id
         self._attr_color_mode=ColorMode.RGBW if m["width"]==4 else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
         mac=format_mac(m["mac"])
@@ -618,6 +630,11 @@ class PaneLight(VirtualLight):
         if " ".join(m["name"].casefold().split()) in ("front right","front right bush"):
             self._attr_supported_features=LightEntityFeature.EFFECT
         self._attr_unique_id=f"{m['mac']}_pane_{index+1}"
+        stem=controller_slug(m["name"])
+        if stem=="front_right_bush":
+            stem="front_right"
+        self.entity_id="light.twinkly_"+stem+"_"+slugify(self._attr_name)
+        self.show_key=self.entity_id
 
     @property
     def available(self):
