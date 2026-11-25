@@ -79,3 +79,92 @@ verify_cloud_session:
 rescan_controllers:
   name: Rescan native Twinkly controllers
   description: Reload Area Manager to refresh controller inventory and virtual lights. Stops any active show.
+
+configure_playback:
+  name: Configure virtual playback
+  description: Select experimental transport and tuning until integration reload. Virtual lights must be off.
+  fields:
+    transport:
+      default: auto
+      selector:
+        select:
+          options:
+            - auto
+            - http-per-controller
+            - udp-per-controller
+            - http-master-combined
+            - udp-master-combined
+    fps:
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 25
+    packet_spacing_ms:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 20
+          step: 0.5
+    brightness_limit_pct:
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+test_playback:
+  name: Test real-time playback
+  description: Temporarily stream a low-brightness diagnostic to a verified group, then switch it off. UDP submission is not proof of display.
+  fields:
+    controller:
+      required: true
+      selector:
+        text: {}
+    transport:
+      default: udp-per-controller
+      selector:
+        select:
+          options:
+            - auto
+            - http-per-controller
+            - udp-per-controller
+            - http-master-combined
+            - udp-master-combined
+    pattern:
+      default: isolate
+      selector:
+        select:
+          options:
+            - isolate
+            - colour
+            - sequence
+            - chase
+    duration:
+      default: 10
+      selector:
+        number:
+          min: 2
+          max: 60
+    fps:
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 25
+    packet_spacing_ms:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 20
+          step: 0.5
+    brightness_pct:
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 10
+stop_playback_test:
+  name: Stop playback diagnostic
+  description: Cancel the active diagnostic and attempt to switch off the tested group.

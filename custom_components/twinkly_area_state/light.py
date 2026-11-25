@@ -26,6 +26,7 @@ class Group:
         self.lock=lock
         self.query=query
         self.session=async_get_clientsession(hass)
+        self.playback={"transport":"auto","fps":10,"packet_spacing_ms":0,"brightness_limit_pct":100}
         self.tokens={}
         self.entities=[]
         self.task=None
@@ -145,14 +146,24 @@ class Group:
 
     async def send(self):
         now=time.monotonic()
-        results=await asyncio.gather(*(self.send_member(m,now) for m in self.members),return_exceptions=True)
+        await self.send_frames({m["mac"]: self.render_member(m,now) for m in self.members})
+
+    async def send_frames(self,frames):
+        transport=self.playback["transport"]
+        if transport=="auto":
+            transport="http-per-controller" if self.master["role"]=="none" else "udp-per-controller"
+        if transport.endswith("master-combined"):
+            ordered=sorted(self.members,key=lambda m:m["offset"])
+            if len({m["width"] for m in ordered})!=1:
+                raise HomeAssistantError("Combined master transport requires a uniform pixel format")
+            await self.transmit(self.master,b"".join(frames[m["mac"]] for m in ordered),transport)
+            return
+        results=await asyncio.gather(*(self.transmit(m,frames[m["mac"]],transport) for m in self.members),return_exceptions=True)
         for result in results:
             if isinstance(result,BaseException):
                 raise result
 
-    async def send_member(self,m,now):
-        if time.monotonic()>=self.expiry.get(m["mac"],0):
-            await self.login(m)
+    def render_member(self,m,now):
         on,brightness,rgbw=self.state[m["mac"]]
         r,g,b,w=(round(c*brightness/255) if on else 0 for c in rgbw)
         pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
@@ -171,14 +182,27 @@ class Group:
                 pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
                 composite(frame,m["width"],indices,pixel*m["led_count"])
             frame=bytes(frame)
-        if m["role"] != "none":
-            # Grouped firmware may reject local-sized HTTP frames. Use the
-            # native segmented real-time transport to each member instead.
+        limit=self.playback["brightness_limit_pct"]/100
+        return bytes(round(c*limit) for c in frame) if limit<1 else frame
+
+    async def send_member(self,m,now):
+        # Compatibility for callers testing a single member.
+        transport=self.playback["transport"]
+        if transport=="auto":
+            transport="http-per-controller" if m["role"]=="none" else "udp-per-controller"
+        await self.transmit(m,self.render_member(m,now),transport)
+
+    async def transmit(self,m,frame,transport):
+        if time.monotonic()>=self.expiry.get(m["mac"],0):
+            await self.login(m)
+        if transport.startswith("udp-"):
             datagrams = packets(self.tokens[m["mac"]], frame)
             loop = asyncio.get_running_loop()
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                 sock.setblocking(False)
-                for datagram in datagrams:
+                for index,datagram in enumerate(datagrams):
+                    if index and self.playback["packet_spacing_ms"]:
+                        await asyncio.sleep(self.playback["packet_spacing_ms"]/1000)
                     await loop.sock_sendto(sock, datagram, (m["ip"], 7777))
             return
         for attempt in range(3):
@@ -279,7 +303,7 @@ class Group:
         failures=0
         while self.active:
             moving=any(self.state[k][0] and effect in MOVING_SPIRALS for k,effect in self.effects.items())
-            await asyncio.sleep((.2 if moving else .75) if failures==0 else min(10,2**failures))
+            await asyncio.sleep((1/self.playback["fps"] if moving else .75) if failures==0 else min(10,2**failures))
             async with self.lock:
                 if not self.active:
                     return

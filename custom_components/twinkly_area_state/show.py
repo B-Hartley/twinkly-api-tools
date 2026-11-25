@@ -24,6 +24,9 @@ class Show:
             {"entity_id":entity,**data},blocking=True)
 
     async def start(self,call):
+        diagnostic=self.ctx.get("playback_test")
+        if diagnostic and not diagnostic.done():
+            raise HomeAssistantError("Stop playback diagnostic first")
         self.guard()
         if self.task and not self.task.done():
             raise HomeAssistantError("Christmas show already running")
