@@ -117,7 +117,7 @@ class Group:
                 except (ValueError,KeyError,TypeError) as exc:
                     self.pane_maps.pop(mac,None)
                     _LOGGER.warning("%s: pane map unavailable: %s",m["name"],exc)
-            if name in ("front right","front right bush"):
+            if name in DEFAULTS:
                 for i,indices in enumerate(self.pane_maps.get(mac,[])):
                     key=(mac,i)
                     zone={}
@@ -336,7 +336,7 @@ class Group:
                 key=(mac,index)
                 effect=kwargs.get("effect","Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else self.pane_effects.get(key,"Solid"))
                 if effect not in ("Solid",*self.pane_patterns.get(key,{})):
-                    raise HomeAssistantError("Effect requires a captured bush map")
+                    raise HomeAssistantError("Effect requires a captured pane map")
                 self.pane_effects[key]=effect
                 self.pane_states[key]=(on,kwargs.get("brightness",old[1]),color)
                 if starting:
@@ -362,7 +362,7 @@ class Group:
     async def run(self):
         failures=0
         while self.active:
-            moving=any(self.state[k][0] and effect in MOVING_SPIRALS for k,effect in self.effects.items())
+            moving=any(self.state[k][0] and effect in MOVING_SPIRALS for k,effect in self.effects.items()) or any(key[0] in self.pane_overrides and state[0] and self.pane_effects.get(key) in MOVING_SPIRALS for key,state in self.pane_states.items())
             await asyncio.sleep((1/15 if self.master["role"]!="none" else (.2 if moving else .75)) if failures==0 else min(10,2**failures))
             async with self.lock:
                 if not self.active:
@@ -627,8 +627,7 @@ class PaneLight(VirtualLight):
         super().__init__(group,m)
         self.index=index
         self._attr_name=pane_label(m["name"],index)
-        if " ".join(m["name"].casefold().split()) in ("front right","front right bush"):
-            self._attr_supported_features=LightEntityFeature.EFFECT
+        self._attr_supported_features=LightEntityFeature.EFFECT
         self._attr_unique_id=f"{m['mac']}_pane_{index+1}"
         stem=controller_slug(m["name"])
         if stem=="front_right_bush":
