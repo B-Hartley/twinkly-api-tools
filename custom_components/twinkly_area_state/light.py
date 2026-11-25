@@ -113,6 +113,35 @@ class Group:
         for e in self.entities:
             e.async_write_ha_state()
 
+    def member_on(self, mac):
+        if mac in self.pane_overrides:
+            return any(self.pane_states[(mac,i)][0]
+                       for i in range(len(self.pane_maps.get(mac,[]))))
+        return self.state[mac][0]
+
+    def any_on(self):
+        return any(self.member_on(m["mac"]) for m in self.members)
+
+    async def finish_idle(self):
+        """Called under lock after committing the last off request."""
+        self.active=False
+        if self.task:
+            self.task.cancel()
+            self.task=None
+        self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
+        self.pane_overrides.clear()
+        self.pane_states.clear()
+        try:
+            await self.login(self.master)
+            await self.mode("off")
+            self.error=False
+        except Exception:
+            # Never restart streaming just because the physical off failed.
+            self.error=True
+            raise
+        finally:
+            self.notify()
+
     async def send(self):
         now=time.monotonic()
         results=await asyncio.gather(*(self.send_member(m,now) for m in self.members),return_exceptions=True)
@@ -198,6 +227,8 @@ class Group:
             if mac not in self.pane_maps:
                 raise HomeAssistantError("Capture a valid pane map first")
             if not on and not self.active:
+                if self.error:
+                    await self.finish_idle()
                 return
             starting=not self.active
             if starting:
@@ -216,13 +247,17 @@ class Group:
                 self.pane_states[(mac,index)]=(on,kwargs.get("brightness",old[1]),color)
                 if starting:
                     await self.mode("rt")
-                await self.send()
+                if self.any_on():
+                    await self.send()
             except BaseException:
                 self.pane_states=old_states
                 self.pane_overrides=old_overrides
                 if starting:
                     await asyncio.gather(self.restore(),return_exceptions=True)
                 raise
+            if not self.any_on():
+                await self.finish_idle()
+                return
             if starting:
                 self.active=True
                 self.error=False
@@ -240,7 +275,16 @@ class Group:
                 try:
                     if failures:
                         await self.validate()
-                        await self.mode("rt")
+                        current=await self.call(self.master,MODE,token=self.tokens[self.master["mac"]])
+                        if current.get("mode")!="rt":
+                            self.active=False
+                            self.task=None
+                            self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
+                            self.pane_overrides.clear()
+                            self.pane_states.clear()
+                            self.error=False
+                            self.notify()
+                            return
                     await self.send()
                     failures=0
                     if self.error:
@@ -276,11 +320,11 @@ async def update_together(targets,on,kwargs,combined=False):
     if not targets:
         return
     async with targets[0][0].lock:
-        targets=[(g,members) for g,members in targets if on or g.active]
+        targets=[(g,members) for g,members in targets if on or g.active or g.error]
         if not targets:
             return
         changes=[(g,g.prepare(members,on,kwargs)) for g,members in targets]
-        starting=[g for g,_ in changes if not g.active]
+        starting=[g for g,_ in changes if on and not g.active]
         # Validate all new sessions before touching playback mode.
         results=await asyncio.gather(*(g.prepare_start() for g in starting),return_exceptions=True)
         for result in results:
@@ -302,7 +346,7 @@ async def update_together(targets,on,kwargs,combined=False):
                         g.combined_selected.add(key)
                     else:
                         g.combined_selected.discard(key)
-            results=await asyncio.gather(*(g.send() for g,_ in changes),return_exceptions=True)
+            results=await asyncio.gather(*(g.send() for g,_ in changes if g.any_on()),return_exceptions=True)
             for result in results:
                 if isinstance(result,BaseException):
                     raise result
@@ -320,12 +364,19 @@ async def update_together(targets,on,kwargs,combined=False):
             await asyncio.gather(*(g.restore() for g in starting),return_exceptions=True)
             # Active streams resend their previous state on the next tick.
             raise
+        # Off operations are committed before hardware shutdown; never roll back
+        # to a streaming state if an off command fails.
+        idle=[g for g,_ in changes if not g.any_on()]
+        results=await asyncio.gather(*(g.finish_idle() for g in idle),return_exceptions=True)
         for g in starting:
             g.active=True
             g.error=False
             g.task=g.hass.async_create_background_task(g.run(),"Twinkly virtual light frames")
         for g,_ in changes:
             g.notify()
+        for result in results:
+            if isinstance(result,BaseException):
+                raise result
 
 
 class CombinedBush(LightEntity):
@@ -475,7 +526,7 @@ class VirtualLight(LightEntity):
     async def async_turn_on(self,**kwargs):
         await self.group.update(self.member,True,kwargs)
     async def async_turn_off(self,**kwargs):
-        if self.group.active:
+        if self.group.active or self.group.error:
             await self.group.update(self.member,False,{})
 
 class PaneLight(VirtualLight):
