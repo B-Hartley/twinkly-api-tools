@@ -65,7 +65,7 @@ class Show:
         speaker=plan["speaker"]
         state=self.hass.states.get(speaker)
         audio=options.get("audio",True) and bool(options.get("audio_base")) and state is not None
-        audio=audio and state.state in ("idle","standby","off")
+        audio=audio and state.state in ("idle","standby","off","paused")
         # Never interrupt a playing speaker or an existing Sonos group.
         audio=audio and len(state.attributes.get("group_members") or [speaker])<=1
         volume=state.attributes.get("volume_level") if audio else None
