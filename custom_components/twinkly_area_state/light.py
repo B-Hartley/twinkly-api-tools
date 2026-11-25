@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from .const import DOMAIN
 from .panes import DEFAULTS, pane_indices, pane_label, composite
-from .window_chase import WINDOW_CHASE, HOUSE_CHASE, CHASE_EFFECTS, chase_zones, house_zones, chase_frame
+from .window_chase import WINDOW_CHASE, HOUSE_CHASE, SLIDE_CHASE, CHASE_EFFECTS, chase_zones, house_zones, chase_frame, slide_geometry, slide_frame
 from .realtime import packets, pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
 
 _LOGGER=logging.getLogger(__name__)
@@ -40,6 +40,7 @@ class Group:
         self.movie_paths={}
         self.chase_zones=[]
         self.house_zones=[]
+        self.slide_zones=[]
         self.chase_started=0.0
         self.expiry={}
         self.effects={m["mac"]:"Solid" for m in members}
@@ -121,11 +122,14 @@ class Group:
         archives=data.get("_area_manager",{})
         records=archives.get("groups",{})
         originals=archives.get("maps_3d",{})
+        slide_2d={}
+        slide_3d={}
         for m in self.members:
             patterns={}
             record=records.get(m["uid"],{})
             saved=next((x for x in record.get("members",[]) if x.get("mac")==m["mac"] and x.get("led_count")==m["led_count"] and x.get("offset")==m["offset"] and x.get("size")==m["size"] and x.get("role")==m["role"]),None)
             if saved:
+                slide_2d[m["mac"]]=saved["layout"]
                 for name,axis,reverse in (("Static rainbow","y",False),("Static rainbow reversed","y",True),("Horizontal rainbow","x",False)):
                     try:
                         patterns[name]=mapped_rainbow(saved["layout"],m["led_count"],m["width"],axis,reverse)
@@ -135,6 +139,7 @@ class Group:
             self.geometry.pop(mac,None)
             original=originals.get(mac,{})
             if original.get("led_count")==m["led_count"]:
+                slide_3d[mac]=original["layout"]
                 try:
                     self.geometry[mac]=spiral_geometry(original["layout"],m["led_count"])
                     patterns.update({name:None for name in SPIRAL_EFFECTS})
@@ -176,6 +181,19 @@ class Group:
 
         self.chase_zones=chase_zones(self.members,self.pane_maps)
         self.house_zones=house_zones(self.members,self.pane_maps)
+        self.slide_zones=[]
+        if self.chase_zones:
+            try:
+                self.slide_zones=slide_geometry(self.members,self.pane_maps,slide_3d,slide_2d)
+            except (ValueError,KeyError,TypeError) as exc:
+                _LOGGER.warning("%s unavailable: %s",SLIDE_CHASE,exc)
+
+    def chase_geometry(self,effect):
+        if effect==HOUSE_CHASE:
+            return self.house_zones
+        if effect=="Bush and Window Chase V2":
+            return getattr(self,"slide_zones",[])
+        return self.chase_zones
 
     def notify(self):
         self.notify_registered()
@@ -236,7 +254,9 @@ class Group:
             geometry=self.combined_geometry.get(m["mac"],self.geometry[m["mac"]]) if m["mac"] in self.combined_selected else self.geometry[m["mac"]]
             frame=spiral_frame(geometry,m["width"],effect,now,rgbw,brightness if on else 0)
         mac=m["mac"]
-        if effect in CHASE_EFFECTS:
+        if effect==SLIDE_CHASE:
+            frame=slide_frame(m,self.slide_zones,now-self.chase_started,brightness if on else 0,rgbw)
+        elif effect in CHASE_EFFECTS:
             whole=effect==HOUSE_CHASE
             frame=chase_frame(m,self.house_zones if whole else self.chase_zones,now-self.chase_started,brightness if on else 0,rgbw,loop=whole)
         if mac in self.pane_overrides:
@@ -335,7 +355,7 @@ class Group:
             key=m["mac"]
             old=self.state[key]
             effect=kwargs.get("effect", "Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else self.effects[key])
-            if effect in CHASE_EFFECTS and not ((self.house_zones if effect==HOUSE_CHASE else self.chase_zones) and len(members)==len(self.members)):
+            if effect in CHASE_EFFECTS and not (self.chase_geometry(effect) and len(members)==len(self.members)):
                 if "effect" in kwargs:
                     raise HomeAssistantError("Window Chase requires the complete Front group")
                 effect="Solid"
@@ -855,7 +875,7 @@ class PhysicalGroupLight(LightEntity):
     @property
     def effect_list(self):
         common=set.intersection(*(set(self.group.patterns[m["mac"]]) for m in self.group.members))
-        return ["Solid",*sorted(common),*([WINDOW_CHASE] if self.group.chase_zones else []),*([HOUSE_CHASE] if self.group.house_zones else []),*self.group.movies]
+        return ["Solid",*sorted(common),*([WINDOW_CHASE] if self.group.chase_zones else []),*([HOUSE_CHASE] if self.group.house_zones else []),*([SLIDE_CHASE] if getattr(self.group,"slide_zones",[]) else []),*self.group.movies]
 
     @property
     def effect(self):
@@ -877,7 +897,7 @@ class PhysicalGroupLight(LightEntity):
         if effect and effect.startswith("Movie: "):
             await self.group.play_movie(effect,kwargs.get("brightness",self.brightness))
         else:
-            if effect in CHASE_EFFECTS and not (self.group.house_zones if effect==HOUSE_CHASE else self.group.chase_zones):
+            if effect in CHASE_EFFECTS and not self.group.chase_geometry(effect):
                 raise HomeAssistantError("Window Chase requires all six mapped windows")
             await update_together([(self.group,self.group.members)],True,kwargs)
 
