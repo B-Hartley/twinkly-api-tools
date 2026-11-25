@@ -53,6 +53,25 @@ import_3d_maps:
   name: Import 3D map archives
   description: Import private CLI reference files from /config/twinkly_3d_import/by-mac. Verify live controller MAC and LED count without changing group membership or layouts.
 
+  fields:
+    overwrite:
+      name: Overwrite existing 3D maps
+      description: Replace conflicting saved references, retaining the previous versions.
+      default: false
+      selector:
+        boolean: {}
+    allow_unverified:
+      name: Import unavailable or unconfigured controllers
+      description: Accept checksum-validated references without live identity verification. Known LED count mismatches are still rejected.
+      default: false
+      selector:
+        boolean: {}
+    confirmation:
+      name: Confirmation
+      description: Type IMPORT to enable either option above.
+      selector:
+        text: {}
+
 verify_cloud_session:
   name: Verify cloud session
   description: Read cloud installations, automatically renewing the cached cloud token if needed. Does not change light sets or groups.
