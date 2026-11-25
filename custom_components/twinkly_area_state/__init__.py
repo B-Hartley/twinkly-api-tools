@@ -529,7 +529,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     lock = asyncio.Lock()
     session = async_get_clientsession(hass)
 
+    def guard():
+        hass.data[DOMAIN][entry.entry_id]["mapping"].guard()
+
     async def collect(name):
+        guard()
         # Capture sequentially: the device's local API tokens can be affected by
         # other active clients; avoid overlapping session setup unnecessarily.
         result = []
@@ -558,6 +562,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def capture_layout_diagnostics(call: ServiceCall):
         """Explicit opt-in raw layout diagnostics, never log secrets or responses."""
         async with lock:
+            guard()
             directory = hass.config.path("twinkly_area_diagnostics")
             completed = []
             for device in devices:
@@ -631,6 +636,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         from homeassistant.exceptions import HomeAssistantError
         async with lock:
             try:
+                guard()
                 incoming = await hass.async_add_executor_job(
                     read_archives, hass.config.path("twinkly_3d_import"))
                 identities = {}
@@ -743,6 +749,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=vol.Schema({vol.Required("name"): STATE_NAME,
                            vol.Required("left"): str, vol.Required("right"): str}))
     async def resume_movie(call: ServiceCall):
+        guard()
         for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
             await group.stop(movie=True)
 
@@ -750,6 +757,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cloud = CloudSession(hass, entry.entry_id)
 
     async def verify_cloud_session(call: ServiceCall):
+        guard()
         await cloud.get("/v3/installations")
         async_create(hass, "Cloud authentication verified. Cached tokens will renew automatically when required.",
                      title="Twinkly cloud session", notification_id=f"{DOMAIN}_cloud_session")
@@ -767,14 +775,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "import_3d_maps": import_3d_maps,
                     "verify_archives": verify_archives},
     }
-    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])
+    from .mapping_mode import MappingMode
+    ctx=hass.data[DOMAIN][entry.entry_id]
+    mapping=MappingMode(hass,ctx,Store(hass,1,f"{DOMAIN}.mapping_mode"),query,session)
+    ctx["mapping"]=mapping
+    await mapping.load()
+    if mapping.enabled:
+        await mapping.suspend_native()
+    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light", "switch"])
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
-        await group.stop()
-    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light"]):
+    ctx=hass.data[DOMAIN][entry.entry_id]
+    if not ctx["mapping"].enabled:
+        for group in ctx.get("virtual_groups", []):
+            await group.stop()
+    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light", "switch"]):
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
