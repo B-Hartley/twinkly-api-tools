@@ -33,6 +33,9 @@ class Show:
                  self.hass.states.get(e).state in ("unavailable","unknown")]
         if missing:
             raise HomeAssistantError("Show lights unavailable: "+", ".join(missing))
+        self.guard()
+        if self.task and not self.task.done():
+            raise HomeAssistantError("Christmas show already running")
         self.task=self.hass.async_create_background_task(
             self.run(plan,call.data),"Christmas.exe")
 
@@ -44,8 +47,8 @@ class Show:
     async def run(self,plan,options):
         speaker=plan["speaker"]
         state=self.hass.states.get(speaker)
-        audio=options.get("audio",True) and state is not None
-        audio=audio and state.state in ("idle","paused","standby","off")
+        audio=options.get("audio",True) and bool(options.get("audio_base")) and state is not None
+        audio=audio and state.state in ("idle","standby","off")
         # Never interrupt a playing speaker or an existing Sonos group.
         audio=audio and len(state.attributes.get("group_members") or [speaker])<=1
         volume=state.attributes.get("volume_level") if audio else None
