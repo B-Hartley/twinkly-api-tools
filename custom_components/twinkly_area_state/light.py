@@ -29,6 +29,7 @@ class Group:
         self.entities=[]
         self.task=None
         self.active=False
+        self.mapping_guard=lambda: None
         self.error=False
         self.previous=None
         self.expiry={}
@@ -121,6 +122,16 @@ class Group:
 
     def any_on(self):
         return any(self.member_on(m["mac"]) for m in self.members)
+
+    def suspend_local(self):
+        self.active=False
+        if self.task:
+            self.task.cancel()
+            self.task=None
+        self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
+        self.pane_overrides.clear()
+        self.pane_states.clear()
+        self.notify()
 
     async def finish_idle(self):
         """Called under lock after committing the last off request."""
@@ -224,6 +235,7 @@ class Group:
     async def update_pane(self,m,index,on,kwargs):
         mac=m["mac"]
         async with self.lock:
+            getattr(self,"mapping_guard",lambda: None)()
             if mac not in self.pane_maps:
                 raise HomeAssistantError("Capture a valid pane map first")
             if not on and not self.active:
@@ -320,6 +332,8 @@ async def update_together(targets,on,kwargs,combined=False):
     if not targets:
         return
     async with targets[0][0].lock:
+        for g,_ in targets:
+            getattr(g,"mapping_guard",lambda: None)()
         targets=[(g,members) for g,members in targets if on or g.active or g.error]
         if not targets:
             return
@@ -583,6 +597,10 @@ async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
     from .realtime import basic_group_members
     ctx=hass.data[DOMAIN][entry.entry_id]
+    if ctx["mapping"].enabled:
+        ctx["virtual_groups"]=[]
+        ctx["combined_bushes"]=[]
+        return
     from .config_flow import configured_twinkly_devices
     from .realtime import standalone_member
     # Keep configured private addresses and include newly added native controllers.
@@ -622,6 +640,7 @@ async def async_setup_entry(hass,entry,async_add_entities):
             try:
                 members=[standalone_member(*items[0])] if uid.startswith("standalone:") else basic_group_members(items)
                 group=Group(hass,members,ctx["lock"],query)
+                group.mapping_guard=ctx["mapping"].guard
                 group.load_maps(data)
                 group.entities=[VirtualLight(group,m) for m in members]
                 group.entities.extend(PaneLight(group,m,i) for m in members for i in range(DEFAULTS.get(" ".join(m["name"].casefold().split()),0)))
