@@ -119,8 +119,11 @@ class Show:
                                 if cue.get("stored_movie"):
                                     movies=sorted(e for e in effects if e.startswith("Movie: "))
                                     effect=movies[cue.get("movie_index",0)%len(movies)] if movies else None
+                                if effect not in effects and cue.get("fallback_effect") in effects:
+                                    effect=cue["fallback_effect"]
                                 if effect and effect in effects:
-                                    await self.call("light","turn_on",target,**data,effect=effect)
+                                    extra={"rgb_color":cue["rgb"]} if effect in ("Window Chase","House and Garden Chase") and "rgb" in cue else {}
+                                    await self.call("light","turn_on",target,**data,effect=effect,**extra)
                                 else:
                                     _LOGGER.warning("Show effect unavailable for %s; using solid fallback",target)
                                     await self.call("light","turn_on",target,**data,effect="Solid",rgb_color=cue["fallback_rgb"])
