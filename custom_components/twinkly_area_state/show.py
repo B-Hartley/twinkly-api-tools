@@ -29,6 +29,23 @@ class Show:
             raise HomeAssistantError("Christmas show already running")
         plan=await self.hass.async_add_executor_job(
             lambda: json.loads(Path(__file__).with_name("christmas_show.json").read_text(encoding="utf-8")))
+        # Resolve logical show keys to actual registry IDs, including existing
+        # installations whose IDs were retained or renamed by the user.
+        by_key={}
+        for group in self.ctx.get("virtual_groups",[]):
+            for entity in group.entities:
+                key=getattr(entity,"show_key",None)
+                if key and entity.entity_id:
+                    if key in by_key and by_key[key]!=entity.entity_id:
+                        raise HomeAssistantError("Ambiguous show light: "+key)
+                    by_key[key]=entity.entity_id
+        unknown=[key for key in plan["targets"] if key not in by_key]
+        if unknown:
+            raise HomeAssistantError("Show lights not registered: "+", ".join(unknown))
+        for section in plan["sections"]:
+            for cue in section["cues"]:
+                cue["targets"]=[by_key[key] for key in cue["targets"]]
+        plan["targets"]=[by_key[key] for key in plan["targets"]]
         missing=[e for e in plan["targets"] if not self.hass.states.get(e) or
                  self.hass.states.get(e).state in ("unavailable","unknown")]
         if missing:
