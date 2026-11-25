@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .panes import DEFAULTS, pane_indices, pane_label, composite
-from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
+from .realtime import pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map, VERTICAL_RAINBOW, vertical_rainbow
 
 _LOGGER=logging.getLogger(__name__)
 MODE="/xled/v1/led/mode"
@@ -36,6 +36,7 @@ class Group:
         self.geometry={}
         self.pane_maps={}
         self.pane_states={}
+        self.pane_effects={}
         self.pane_overrides=set()
         self.combined_geometry={}
         self.combined_selected=set()
@@ -97,6 +98,13 @@ class Group:
                     patterns.update({name:None for name in SPIRAL_EFFECTS})
                 except (ValueError,KeyError,TypeError) as exc:
                     _LOGGER.warning("%s: spiral unavailable: %s",m["name"],exc)
+            for reference in (original, saved):
+                if reference and reference.get("led_count")==m["led_count"]:
+                    try:
+                        patterns[VERTICAL_RAINBOW]=vertical_rainbow(reference["layout"],m["led_count"],m["width"])
+                        break
+                    except (ValueError,KeyError,TypeError) as exc:
+                        _LOGGER.warning("%s: vertical rainbow unavailable: %s",m["name"],exc)
             name=" ".join(m["name"].casefold().split())
             if name in DEFAULTS:
                 config=data.get("_virtual_panes",{}).get(mac,{})
@@ -133,13 +141,23 @@ class Group:
             geometry=self.combined_geometry.get(m["mac"],self.geometry[m["mac"]]) if m["mac"] in self.combined_selected else self.geometry[m["mac"]]
             frame=spiral_frame(geometry,m["width"],effect,now,rgbw,brightness if on else 0)
         mac=m["mac"]
+        if effect==VERTICAL_RAINBOW and mac in self.combined_selected and mac in self.combined_geometry:
+            # Combined geometry already carries normalized whole-bush height.
+            import colorsys
+            pixels=[]
+            for _,height in self.combined_geometry[mac]:
+                rgb=tuple(round(c*brightness) if on else 0 for c in colorsys.hsv_to_rgb((1-height)*5/6,1,1))
+                pixels.extend((0,)+rgb if m["width"]==4 else rgb)
+            frame=bytes(pixels)
         if mac in self.pane_overrides:
             frame=bytearray(frame)
             for i,indices in enumerate(self.pane_maps.get(mac,[])):
                 enabled,level,color=self.pane_states[(mac,i)]
                 r,g,b,w=(round(c*level/255) if enabled else 0 for c in color)
                 pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
-                composite(frame,m["width"],indices,pixel*m["led_count"])
+                pane_pattern=self.patterns[mac].get(self.pane_effects.get((mac,i),"Solid"))
+                replacement=bytes(round(c*level/255) if enabled else 0 for c in pane_pattern) if pane_pattern is not None else pixel*m["led_count"]
+                composite(frame,m["width"],indices,replacement)
             frame=bytes(frame)
         for attempt in range(3):
             try:
@@ -203,13 +221,19 @@ class Group:
             if starting:
                 await self.prepare_start()
             old_states=self.pane_states.copy()
+            old_effects=self.pane_effects.copy()
             old_overrides=self.pane_overrides.copy()
             try:
                 if mac not in self.pane_overrides:
                     for i in range(len(self.pane_maps[mac])):
                         self.pane_states[(mac,i)]=self.state[mac]
+                        self.pane_effects[(mac,i)]=VERTICAL_RAINBOW if self.effects[mac]==VERTICAL_RAINBOW else "Solid"
                 self.pane_overrides.add(mac)
                 old=self.pane_states[(mac,index)]
+                effect=kwargs.get("effect","Solid" if "rgb_color" in kwargs or "rgbw_color" in kwargs else self.pane_effects[(mac,index)])
+                if effect!="Solid" and (effect!=VERTICAL_RAINBOW or effect not in self.patterns[mac]):
+                    raise HomeAssistantError("Pane rainbow requires a captured map")
+                self.pane_effects[(mac,index)]=effect
                 color=tuple(kwargs.get("rgbw_color",kwargs.get("rgb_color",old[2])))
                 if len(color)==3:
                     color+=(0,)
@@ -219,6 +243,7 @@ class Group:
                 await self.send()
             except BaseException:
                 self.pane_states=old_states
+                self.pane_effects=old_effects
                 self.pane_overrides=old_overrides
                 if starting:
                     await asyncio.gather(self.restore(),return_exceptions=True)
@@ -269,6 +294,7 @@ class Group:
             self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
             self.pane_overrides.clear()
             self.pane_states.clear()
+            self.pane_effects.clear()
             self.notify()
 
 async def update_together(targets,on,kwargs,combined=False):
@@ -400,6 +426,7 @@ class CombinedBush(LightEntity):
         common=set.intersection(*(set(g.patterns[m["mac"]]) for g,m in self.parts))
         if self.combined_map is None:
             common.difference_update(SPIRAL_EFFECTS)
+            common.discard(VERTICAL_RAINBOW)
         return ["Solid", *sorted(common)]
 
     @property
@@ -479,7 +506,7 @@ class VirtualLight(LightEntity):
             await self.group.update(self.member,False,{})
 
 class PaneLight(VirtualLight):
-    _attr_supported_features=LightEntityFeature(0)
+    _attr_supported_features=LightEntityFeature.EFFECT
 
     def __init__(self,group,m,index):
         super().__init__(group,m)
@@ -511,11 +538,14 @@ class PaneLight(VirtualLight):
 
     @property
     def effect_list(self):
-        return None
+        return ["Solid", *([VERTICAL_RAINBOW] if VERTICAL_RAINBOW in self.group.patterns[self.member["mac"]] else [])]
 
     @property
     def effect(self):
-        return None
+        mac=self.member["mac"]
+        if mac in self.group.pane_overrides:
+            return self.group.pane_effects.get((mac,self.index),"Solid")
+        return VERTICAL_RAINBOW if self.group.effects[mac]==VERTICAL_RAINBOW else "Solid"
 
     @property
     def extra_state_attributes(self):
