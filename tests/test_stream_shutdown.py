@@ -1,4 +1,6 @@
 import ast
+import base64
+import os
 import asyncio
 import time
 from pathlib import Path
@@ -8,7 +10,7 @@ from unittest.mock import AsyncMock, Mock
 source=Path(__file__).resolve().parents[1]/"custom_components/twinkly_area_state/light.py"
 tree=ast.parse(source.read_text(encoding="utf-8"))
 nodes=[n for n in tree.body if getattr(n,"name",None) in ("Group","update_together")]
-ns={"asyncio":asyncio,"time":time,"WINDOW_CHASE":"Window Chase","HOUSE_CHASE":"House and Garden Chase","CHASE_EFFECTS":("Window Chase","House and Garden Chase")}
+ns={"asyncio":asyncio,"base64":base64,"os":os,"HomeAssistantError":RuntimeError,"_LOGGER":Mock(),"time":time,"WINDOW_CHASE":"Window Chase","HOUSE_CHASE":"House and Garden Chase","CHASE_EFFECTS":("Window Chase","House and Garden Chase")}
 exec(compile(ast.Module(body=nodes,type_ignores=[]),str(source),"exec"),ns)
 Group=ns["Group"]
 update=ns["update_together"]
@@ -35,6 +37,8 @@ def group(two=False):
     g.active=True
     g.error=False
     g.task=Mock()
+    g.tokens={}
+    g.expiry={}
     g.login=AsyncMock()
     g.mode=AsyncMock()
     g.member_mode=AsyncMock()
@@ -119,5 +123,39 @@ class ShutdownTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({s[1] for s in g.state.values()},{64})
         await update([(g,g.members)],True,{"effect":"Solid"})
         self.assertEqual(set(g.effects.values()),{"Solid"})
+        await update([(g,g.members)],False,{})
+        self.assertFalse(g.active)
+
+    async def test_authentication_retry_and_reuse(self):
+        g=group()
+        del g.login
+        g.call=AsyncMock(side_effect=[RuntimeError("TimeoutError:"),{"authentication_token":"token","challenge-response":"proof"},{}])
+        await g.ensure_login(g.master)
+        self.assertEqual(g.tokens["a"],"token")
+        self.assertEqual(g.call.await_count,3)
+        self.assertNotEqual(g.call.await_args_list[0].kwargs["payload"],g.call.await_args_list[1].kwargs["payload"])
+        await g.ensure_login(g.master)
+        self.assertEqual(g.call.await_count,3)
+
+    async def test_group_shutdown_reuses_tokens(self):
+        g=group(True)
+        g.tokens={m["mac"]:"token" for m in g.members}
+        g.expiry={m["mac"]:time.monotonic()+600 for m in g.members}
+        await update([(g,g.members)],False,{})
+        g.login.assert_not_awaited()
+        g.black_frames.assert_awaited_once_with(1)
+
+    async def test_hold_black_between_cues(self):
+        g=group()
+        g.hold_idle=True
+        await update([(g,g.members)],False,{})
+        self.assertTrue(g.active)
+        self.assertFalse(g.any_on())
+        g.member_mode.assert_not_awaited()
+        g.send.assert_awaited_once()
+        await update([(g,g.members)],True,{"rgb_color":(0,255,0)})
+        self.assertTrue(g.any_on())
+        g.login.assert_not_awaited()
+        g.hold_idle=False
         await update([(g,g.members)],False,{})
         self.assertFalse(g.active)
