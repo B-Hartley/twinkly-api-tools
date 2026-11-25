@@ -33,7 +33,7 @@
     {
       "id": "01_power_on",
       "duration": 5,
-      "voice": "Power supply online.",
+      "voice": "Ho, ho, ho! Santa here. Power on!",
       "cues": [
         {
           "at": 0,
@@ -192,7 +192,7 @@
     {
       "id": "02_initialising",
       "duration": 5,
-      "voice": "Initialising Christmas lighting system.",
+      "voice": "Time to wake up some Christmas magic!",
       "cues": [
         {
           "at": 0,
@@ -351,7 +351,7 @@
     {
       "id": "03_diagnostics",
       "duration": 15,
-      "voice": "Running window and garden diagnostics.",
+      "voice": "One bush at a time. And now the windows. Splendid!",
       "cues": [
         {
           "at": 0,
@@ -680,7 +680,7 @@
     {
       "id": "04_system_online",
       "duration": 5,
-      "voice": "All systems online.",
+      "voice": "All systems ready. Lovely!",
       "cues": [
         {
           "at": 0,
@@ -781,7 +781,7 @@
     {
       "id": "05_demo_music",
       "duration": 15,
-      "voice": "",
+      "voice": "Let's add some rainbow magic!",
       "cues": [
         {
           "at": 0,
@@ -929,7 +929,7 @@
     {
       "id": "06_critical_error",
       "duration": 5,
-      "voice": "Warning. Christmas spirit overflow.",
+      "voice": "Oh dear! Too much Christmas spirit!",
       "cues": [
         {
           "at": 0,
@@ -1008,7 +1008,7 @@
     {
       "id": "07_system_crash",
       "duration": 4,
-      "voice": "Critical error. System shutdown.",
+      "voice": "Oh bother! The elves warned me!",
       "cues": [
         {
           "at": 0,
@@ -1064,7 +1064,7 @@
     {
       "id": "09_recovery",
       "duration": 12,
-      "voice": "Emergency recovery. Restarting lighting controllers.",
+      "voice": "Come on, Rudolph! Let's give it another go. Round the house we go!",
       "cues": [
         {
           "at": 0,
@@ -1178,7 +1178,7 @@
     {
       "id": "10_christmas_unlocked",
       "duration": 5,
-      "voice": "Recovery complete. Maximum Christmas mode enabled.",
+      "voice": "Maximum Christmas magic! Here we go!",
       "cues": [
         {
           "at": 0,
@@ -1277,7 +1277,7 @@
     {
       "id": "12_startup_complete",
       "duration": 6,
-      "voice": "Christmas startup complete. Merry Christmas!",
+      "voice": "Ho, ho, ho! Merry Christmas, everyone!",
       "cues": []
     }
   ]
