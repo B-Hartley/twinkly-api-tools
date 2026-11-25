@@ -1126,24 +1126,7 @@
           "brightness": 120
         },
         {
-          "at": 4.8,
-          "targets": [
-            "light.twinkly_landing_pane_2",
-            "light.twinkly_office_right_pane_1",
-            "light.twinkly_lounge_pane_2",
-            "light.twinkly_bar_pane_3",
-            "light.twinkly_light_tree",
-            "light.twinkly_back_right_bush"
-          ],
-          "rgb": [
-            255,
-            150,
-            30
-          ],
-          "brightness": 120
-        },
-        {
-          "at": 6.5,
+          "at": 3.5,
           "targets": [
             "light.twinkly_master_bedroom_left",
             "light.twinkly_master_bedroom_right",
@@ -1172,11 +1155,17 @@
           "brightness": 160
         },
         {
-          "at": 8,
+          "at": 4,
           "targets": [
             "light.twinkly_front"
           ],
-          "effect": "Window Chase",
+          "effect": "House and Garden Chase",
+          "fallback_effect": "Window Chase",
+          "fallback_rgb": [
+            255,
+            180,
+            80
+          ],
           "rgb": [
             255,
             180,
