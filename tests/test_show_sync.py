@@ -296,6 +296,41 @@ class ShowSyncTests(unittest.IsolatedAsyncioTestCase):
             await self.show.run(plan(), {"audio_base": URL.rsplit("/", 1)[0]})
         self.assertLess(order.index("media_stop"), order.index("stop_lights"))
 
+    def test_ahead_and_behind_drift_slews_without_replaying_time(self):
+        for error in (3.0, -3.0):
+            self.show = Show(self.hass, {})
+            self.clock.value = 10
+            self.playing(position=10+error)
+            audio = (SPEAKER, URL, 0, 140)
+            self.show.check_audio(audio)
+            previous = 10.0
+            for _ in range(24):
+                self.clock.value += .25
+                self.show.check_audio(audio)
+                corrected = self.clock.value-self.show._clock_correction
+                self.assertGreater(corrected, previous)
+                self.assertLessEqual(abs(corrected-previous-.25), .125001)
+                previous = corrected
+            self.assertLessEqual(abs(self.show._clock_correction+error), .451)
+
+    def test_quantisation_noise_does_not_move_clock(self):
+        self.clock.value = 10
+        self.playing(position=10.3)
+        audio = (SPEAKER, URL, 0, 140)
+        self.show.check_audio(audio)
+        self.clock.value += .5
+        self.show.check_audio(audio)
+        self.assertEqual(self.show._clock_correction, 0)
+
+    async def test_corrected_deadline_follows_sonos_in_both_directions(self):
+        for error in (2.5, -2.5):
+            self.show = Show(self.hass, {})
+            self.clock.value = 10
+            self.playing(position=10+error)
+            await self.show.wait_until(18, (SPEAKER, URL, 0, 140))
+            actual = self.clock.value + error
+            self.assertLess(abs(actual-18), .5)
+
     def test_sustained_seek_aborts_without_chasing_a_new_clock(self):
         self.clock.value = 3
         self.playing(position=45)
