@@ -198,8 +198,17 @@ def slide_geometry(members,pane_maps,maps_3d,maps_2d):
                 raise ValueError("Duplicate route LED")
             seen.add((mac,i))
             pixels.setdefault(mac,[]).append((i,(v-lo)/(hi-lo)))
-        stops.append(dict(bush=bush,pixels=pixels,hold=BUSH_HOLD if bush else PANE_HOLD,
-                          transfer=BUSH_TRANSFER if bush else PANE_TRANSFER))
+        stops.append(dict(bush=bush,pixels=pixels,span=hi-lo,
+                          hold=BUSH_HOLD if bush else PANE_HOLD))
+    # Scale the transfer time using both projected widths, within practical
+    # limits. The footprint itself grows/shrinks to fill each zone exactly.
+    for i,stop in enumerate(stops):
+        following=stops[(i+1)%len(stops)]
+        peers=[s["span"] for s in stops if s["bush"]==stop["bush"]]
+        median=sorted(peers)[len(peers)//2]
+        ratio=(stop["span"]+following["span"])/(2*median)
+        nominal=BUSH_TRANSFER if stop["bush"] or following["bush"] else PANE_TRANSFER
+        stop["transfer"]=nominal*max(.8,min(1.3,math.sqrt(ratio)))
     return stops
 
 def slide_duration(stops):
