@@ -1,7 +1,7 @@
 {
   "domain": "twinkly_area_state",
   "name": "Twinkly Area Manager",
-  "version": "0.3.22",
+  "version": "0.3.23",
   "documentation": "https://github.com/B-Hartley/twinkly-api-tools",
   "issue_tracker": "https://github.com/B-Hartley/twinkly-api-tools/issues",
   "codeowners": [

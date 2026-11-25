@@ -23,6 +23,13 @@ class Show:
         await self.hass.services.async_call(domain,service,
             {"entity_id":entity,**data},blocking=True)
 
+    async def release_holds(self):
+        for group in self.ctx.get("virtual_groups",[]):
+            async with group.lock:
+                group.hold_idle=False
+                if group.active and not group.any_on():
+                    await group.finish_idle()
+
     async def start(self,call):
         self.guard()
         if self.task and not self.task.done():
@@ -104,10 +111,18 @@ class Show:
                         _LOGGER.warning("Show audio unavailable; continuing silently: %s",exc)
                         audio=False
                 start=loop.time()+ (options.get("offset_ms",0)/1000 if audio else 0)
-                for cue in sorted(section["cues"],key=lambda c:c["at"]):
+                cues=sorted(section["cues"],key=lambda c:c["at"])
+                for index,cue in enumerate(cues):
                     await asyncio.sleep(max(0,start+cue["at"]-loop.time()))
                     self.guard()
                     if cue.get("off") or options.get("brightness_pct",2)==0:
+                        following=cues[index+1] if index+1<len(cues) else None
+                        if (options.get("brightness_pct",2)>0 and following and
+                                not following.get("off") and following["at"]-cue["at"]<=.1):
+                            for group in self.ctx.get("virtual_groups",[]):
+                                group.hold_idle=True
+                        else:
+                            await self.release_holds()
                         await self.call("light","turn_off",cue["targets"])
                     else:
                         data={"brightness":max(1,round(cue["brightness"]*options.get("brightness_pct",2)/100))}
@@ -133,9 +148,12 @@ class Show:
                             if "effect" in cue:
                                 data["effect"]=cue["effect"]
                             await self.call("light","turn_on",cue["targets"],**data)
+                        await self.release_holds()
                 await asyncio.sleep(max(0,start+section["duration"]-loop.time()))
         except asyncio.CancelledError:
             try:
+                for group in self.ctx.get("virtual_groups",[]):
+                    group.hold_idle=False
                 self.guard()
                 await self.call("light","turn_off",plan["targets"])
             except Exception:
@@ -144,11 +162,17 @@ class Show:
         except Exception:
             _LOGGER.exception("Christmas show failed")
             try:
+                for group in self.ctx.get("virtual_groups",[]):
+                    group.hold_idle=False
                 self.guard()
                 await self.call("light","turn_off",plan["targets"])
             except Exception:
                 _LOGGER.exception("Show cleanup failed")
         finally:
+            try:
+                await self.release_holds()
+            except Exception:
+                _LOGGER.exception("Show idle stream cleanup failed")
             if owned:
                 try:
                     await self.call("media_player","media_stop",speaker)

@@ -31,6 +31,7 @@ class Group:
         self.entities=[]
         self.task=None
         self.active=False
+        self.hold_idle=False
         self.error=False
         self.previous=None
         self.movies={}
@@ -62,21 +63,43 @@ class Group:
         return r["data"]
 
     async def login(self,m):
-        challenge=base64.b64encode(os.urandom(32)).decode()
-        d=await self.call(m,"/xled/v1/login",method="POST",payload={"challenge":challenge})
-        token=d["authentication_token"]
-        await self.call(m,"/xled/v1/verify",method="POST",token=token,
-                        payload={"challenge-response":d["challenge-response"]})
-        self.tokens[m["mac"]]=token
-        lifetime=d.get("authentication_token_expires_in",14400)
-        self.expiry[m["mac"]]=time.monotonic()+max(1,float(lifetime)-30)
+        mac=m["mac"]
+        self.tokens.pop(mac,None)
+        self.expiry.pop(mac,None)
+        for attempt in range(3):
+            try:
+                # A fresh challenge for each attempt; never replay a verify request.
+                challenge=base64.b64encode(os.urandom(32)).decode()
+                d=await self.call(m,"/xled/v1/login",method="POST",payload={"challenge":challenge})
+                token=d["authentication_token"]
+                await self.call(m,"/xled/v1/verify",method="POST",token=token,
+                                payload={"challenge-response":d["challenge-response"]})
+                lifetime=float(d.get("authentication_token_expires_in",14400))
+                self.tokens[mac]=token
+                self.expiry[mac]=time.monotonic()+max(1,lifetime-30)
+                return
+            except HomeAssistantError as exc:
+                if attempt==2 or not any(x in str(exc) for x in ("TimeoutError","ClientConnectionError","ClientOSError","ServerDisconnectedError","ConnectionResetError","HTTP 503","HTTP 502")):
+                    raise
+                _LOGGER.warning("%s: authentication attempt %s failed; retrying",m["name"],attempt+1)
+                await asyncio.sleep(.5*(attempt+1))
+
+    async def ensure_login(self,m):
+        if m["mac"] not in self.tokens or time.monotonic()>=self.expiry.get(m["mac"],0):
+            await self.login(m)
 
     async def validate_member(self,m):
         g=await self.call(m,"/xled/v1/gestalt")
         if str(g.get("mac","")).lower().replace(":","").replace("-","")!=m["mac"] or g.get("number_of_led")!=m["led_count"] or pixel_width(g)!=m["width"]:
             raise HomeAssistantError("Controller identity or pixel format changed")
-        await self.login(m)
-        d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
+        await self.ensure_login(m)
+        try:
+            d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
+        except HomeAssistantError as exc:
+            if not any(x in str(exc) for x in ("HTTP 401","HTTP 403","Device code 1101")):
+                raise
+            await self.login(m)
+            d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
         group=d["group"]
         if m["role"]=="none":
             if group.get("mode")!="none":
@@ -165,6 +188,14 @@ class Group:
 
     def any_on(self):
         return any(self.member_on(m["mac"]) for m in self.members)
+
+    async def idle_or_hold(self):
+        """Keep a black frame stream only during a bounded show transition."""
+        if getattr(self,"hold_idle",False) and self.active and not self.error:
+            await self.send()
+            self.notify()
+            return
+        await self.finish_idle()
 
     async def finish_idle(self):
         """Called under lock after committing the last off request."""
@@ -289,7 +320,7 @@ class Group:
     async def shutdown(self,value):
         try:
             if self.master["role"]!="none":
-                await self.all_members(self.login)
+                await self.all_members(self.ensure_login)
                 await self.black_frames(1)
         finally:
             await self.all_members(lambda m:self.member_mode(m,value))
@@ -454,7 +485,7 @@ class Group:
                     await asyncio.gather(self.restore(),return_exceptions=True)
                 raise
             if not self.any_on():
-                await self.finish_idle()
+                await self.idle_or_hold()
                 return
             if starting:
                 self.active=True
@@ -569,7 +600,7 @@ async def update_together(targets,on,kwargs,combined=False):
         # Off operations are committed before hardware shutdown; never roll back
         # to a streaming state if an off command fails.
         idle=[g for g,_ in changes if not g.any_on()]
-        results=await asyncio.gather(*(g.finish_idle() for g in idle),return_exceptions=True)
+        results=await asyncio.gather(*(g.idle_or_hold() for g in idle),return_exceptions=True)
         for g in starting:
             g.active=True
             g.error=False
