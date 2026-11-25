@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 _MODE = "/xled/v1/led/mode"
-_CHASES = ("Window Chase", "House and Garden Chase")
+_CHASES = ("Window Chase", "House and Garden Chase", "Bush and Window Chase V2")
 
 
 async def _complete(awaitables):
@@ -239,7 +239,8 @@ class ShowLights:
             old = draft["state"][key]
             effect = data.get("effect", "Solid" if "rgb_color" in data else draft["effects"][key])
             if effect in _CHASES:
-                zones = group.house_zones if effect == "House and Garden Chase" else group.chase_zones
+                zones = (getattr(group, "slide_zones", []) if effect == "Bush and Window Chase V2" else
+                         group.house_zones if effect == "House and Garden Chase" else group.chase_zones)
                 if not zones or len(members) != len(group.members):
                     if "effect" in data:
                         raise HomeAssistantError("Show chase requires the complete mapped Front group")

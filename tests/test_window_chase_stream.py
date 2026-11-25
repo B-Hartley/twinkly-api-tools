@@ -54,3 +54,42 @@ class WindowChaseTests(unittest.TestCase):
         self.assertEqual(wc.house_zones(self.members+extra[:-1],maps),[])
         extra[2]["name"]="Backl Bush"
         self.assertEqual(wc.house_zones(self.members+extra,maps),zones)
+
+
+class SlideChaseTests(unittest.TestCase):
+    def setUp(self):
+        names=["front left top","front left bottom","front right bush","mid right",
+               "back left bush","back bush top","back bush bottom",*wc.SLIDE_WINDOWS]
+        self.members=[dict(name=n,mac=n,led_count=4,width=4 if i%2 else 3) for i,n in enumerate(names)]
+        self.panes={n:[[0,1],[2,3]] for n in ("front right bush",*wc.SLIDE_WINDOWS)}
+        self.screen={}
+        self.originals={}
+        for i,n in enumerate(names):
+            coords=[dict(x=i*3+j*.4,y=(j%2)*.1) for j in range(4)]
+            self.screen[n]=dict(source="2d",coordinates=coords)
+            self.originals[n]=dict(source="3d",coordinates=[dict(x=j,y=j%2,z=(j%3)*.2) for j in range(4)])
+        self.stops=wc.slide_geometry(self.members,self.panes,self.originals,self.screen)
+
+    def test_route_combined_bushes_and_lounge_handoff(self):
+        self.assertEqual(len(self.stops),18)
+        self.assertEqual(set(self.stops[0]["pixels"]),{"front left top","front left bottom"})
+        self.assertEqual(set(self.stops[1]["pixels"]),{"front right bush"})
+        self.assertEqual(set(self.stops[2]["pixels"]),{"front right bush"})
+        self.assertEqual(set(self.stops[5]["pixels"]),{"back bush top","back bush bottom"})
+        self.assertEqual(set(self.stops[6]["pixels"]),{"lounge"})
+
+    def test_whole_zone_and_spatial_transfer(self):
+        first=self.members[0]
+        full=wc.slide_frame(first,self.stops,0,255,(255,180,80,0))
+        self.assertTrue(all(any(full[i:i+3]) for i in range(0,12,3)))
+        t=self.stops[0]["hold"]+self.stops[0]["transfer"]*.5
+        middle=wc.slide_frame(first,self.stops,t,255,(255,180,80,0))
+        self.assertGreater(len(set(middle[i:i+3] for i in range(0,12,3))),1)
+        end=wc.slide_duration(self.stops)
+        self.assertEqual(full,wc.slide_frame(first,self.stops,end,255,(255,180,80,0)))
+        self.assertEqual(wc.slide_frame(first,self.stops,t,0,(255,180,80,0)),bytes(12))
+
+    def test_missing_3d_rejected(self):
+        del self.originals["back bush bottom"]
+        with self.assertRaises(ValueError):
+            wc.slide_geometry(self.members,self.panes,self.originals,self.screen)

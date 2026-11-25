@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, Mock
 source=Path(__file__).resolve().parents[1]/"custom_components/twinkly_area_state/light.py"
 tree=ast.parse(source.read_text(encoding="utf-8"))
 nodes=[n for n in tree.body if getattr(n,"name",None) in ("Group","update_together")]
-ns={"asyncio":asyncio,"base64":base64,"os":os,"HomeAssistantError":RuntimeError,"_LOGGER":Mock(),"time":time,"WINDOW_CHASE":"Window Chase","HOUSE_CHASE":"House and Garden Chase","CHASE_EFFECTS":("Window Chase","House and Garden Chase")}
+ns={"asyncio":asyncio,"base64":base64,"os":os,"HomeAssistantError":RuntimeError,"_LOGGER":Mock(),"time":time,"WINDOW_CHASE":"Window Chase","HOUSE_CHASE":"House and Garden Chase","SLIDE_CHASE":"Bush and Window Chase V2","CHASE_EFFECTS":("Window Chase","House and Garden Chase","Bush and Window Chase V2")}
 exec(compile(ast.Module(body=nodes,type_ignores=[]),str(source),"exec"),ns)
 Group=ns["Group"]
 update=ns["update_together"]
