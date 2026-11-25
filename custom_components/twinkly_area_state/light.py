@@ -313,6 +313,7 @@ class Group:
 
     async def stop(self,movie=False):
         async with self.lock:
+            getattr(self,"mapping_guard",lambda: None)()
             if not self.active and not self.error:
                 return
             self.active=False
