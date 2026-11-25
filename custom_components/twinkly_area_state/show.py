@@ -57,7 +57,7 @@ class Show:
         try:
             if audio:
                 try:
-                    await self.call("media_player","volume_set",speaker,volume_level=options.get("volume",.4))
+                    await self.call("media_player","volume_set",speaker,volume_level=options.get("volume",.05))
                     owned=True
                 except Exception:
                     audio=False
@@ -83,11 +83,11 @@ class Show:
                 for cue in sorted(section["cues"],key=lambda c:c["at"]):
                     await asyncio.sleep(max(0,start+cue["at"]-loop.time()))
                     self.guard()
-                    if cue.get("off"):
+                    if cue.get("off") or options.get("brightness_pct",2)==0:
                         await self.call("light","turn_off",cue["targets"])
                     else:
                         await self.call("light","turn_on",cue["targets"],
-                            rgb_color=cue["rgb"],brightness=cue["brightness"])
+                            rgb_color=cue["rgb"],brightness=max(1,round(cue["brightness"]*options.get("brightness_pct",2)/100)))
                 await asyncio.sleep(max(0,start+section["duration"]-loop.time()))
         except asyncio.CancelledError:
             try:
