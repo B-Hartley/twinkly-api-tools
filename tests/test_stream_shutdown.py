@@ -22,6 +22,9 @@ def group(two=False):
     g.patterns={m["mac"]:{} for m in g.members}
     g.pane_maps={"a":[[0],[1]]}
     g.pane_states={}
+    g.pane_effects={}
+    g.pane_patterns={}
+    g.pane_geometry={}
     g.pane_overrides=set()
     g.combined_selected=set()
     g.combined_geometry={}
@@ -87,3 +90,15 @@ class ShutdownTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(g.active)
             g.member_mode.assert_awaited_once_with(g.master,"off")
             g.black_frames.assert_not_awaited()
+
+    async def test_bush_effects_independent(self):
+        g=group()
+        g.pane_patterns={("a",0):{"Static rainbow":b"abc"},("a",1):{"Rising spiral":None}}
+        await g.update_pane(g.master,0,True,{"effect":"Static rainbow"})
+        await g.update_pane(g.master,1,True,{"effect":"Rising spiral"})
+        self.assertEqual(g.pane_effects,{("a",0):"Static rainbow",("a",1):"Rising spiral"})
+        await g.update_pane(g.master,0,False,{})
+        self.assertTrue(g.active)
+        self.assertTrue(g.pane_states[("a",1)][0])
+        await g.update_pane(g.master,1,False,{})
+        self.assertFalse(g.active)
