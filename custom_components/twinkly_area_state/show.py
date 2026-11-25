@@ -46,6 +46,13 @@ class Show:
             for cue in section["cues"]:
                 cue["targets"]=[by_key[key] for key in cue["targets"]]
         plan["targets"]=[by_key[key] for key in plan["targets"]]
+        for section in plan["sections"]:
+            for cue in section["cues"]:
+                if "effect" in cue:
+                    for target in cue["targets"]:
+                        state=self.hass.states.get(target)
+                        if not state or cue["effect"] not in (state.attributes.get("effect_list") or []):
+                            raise HomeAssistantError(f"Show effect unavailable: {target}: {cue['effect']}")
         missing=[e for e in plan["targets"] if not self.hass.states.get(e) or
                  self.hass.states.get(e).state in ("unavailable","unknown")]
         if missing:
