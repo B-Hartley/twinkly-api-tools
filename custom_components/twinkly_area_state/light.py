@@ -148,8 +148,7 @@ class Group:
                 self.effects[m["mac"]]="Solid"
 
     def notify(self):
-        for e in self.entities:
-            e.async_write_ha_state()
+        self.notify_registered()
 
     def member_on(self, mac):
         if mac in self.pane_overrides:
