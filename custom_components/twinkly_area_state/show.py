@@ -48,7 +48,7 @@ class Show:
         plan["targets"]=[by_key[key] for key in plan["targets"]]
         for section in plan["sections"]:
             for cue in section["cues"]:
-                if "effect" in cue:
+                if "effect" in cue and "fallback_rgb" not in cue:
                     for target in cue["targets"]:
                         state=self.hass.states.get(target)
                         if not state or cue["effect"] not in (state.attributes.get("effect_list") or []):
@@ -111,11 +111,25 @@ class Show:
                         await self.call("light","turn_off",cue["targets"])
                     else:
                         data={"brightness":max(1,round(cue["brightness"]*options.get("brightness_pct",2)/100))}
-                        if "rgb" in cue:
-                            data["rgb_color"]=cue["rgb"]
-                        if "effect" in cue:
-                            data["effect"]=cue["effect"]
-                        await self.call("light","turn_on",cue["targets"],**data)
+                        if cue.get("stored_movie") or "fallback_rgb" in cue:
+                            for target in cue["targets"]:
+                                state=self.hass.states.get(target)
+                                effects=(state.attributes.get("effect_list") or []) if state else []
+                                effect=cue.get("effect")
+                                if cue.get("stored_movie"):
+                                    movies=sorted(e for e in effects if e.startswith("Movie: "))
+                                    effect=movies[cue.get("movie_index",0)%len(movies)] if movies else None
+                                if effect and effect in effects:
+                                    await self.call("light","turn_on",target,**data,effect=effect)
+                                else:
+                                    _LOGGER.warning("Show effect unavailable for %s; using solid fallback",target)
+                                    await self.call("light","turn_on",target,**data,effect="Solid",rgb_color=cue["fallback_rgb"])
+                        else:
+                            if "rgb" in cue:
+                                data["rgb_color"]=cue["rgb"]
+                            if "effect" in cue:
+                                data["effect"]=cue["effect"]
+                            await self.call("light","turn_on",cue["targets"],**data)
                 await asyncio.sleep(max(0,start+section["duration"]-loop.time()))
         except asyncio.CancelledError:
             try:
