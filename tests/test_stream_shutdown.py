@@ -24,6 +24,7 @@ def group(two=False):
     g.pane_states={}
     g.pane_overrides=set()
     g.combined_selected=set()
+    g.combined_geometry={}
     g.active=True
     g.error=False
     g.task=Mock()
