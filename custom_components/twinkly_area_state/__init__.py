@@ -811,6 +811,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     from .show import Show
     ctx=hass.data[DOMAIN][entry.entry_id]
+    from .playback_test import register_playback_actions
+    register_playback_actions(hass, ctx)
     show=Show(hass,ctx)
     ctx["show"]=show
     hass.services.async_register(DOMAIN,"start_christmas_show",show.start,schema=vol.Schema({
@@ -826,6 +828,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    from .playback_test import stop_playback_test
+    await stop_playback_test(hass.data[DOMAIN][entry.entry_id])
     await hass.data[DOMAIN][entry.entry_id]["show"].stop()
     for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
         await group.stop()
@@ -834,7 +838,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
-                    "start_christmas_show", "stop_christmas_show", "rescan_controllers"):
+                    "start_christmas_show", "stop_christmas_show", "rescan_controllers", "configure_playback", "test_playback", "stop_playback_test"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
