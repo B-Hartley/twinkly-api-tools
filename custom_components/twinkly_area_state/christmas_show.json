@@ -19,14 +19,12 @@
     "light.twinkly_bar_pane_2",
     "light.twinkly_bar_pane_3",
     "light.twinkly_bar_pane_4",
-    "light.twinkly_front_left_bottom",
-    "light.twinkly_front_left_top",
+    "light.twinkly_front_left_bush",
     "light.twinkly_back_left_bush",
     "light.twinkly_light_tree",
     "light.twinkly_front_right_bush",
     "light.twinkly_mid_right",
-    "light.twinkly_back_right_bottom",
-    "light.twinkly_back_right_top",
+    "light.twinkly_back_right_bush",
     "light.twinkly_icicles"
   ],
   "sections": [
@@ -55,14 +53,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "off": true
@@ -204,7 +200,7 @@
         {
           "at": 0,
           "targets": [
-            "light.twinkly_front_left_bottom"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             255,
@@ -216,7 +212,7 @@
         {
           "at": 1,
           "targets": [
-            "light.twinkly_front_left_top"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             0,
@@ -276,7 +272,7 @@
         {
           "at": 6,
           "targets": [
-            "light.twinkly_back_right_bottom"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             255,
@@ -288,7 +284,7 @@
         {
           "at": 7,
           "targets": [
-            "light.twinkly_back_right_top"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             0,
@@ -540,14 +536,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -577,14 +571,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -621,14 +613,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -658,14 +648,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -695,14 +683,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -732,14 +718,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -769,14 +753,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -806,14 +788,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -843,14 +823,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -880,14 +858,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -917,14 +893,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -954,14 +928,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -991,14 +963,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1028,14 +998,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1065,14 +1033,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1102,14 +1068,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1139,14 +1103,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1183,14 +1145,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1215,10 +1175,10 @@
         {
           "at": 3,
           "targets": [
-            "light.twinkly_front_left_bottom",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_front_right_bush",
-            "light.twinkly_back_right_bottom",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1238,14 +1198,12 @@
         {
           "at": 0,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "off": true
@@ -1295,7 +1253,7 @@
         {
           "at": 0,
           "targets": [
-            "light.twinkly_front_left_bottom"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             255,
@@ -1307,7 +1265,7 @@
         {
           "at": 1,
           "targets": [
-            "light.twinkly_front_left_top"
+            "light.twinkly_front_left_bush"
           ],
           "rgb": [
             255,
@@ -1367,7 +1325,7 @@
         {
           "at": 6,
           "targets": [
-            "light.twinkly_back_right_bottom"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             255,
@@ -1379,7 +1337,7 @@
         {
           "at": 7,
           "targets": [
-            "light.twinkly_back_right_top"
+            "light.twinkly_back_right_bush"
           ],
           "rgb": [
             255,
@@ -1631,14 +1589,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1668,14 +1624,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1723,14 +1677,12 @@
         {
           "at": 0,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1771,14 +1723,12 @@
         {
           "at": 1,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1819,14 +1769,12 @@
         {
           "at": 2,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1867,14 +1815,12 @@
         {
           "at": 3,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1915,14 +1861,12 @@
         {
           "at": 4,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -1963,14 +1907,12 @@
         {
           "at": 5,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2011,14 +1953,12 @@
         {
           "at": 6,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2059,14 +1999,12 @@
         {
           "at": 7,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2107,14 +2045,12 @@
         {
           "at": 8,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2155,14 +2091,12 @@
         {
           "at": 9,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2203,14 +2137,12 @@
         {
           "at": 10,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2251,14 +2183,12 @@
         {
           "at": 11,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2299,14 +2229,12 @@
         {
           "at": 12,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2347,14 +2275,12 @@
         {
           "at": 13,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2395,14 +2321,12 @@
         {
           "at": 14,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2443,14 +2367,12 @@
         {
           "at": 15,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2491,14 +2413,12 @@
         {
           "at": 16,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2539,14 +2459,12 @@
         {
           "at": 17,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2587,14 +2505,12 @@
         {
           "at": 18,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2635,14 +2551,12 @@
         {
           "at": 19,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2683,14 +2597,12 @@
         {
           "at": 20,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2731,14 +2643,12 @@
         {
           "at": 21,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2779,14 +2689,12 @@
         {
           "at": 22,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2827,14 +2735,12 @@
         {
           "at": 23,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2875,14 +2781,12 @@
         {
           "at": 24,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2923,14 +2827,12 @@
         {
           "at": 25,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -2971,14 +2873,12 @@
         {
           "at": 26,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3019,14 +2919,12 @@
         {
           "at": 27,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3067,14 +2965,12 @@
         {
           "at": 28,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3115,14 +3011,12 @@
         {
           "at": 29,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3163,14 +3057,12 @@
         {
           "at": 30,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3211,14 +3103,12 @@
         {
           "at": 31,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3259,14 +3149,12 @@
         {
           "at": 32,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3307,14 +3195,12 @@
         {
           "at": 33,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3355,14 +3241,12 @@
         {
           "at": 34,
           "targets": [
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [
@@ -3399,14 +3283,12 @@
             "light.twinkly_bar_pane_2",
             "light.twinkly_bar_pane_3",
             "light.twinkly_bar_pane_4",
-            "light.twinkly_front_left_bottom",
-            "light.twinkly_front_left_top",
+            "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
             "light.twinkly_light_tree",
             "light.twinkly_front_right_bush",
             "light.twinkly_mid_right",
-            "light.twinkly_back_right_bottom",
-            "light.twinkly_back_right_top",
+            "light.twinkly_back_right_bush",
             "light.twinkly_icicles"
           ],
           "rgb": [

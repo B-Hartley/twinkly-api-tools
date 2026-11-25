@@ -32,6 +32,10 @@ class Group:
         self.active=False
         self.error=False
         self.previous=None
+        self.movies={}
+        self.native_effect=None
+        self.native_brightness=255
+        self.movie_paths={}
         self.expiry={}
         self.effects={m["mac"]:"Solid" for m in members}
         self.geometry={}
@@ -299,9 +303,95 @@ class Group:
             changes[key]=((on,b,c),effect)
         return changes
 
+    async def refresh_movies(self):
+        """Read only; match group movies by UUID, never by local numeric ID."""
+        catalogues=[]
+        for m in self.members:
+            mac=m["mac"]
+            if time.monotonic()>=self.expiry.get(mac,0):
+                await self.login(m)
+            token=self.tokens[mac]
+            data=await self.call(m,"/xled/v1/movies",token=token)
+            catalogue={}
+            for movie in data.get("movies",[]):
+                uid=movie.get("unique_id")
+                ident=movie.get("id")
+                if isinstance(uid,str) and uid and type(ident) is int and ident>=0:
+                    catalogue[uid]=(ident,movie.get("name") or uid)
+            catalogues.append(catalogue)
+        common=set.intersection(*(set(c) for c in catalogues))
+        self.movies={}
+        for uid in sorted(common):
+            label="Movie: "+catalogues[0][uid][1]
+            if label in self.movies:
+                label+=" ("+uid+")"
+            self.movies[label]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+        self.notify_registered()
+
+    def notify_registered(self):
+        for e in self.entities:
+            if e.hass is not None and e.entity_id:
+                e.async_write_ha_state()
+
+    async def movie_current_path(self,m):
+        mac=m["mac"]
+        for path in ("/xled/v1/movies/current","/xled/v1/led/movies/current"):
+            try:
+                await self.call(m,path,token=self.tokens[mac])
+                return path
+            except HomeAssistantError:
+                continue
+        raise HomeAssistantError(m["name"]+": movie selection endpoint unavailable")
+
+    async def native_level(self,value):
+        async def set_level(m):
+            await self.call(m,"/xled/v1/led/out/brightness",method="POST",
+                token=self.tokens[m["mac"]],payload={"mode":"enabled","type":"A","value":value})
+        await self.all_members(set_level)
+
+    async def play_movie(self,effect,brightness):
+        async with self.lock:
+            await self.validate()
+            await self.refresh_movies()
+            if effect not in self.movies:
+                raise HomeAssistantError("Movie not present on every physical group member")
+            paths=await asyncio.gather(*(self.movie_current_path(m) for m in self.members))
+            if self.active or self.error:
+                await self.finish_idle()
+            try:
+                await self.native_level(round(brightness*100/255))
+                for m,path in zip(self.members,paths):
+                    await self.call(m,path,method="POST",token=self.tokens[m["mac"]],
+                        payload={"id":self.movies[effect][m["mac"]]})
+                await self.mode("movie")
+            except BaseException:
+                self.native_effect=None
+                try:
+                    await self.mode("off")
+                finally:
+                    self.notify_registered()
+                raise
+            self.native_effect=effect
+            self.native_brightness=brightness
+            self.notify_registered()
+
+    async def native_off(self):
+        async with self.lock:
+            if self.native_effect is None:
+                return
+            await self.validate()
+            await self.mode("off")
+            self.native_effect=None
+            self.notify_registered()
+
     async def prepare_start(self):
         await self.validate()
         self.previous=(await self.call(self.master,MODE,token=self.tokens[self.master["mac"]]))["mode"]
+        if self.native_effect is not None:
+            await self.mode("off")
+            await self.native_level(100)
+            self.native_effect=None
+            self.previous="off"
         if self.previous not in ("off","movie","playlist","color","effect"):
             raise HomeAssistantError("Group already in unsupported mode; stop external streaming first")
 
@@ -592,22 +682,24 @@ class VirtualLight(LightEntity):
             name=m["name"],manufacturer="Twinkly")
     @property
     def effect_list(self):
-        return ["Solid", *self.group.patterns[self.member["mac"]]]
+        return ["Solid", *self.group.patterns[self.member["mac"]], *(self.group.movies if self.member["role"]=="none" else {})]
     @property
     def effect(self):
-        return self.group.effects[self.member["mac"]]
+        return self.group.native_effect if self.member["role"]=="none" and self.group.native_effect else self.group.effects[self.member["mac"]]
     @property
     def available(self):
         return not self.group.error
     @property
     def is_on(self):
         mac=self.member["mac"]
+        if self.member["role"]=="none" and self.group.native_effect:
+            return True
         if mac in self.group.pane_overrides:
             return self.group.active and any(self.group.pane_states[(mac,i)][0] for i in range(len(self.group.pane_maps.get(mac,[]))))
         return self.group.active and self.group.state[mac][0]
     @property
     def brightness(self):
-        return self.group.state[self.member["mac"]][1]
+        return self.group.native_brightness if self.member["role"]=="none" and self.group.native_effect else self.group.state[self.member["mac"]][1]
     @property
     def rgbw_color(self):
         return self.group.state[self.member["mac"]][2]
@@ -615,9 +707,16 @@ class VirtualLight(LightEntity):
     def rgb_color(self):
         return self.rgbw_color[:3]
     async def async_turn_on(self,**kwargs):
+        if self.member["role"]=="none":
+            effect=kwargs.get("effect",self.group.native_effect if not ("rgb_color" in kwargs or "rgbw_color" in kwargs) else None)
+            if effect and effect.startswith("Movie: "):
+                await self.group.play_movie(effect,kwargs.get("brightness",self.group.native_brightness))
+                return
         await self.group.update(self.member,True,kwargs)
     async def async_turn_off(self,**kwargs):
-        if self.group.active or self.group.error:
+        if self.member["role"]=="none" and self.group.native_effect:
+            await self.group.native_off()
+        elif self.group.active or self.group.error:
             await self.group.update(self.member,False,{})
 
 class PaneLight(VirtualLight):
@@ -681,6 +780,62 @@ class PaneLight(VirtualLight):
     async def async_turn_off(self,**kwargs):
         await self.group.update_pane(self.member,self.index,False,{})
 
+class PhysicalGroupLight(LightEntity):
+    _attr_has_entity_name=True
+    _attr_name=None
+    _attr_should_poll=False
+    _attr_supported_features=LightEntityFeature.EFFECT
+    _attr_color_mode=ColorMode.RGB
+    _attr_supported_color_modes={ColorMode.RGB}
+
+    def __init__(self,group,name):
+        self.group=group
+        self._attr_unique_id="physical_group_"+group.master["uid"]
+        self.entity_id="light.twinkly_"+slugify(name)
+        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly")
+
+    @property
+    def is_on(self):
+        return bool(self.group.native_effect or (self.group.active and self.group.any_on()))
+
+    @property
+    def available(self):
+        return not self.group.error
+
+    @property
+    def effect_list(self):
+        common=set.intersection(*(set(self.group.patterns[m["mac"]]) for m in self.group.members))
+        return ["Solid",*sorted(common),*self.group.movies]
+
+    @property
+    def effect(self):
+        if self.group.native_effect:
+            return self.group.native_effect
+        effects=set(self.group.effects.values())
+        return next(iter(effects)) if len(effects)==1 else None
+
+    @property
+    def brightness(self):
+        return self.group.native_brightness if self.group.native_effect else round(sum(s[1] for s in self.group.state.values())/len(self.group.members))
+
+    @property
+    def rgb_color(self):
+        return self.group.state[self.group.master["mac"]][2][:3]
+
+    async def async_turn_on(self,**kwargs):
+        effect=kwargs.get("effect",self.group.native_effect if "rgb_color" not in kwargs else None)
+        if effect and effect.startswith("Movie: "):
+            await self.group.play_movie(effect,kwargs.get("brightness",self.brightness))
+        else:
+            await update_together([(self.group,self.group.members)],True,kwargs)
+
+    async def async_turn_off(self,**kwargs):
+        if self.group.native_effect:
+            await self.group.native_off()
+        else:
+            await update_together([(self.group,self.group.members)],False,{})
+
+
 async def async_setup_entry(hass,entry,async_add_entities):
     from . import query
     from .realtime import basic_group_members
@@ -722,6 +877,13 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 group.load_maps(data)
                 group.entities=[VirtualLight(group,m) for m in members]
                 group.entities.extend(PaneLight(group,m,i) for m in members for i in range(DEFAULTS.get(" ".join(m["name"].casefold().split()),0)))
+                if len(members)>1:
+                    name=items[0][2].get("name") or ("Front" if len(members)==15 else "Group "+uid[:8])
+                    group.entities.append(PhysicalGroupLight(group,name))
+                try:
+                    await group.refresh_movies()
+                except (HomeAssistantError,ValueError,KeyError,TypeError) as exc:
+                    _LOGGER.warning("Movie catalogue unavailable for %s: %s",uid,exc)
                 groups.append(group)
             except (ValueError,KeyError,TypeError,StopIteration) as exc:
                 _LOGGER.warning("Virtual group %s not created: %s; discovered %s",uid,exc,[(m["name"],g.get("mode"),g.get("offset"),g.get("size"),hw.get("number_of_led")) for m,hw,g in items])
@@ -751,5 +913,5 @@ async def async_setup_entry(hass,entry,async_add_entities):
             g.entities.append(entity)
         combined.append(entity)
     ctx["combined_bushes"]=combined
-    individual=[e for group in groups for e in group.entities if isinstance(e,VirtualLight)]
+    individual=[e for group in groups for e in group.entities if isinstance(e,(VirtualLight,PhysicalGroupLight))]
     async_add_entities(individual+combined)
