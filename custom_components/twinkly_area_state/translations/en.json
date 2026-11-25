@@ -34,6 +34,21 @@
   "options": {
     "step": {
       "init": {
+        "title": "Twinkly Area Manager settings",
+        "menu_options": {
+          "controllers": "Manage controllers",
+          "cloud": "Twinkly cloud login"
+        }
+      },
+      "controllers": {
+        "title": "Manage controllers",
+        "description": "Edit the complete controller list. Test connectivity without saving, or submit to save and reload. {results}",
+        "data": {
+          "devices_json": "Controller list (JSON)",
+          "test_only": "Test connectivity only (do not save)"
+        }
+      },
+      "cloud": {
         "title": "Twinkly cloud login (optional)",
         "description": "Sign in once to enable cloud operations. The password is not retained; access and refresh tokens are stored privately in Home Assistant. Select forget to remove the saved session.",
         "data": {
@@ -44,7 +59,8 @@
       }
     },
     "error": {
-      "cloud_auth_failed": "Cloud login failed. Check your credentials and network connection."
+      "cloud_auth_failed": "Cloud login failed. Check your credentials and network connection.",
+      "invalid_devices": "Enter a nonempty JSON list with unique names and private IPv4 addresses."
     }
   }
 }
