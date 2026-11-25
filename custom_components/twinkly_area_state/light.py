@@ -565,6 +565,29 @@ class VirtualLight(LightEntity):
         if self.group.active or self.group.error:
             await self.group.update(self.member,False,{})
 
+class UnavailableController(LightEntity):
+    """Keep known controller entities visible without permitting unverified writes."""
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_available = False
+
+    def __init__(self, member, reason, index=None):
+        self._attr_name = "Virtual light" if index is None else pane_label(member["name"], index)
+        self._attr_unique_id = member["mac"] + ("_virtual" if index is None else f"_pane_{index+1}")
+        self._attr_supported_color_modes = {ColorMode.RGBW if member["width"] == 4 else ColorMode.RGB}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, member["mac"])},
+            connections={(CONNECTION_NETWORK_MAC, format_mac(member["mac"]))},
+            name=member["name"], manufacturer="Twinkly")
+        self._attr_extra_state_attributes = {"discovery_error": reason}
+
+    async def async_turn_on(self, **kwargs):
+        raise HomeAssistantError("Controller unavailable; rescan after checking connectivity")
+
+    async def async_turn_off(self, **kwargs):
+        raise HomeAssistantError("Controller unavailable; rescan after checking connectivity")
+
+
 class PaneLight(VirtualLight):
     _attr_supported_features=LightEntityFeature(0)
 
@@ -628,11 +651,18 @@ async def async_setup_entry(hass,entry,async_add_entities):
             raise ValueError(f"{m['name']}: {path}: {reply.get('error')}")
         return reply["data"]
     groups=[]
+    unavailable=[]
     async with ctx["lock"]:
+        data=await ctx["store"].async_load() or {}
+        cache=data.get("_controller_identity", {})
+        failures={}
         observations={}
         for m in selected:
             try:
                 gestalt=await read(m,"/xled/v1/gestalt")
+                # Cache only validated physical identity, not group membership or tokens.
+                identity=standalone_member(m,gestalt,{"mode":"none"})
+                cache[m["ip"]]={"mac":identity["mac"],"width":identity["width"]}
                 login=await read(m,"/xled/v1/login",method="POST",
                     payload={"challenge":base64.b64encode(os.urandom(32)).decode()})
                 token=login["authentication_token"]
@@ -646,9 +676,9 @@ async def async_setup_entry(hass,entry,async_add_entities):
                     observations["standalone:"+member["mac"]]=[(m,gestalt,group)]
                 else:
                     _LOGGER.warning("%s: unsupported group role %s",m["name"],group.get("mode"))
-            except (ValueError,KeyError,TypeError, OSError) as exc:
+            except (ValueError,KeyError,TypeError,OSError,aiohttp.ClientError,asyncio.TimeoutError) as exc:
+                failures[m["ip"]]=str(exc)
                 _LOGGER.warning("%s: virtual light discovery skipped: %s",m["name"],exc)
-        data=await ctx["store"].async_load() or {}
         for uid,items in observations.items():
             try:
                 members=[standalone_member(*items[0])] if uid.startswith("standalone:") else basic_group_members(items)
@@ -659,6 +689,19 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 groups.append(group)
             except (ValueError,KeyError,TypeError,StopIteration) as exc:
                 _LOGGER.warning("Virtual group %s not created: %s; discovered %s",uid,exc,[(m["name"],g.get("mode"),g.get("offset"),g.get("size"),hw.get("number_of_led")) for m,hw,g in items])
+        active_macs={m["mac"] for g in groups for m in g.members}
+        for device in selected:
+            identity=cache.get(device["ip"])
+            if not identity or identity["mac"] in active_macs:
+                continue
+            member={**device, **identity}
+            reason=failures.get(device["ip"], "Incomplete or unsupported controller group")
+            unavailable.append(UnavailableController(member,reason))
+            unavailable.extend(UnavailableController(member,reason,i) for i in range(
+                DEFAULTS.get(" ".join(device["name"].casefold().split()),0)))
+            active_macs.add(identity["mac"])
+        data["_controller_identity"]=cache
+        await ctx["store"].async_save(data)
     ctx["virtual_groups"]=groups
     combined=[]
     definitions=(
@@ -686,4 +729,4 @@ async def async_setup_entry(hass,entry,async_add_entities):
         combined.append(entity)
     ctx["combined_bushes"]=combined
     individual=[e for group in groups for e in group.entities if isinstance(e,VirtualLight)]
-    async_add_entities(individual+combined)
+    async_add_entities(individual+combined+unavailable)
