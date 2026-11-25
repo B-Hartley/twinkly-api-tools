@@ -46,6 +46,13 @@ class Show:
             for cue in section["cues"]:
                 cue["targets"]=[by_key[key] for key in cue["targets"]]
         plan["targets"]=[by_key[key] for key in plan["targets"]]
+        for section in plan["sections"]:
+            for cue in section["cues"]:
+                if "effect" in cue and "fallback_rgb" not in cue:
+                    for target in cue["targets"]:
+                        state=self.hass.states.get(target)
+                        if not state or cue["effect"] not in (state.attributes.get("effect_list") or []):
+                            raise HomeAssistantError(f"Show effect unavailable: {target}: {cue['effect']}")
         missing=[e for e in plan["targets"] if not self.hass.states.get(e) or
                  self.hass.states.get(e).state in ("unavailable","unknown")]
         if missing:
@@ -103,8 +110,29 @@ class Show:
                     if cue.get("off") or options.get("brightness_pct",2)==0:
                         await self.call("light","turn_off",cue["targets"])
                     else:
-                        await self.call("light","turn_on",cue["targets"],
-                            rgb_color=cue["rgb"],brightness=max(1,round(cue["brightness"]*options.get("brightness_pct",2)/100)))
+                        data={"brightness":max(1,round(cue["brightness"]*options.get("brightness_pct",2)/100))}
+                        if cue.get("stored_movie") or "fallback_rgb" in cue:
+                            for target in cue["targets"]:
+                                state=self.hass.states.get(target)
+                                effects=(state.attributes.get("effect_list") or []) if state else []
+                                effect=cue.get("effect")
+                                if cue.get("stored_movie"):
+                                    movies=sorted(e for e in effects if e.startswith("Movie: "))
+                                    effect=movies[cue.get("movie_index",0)%len(movies)] if movies else None
+                                if effect not in effects and cue.get("fallback_effect") in effects:
+                                    effect=cue["fallback_effect"]
+                                if effect and effect in effects:
+                                    extra={"rgb_color":cue["rgb"]} if effect in ("Window Chase","House and Garden Chase") and "rgb" in cue else {}
+                                    await self.call("light","turn_on",target,**data,effect=effect,**extra)
+                                else:
+                                    _LOGGER.warning("Show effect unavailable for %s; using solid fallback",target)
+                                    await self.call("light","turn_on",target,**data,effect="Solid",rgb_color=cue["fallback_rgb"])
+                        else:
+                            if "rgb" in cue:
+                                data["rgb_color"]=cue["rgb"]
+                            if "effect" in cue:
+                                data["effect"]=cue["effect"]
+                            await self.call("light","turn_on",cue["targets"],**data)
                 await asyncio.sleep(max(0,start+section["duration"]-loop.time()))
         except asyncio.CancelledError:
             try:

@@ -1,5 +1,6 @@
 import ast
 import asyncio
+import time
 from pathlib import Path
 import unittest
 from unittest.mock import AsyncMock, Mock
@@ -7,7 +8,7 @@ from unittest.mock import AsyncMock, Mock
 source=Path(__file__).resolve().parents[1]/"custom_components/twinkly_area_state/light.py"
 tree=ast.parse(source.read_text(encoding="utf-8"))
 nodes=[n for n in tree.body if getattr(n,"name",None) in ("Group","update_together")]
-ns={"asyncio":asyncio}
+ns={"asyncio":asyncio,"time":time,"WINDOW_CHASE":"Window Chase","HOUSE_CHASE":"House and Garden Chase","CHASE_EFFECTS":("Window Chase","House and Garden Chase")}
 exec(compile(ast.Module(body=nodes,type_ignores=[]),str(source),"exec"),ns)
 Group=ns["Group"]
 update=ns["update_together"]
@@ -28,6 +29,9 @@ def group(two=False):
     g.pane_overrides=set()
     g.combined_selected=set()
     g.combined_geometry={}
+    g.chase_started=0.0
+    g.chase_zones=[]
+    g.house_zones=[]
     g.active=True
     g.error=False
     g.task=Mock()
@@ -101,4 +105,19 @@ class ShutdownTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(g.active)
         self.assertTrue(g.pane_states[("a",1)][0])
         await g.update_pane(g.master,1,False,{})
+        self.assertFalse(g.active)
+
+    async def test_window_chase_group_start_and_off(self):
+        g=group(True)
+        g.chase_zones=[("a",(0,)),("b",(0,))]
+        await update([(g,g.members)],True,{"effect":"Window Chase","brightness":32})
+        self.assertEqual(set(g.effects.values()),{"Window Chase"})
+        self.assertGreater(g.chase_started,0)
+        started=g.chase_started
+        await update([(g,g.members)],True,{"brightness":64})
+        self.assertEqual(g.chase_started,started)
+        self.assertEqual({s[1] for s in g.state.values()},{64})
+        await update([(g,g.members)],True,{"effect":"Solid"})
+        self.assertEqual(set(g.effects.values()),{"Solid"})
+        await update([(g,g.members)],False,{})
         self.assertFalse(g.active)

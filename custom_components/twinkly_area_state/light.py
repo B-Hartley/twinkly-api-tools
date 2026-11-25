@@ -14,6 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from .const import DOMAIN
 from .panes import DEFAULTS, pane_indices, pane_label, composite
+from .window_chase import WINDOW_CHASE, HOUSE_CHASE, CHASE_EFFECTS, chase_zones, house_zones, chase_frame
 from .realtime import packets, pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
 
 _LOGGER=logging.getLogger(__name__)
@@ -36,6 +37,9 @@ class Group:
         self.native_effect=None
         self.native_brightness=255
         self.movie_paths={}
+        self.chase_zones=[]
+        self.house_zones=[]
+        self.chase_started=0.0
         self.expiry={}
         self.effects={m["mac"]:"Solid" for m in members}
         self.geometry={}
@@ -147,6 +151,9 @@ class Group:
             if self.effects[m["mac"]] not in patterns:
                 self.effects[m["mac"]]="Solid"
 
+        self.chase_zones=chase_zones(self.members,self.pane_maps)
+        self.house_zones=house_zones(self.members,self.pane_maps)
+
     def notify(self):
         self.notify_registered()
 
@@ -198,6 +205,9 @@ class Group:
             geometry=self.combined_geometry.get(m["mac"],self.geometry[m["mac"]]) if m["mac"] in self.combined_selected else self.geometry[m["mac"]]
             frame=spiral_frame(geometry,m["width"],effect,now,rgbw,brightness if on else 0)
         mac=m["mac"]
+        if effect in CHASE_EFFECTS:
+            whole=effect==HOUSE_CHASE
+            frame=chase_frame(m,self.house_zones if whole else self.chase_zones,now-self.chase_started,brightness if on else 0,rgbw,loop=whole)
         if mac in self.pane_overrides:
             frame=bytearray(frame)
             for i,indices in enumerate(self.pane_maps.get(mac,[])):
@@ -294,7 +304,11 @@ class Group:
             key=m["mac"]
             old=self.state[key]
             effect=kwargs.get("effect", "Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else self.effects[key])
-            if effect not in ["Solid", *self.patterns[key]]:
+            if effect in CHASE_EFFECTS and not ((self.house_zones if effect==HOUSE_CHASE else self.chase_zones) and len(members)==len(self.members)):
+                if "effect" in kwargs:
+                    raise HomeAssistantError("Window Chase requires the complete Front group")
+                effect="Solid"
+            if effect not in ["Solid", *self.patterns[key]] and effect not in CHASE_EFFECTS:
                 raise HomeAssistantError(f"{m['name']}: effect requires a captured map")
             b=kwargs.get("brightness",old[1])
             c=kwargs.get("rgbw_color",kwargs.get("rgb_color",old[2]))
@@ -515,12 +529,15 @@ async def update_together(targets,on,kwargs,combined=False):
                 raise result
         old=[(g,{k:(g.state[k],g.effects[k],k in g.combined_selected) for k in values}) for g,values in changes]
         old_panes=[(g,g.pane_overrides.copy()) for g,_ in changes]
+        old_chase=[(g,g.chase_started) for g,_ in changes]
         try:
             results=await asyncio.gather(*(g.mode("rt") for g in starting),return_exceptions=True)
             for result in results:
                 if isinstance(result,BaseException):
                     raise result
             for g,values in changes:
+                if on and any(effect in CHASE_EFFECTS for _,effect in values.values()) and (not g.active or not all(g.effects[k]==effect for k,(_,effect) in values.items())):
+                    g.chase_started=time.monotonic()
                 for key,(state,effect) in values.items():
                     g.state[key]=state
                     g.effects[key]=effect
@@ -536,6 +553,8 @@ async def update_together(targets,on,kwargs,combined=False):
         except BaseException:
             for g,overrides in old_panes:
                 g.pane_overrides=overrides
+            for g,started in old_chase:
+                g.chase_started=started
             for g,values in old:
                 for key,(state,effect,was_combined) in values.items():
                     g.state[key]=state
@@ -791,6 +810,7 @@ class PhysicalGroupLight(LightEntity):
         self.group=group
         self._attr_unique_id="physical_group_"+group.master["uid"]
         self.entity_id="light.twinkly_"+slugify(name)
+        self.show_key=self.entity_id
         self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly")
 
     @property
@@ -804,7 +824,7 @@ class PhysicalGroupLight(LightEntity):
     @property
     def effect_list(self):
         common=set.intersection(*(set(self.group.patterns[m["mac"]]) for m in self.group.members))
-        return ["Solid",*sorted(common),*self.group.movies]
+        return ["Solid",*sorted(common),*([WINDOW_CHASE] if self.group.chase_zones else []),*([HOUSE_CHASE] if self.group.house_zones else []),*self.group.movies]
 
     @property
     def effect(self):
@@ -826,6 +846,8 @@ class PhysicalGroupLight(LightEntity):
         if effect and effect.startswith("Movie: "):
             await self.group.play_movie(effect,kwargs.get("brightness",self.brightness))
         else:
+            if effect in CHASE_EFFECTS and not (self.group.house_zones if effect==HOUSE_CHASE else self.group.chase_zones):
+                raise HomeAssistantError("Window Chase requires all six mapped windows")
             await update_together([(self.group,self.group.members)],True,kwargs)
 
     async def async_turn_off(self,**kwargs):
