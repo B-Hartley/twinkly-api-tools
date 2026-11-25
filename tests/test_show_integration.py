@@ -73,7 +73,7 @@ class Simulation:
         light_ns = {"asyncio": transport_asyncio, "time": timer, "HomeAssistantError": RuntimeError,
                     "LightEntity": type("LightEntity", (), {}), "LightEntityFeature": Features,
                     "ColorMode": SimpleNamespace(RGB="rgb", RGBW="rgbw"),
-                    "SPIRAL_EFFECTS": (), "CHASE_EFFECTS": ("Window Chase", "House and Garden Chase"),
+                    "SPIRAL_EFFECTS": (), "SLIDE_CHASE": "Bush and Window Chase V2", "CHASE_EFFECTS": ("Window Chase", "House and Garden Chase", "Bush and Window Chase V2"),
                     "socket": SimpleNamespace(socket=lambda *a: Socket(), AF_INET=2, SOCK_DGRAM=2),
                     "packets": lambda token, frame: [frame], "_LOGGER": Mock()}
         self.light = load_definitions("light.py", light_ns,
