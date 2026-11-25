@@ -568,6 +568,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def capture_layout_diagnostics(call: ServiceCall):
         """Explicit opt-in raw layout diagnostics, never log secrets or responses."""
         async with lock:
+            maintenance.guard()
             directory = hass.config.path("twinkly_area_diagnostics")
             completed = []
             for device in devices:
@@ -589,6 +590,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def capture_groups(call: ServiceCall):
         async with lock:
+            maintenance.guard()
             live = await collect("capture-groups-local")
             records = _capture_local_groups(live)
             data = await store.async_load() or {}
@@ -614,6 +616,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def capture_3d_maps(call: ServiceCall):
         async with lock:
+            maintenance.guard()
             live = await collect("capture-3d-local")
             records = _capture_live_3d(live)
             data = await store.async_load() or {}
@@ -644,6 +647,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if (overwrite or allow_unverified) and call.data.get("confirmation") != "IMPORT":
             raise HomeAssistantError("Type IMPORT to confirm replacement or unverified import")
         async with lock:
+            maintenance.guard()
             try:
                 incoming = await hass.async_add_executor_job(
                     read_archives, hass.config.path("twinkly_3d_import"))
@@ -695,6 +699,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def verify_archives(call: ServiceCall):
         async with lock:
+            maintenance.guard()
             live = await collect("verify-live")
             data = await store.async_load() or {}
             archives = data.get("_area_manager", {})
@@ -710,6 +715,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def save_state(call: ServiceCall):
         async with lock:
+            maintenance.guard()
             state = await collect(call.data["name"])
             snapshots = await store.async_load() or {}
             snapshots[call.data["name"]] = state
@@ -724,6 +730,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def restore_state(call: ServiceCall):
         async with lock:
+            maintenance.guard()
             snapshots = await store.async_load() or {}
             state = snapshots.get(call.data["name"])
             if not state:
@@ -738,6 +745,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def office_plan(call: ServiceCall):
         async with lock:
+            maintenance.guard()
             snapshots = await store.async_load() or {}
             state = snapshots.get(call.data["name"])
             if not state:
@@ -773,6 +781,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=vol.Schema({vol.Required("name"): STATE_NAME,
                            vol.Required("left"): str, vol.Required("right"): str}))
     async def resume_movie(call: ServiceCall):
+        maintenance.guard()
         for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
             await group.stop(movie=True)
 
@@ -780,11 +789,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cloud = CloudSession(hass, entry.entry_id)
 
     async def verify_cloud_session(call: ServiceCall):
+        maintenance.guard()
         await cloud.get("/v3/installations")
         async_create(hass, "Cloud authentication verified. Cached tokens will renew automatically when required.",
                      title="Twinkly cloud session", notification_id=f"{DOMAIN}_cloud_session")
 
     async def rescan_controllers(call: ServiceCall):
+        maintenance.guard()
         # Reload outside the capture lock: platform discovery acquires it.
         if not await hass.config_entries.async_reload(entry.entry_id):
             from homeassistant.exceptions import HomeAssistantError
@@ -813,6 +824,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ctx=hass.data[DOMAIN][entry.entry_id]
     show=Show(hass,ctx)
     ctx["show"]=show
+    from .maintenance import Maintenance
+    maintenance=Maintenance(hass,entry,ctx,query,session)
+    ctx["maintenance"]=maintenance
+    await maintenance.load()
     hass.services.async_register(DOMAIN,"start_christmas_show",show.start,schema=vol.Schema({
         vol.Optional("audio",default=True): bool,
         vol.Optional("audio_base",default=""): str,
@@ -821,7 +836,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vol.Optional("offset_ms",default=0): vol.All(vol.Coerce(int),vol.Range(min=0,max=2000)),
     }))
     hass.services.async_register(DOMAIN,"stop_christmas_show",show.stop)
-    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])
+    platforms=["button","switch"]
+    if not maintenance.enabled:
+        platforms.append("light")
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    maintenance.light_loaded=not maintenance.enabled
     return True
 
 
@@ -829,7 +848,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.data[DOMAIN][entry.entry_id]["show"].stop()
     for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
         await group.stop()
-    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light"]):
+    maintenance=hass.data[DOMAIN][entry.entry_id]["maintenance"]
+    platforms=["button","switch"]+ (["light"] if maintenance.light_loaded else [])
+    if not await hass.config_entries.async_unload_platforms(entry, platforms):
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
