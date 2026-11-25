@@ -1,8 +1,9 @@
 # Twinkly Area Manager for Home Assistant (experimental)
 
 Home Assistant custom integration in `custom_components/twinkly_area_state/`.
-Works **alongside** the built-in [Twinkly integration](https://www.home-assistant.io/integrations/twinkly/).
-It does **not** replace, patch or import the native Twinkly light integration.
+Controls Twinkly lights directly and works **without** the built-in Twinkly
+integration. Area Manager owns its controller inventory and device registrations,
+and streams grouped designs directly to each controller over UDP.
 
 ## Install through Home Assistant Marketplace / HACS
 
@@ -20,9 +21,21 @@ It does **not** replace, patch or import the native Twinkly light integration.
 ]
 ```
 
-Only private IPv4 addresses are accepted. Assign static DHCP leases. The integration does not start a second LAN discovery scanner; it reuses existing Home Assistant device entries where possible.
+Only private IPv4 addresses are accepted. Assign static DHCP leases. The integration does not scan the LAN. Importing controllers from native Twinkly config entries is optional; imported controllers are saved in Area Manager's own configuration during setup, so later operation does not require those native entries.
+
+Include **every physical controller** in each Twinkly group, including its master. If native entries were already deleted before their controllers were saved in Area Manager, missing inventory cannot be recovered automatically. Existing saved controller addresses and mapping archives remain available; a partial controller list is insufficient to create that group's light entities.
 
 **This is a custom-repository install**, not a claim of listing in the public Marketplace catalogue. All installed Python files live inside `custom_components/twinkly_area_state/`. Home Assistant runs it on HAOS/Linux; Windows-only DPAPI CLI credentials are **not** imported.
+
+## Update an existing installation
+
+This repository currently supplies updates from `main`, without tagged releases.
+
+1. Open **Twinkly Area Manager** in HACS and download or redownload the latest `main` version.
+2. Allow Home Assistant to reach the Twinkly controller addresses over **HTTP (TCP 80)** and **UDP 7777**. Disable any temporary HA-to-Twinkly isolation rule before restarting; that rule also blocks Area Manager's controller checks at startup.
+3. Restart Home Assistant to load the updated integration. If you already restarted while the controllers were blocked, reload Area Manager after restoring connectivity.
+
+Area Manager retains its saved configuration and mapping archives across this update. The native Twinkly integration is not required for playback.
 
 ## Home Assistant UI / actions
 

@@ -11,7 +11,6 @@ from homeassistant.components.light import LightEntity, ColorMode, LightEntityFe
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
-from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .panes import DEFAULTS, pane_indices, pane_label, composite
 from .realtime import packets, pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
@@ -60,20 +59,28 @@ class Group:
         lifetime=d.get("authentication_token_expires_in",14400)
         self.expiry[m["mac"]]=time.monotonic()+max(1,float(lifetime)-30)
 
+    async def validate_member(self,m):
+        g=await self.call(m,"/xled/v1/gestalt")
+        if str(g.get("mac","")).lower().replace(":","").replace("-","")!=m["mac"] or g.get("number_of_led")!=m["led_count"] or pixel_width(g)!=m["width"]:
+            raise HomeAssistantError("Controller identity or pixel format changed")
+        await self.login(m)
+        d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
+        group=d["group"]
+        if m["role"]=="none":
+            if group.get("mode")!="none":
+                raise HomeAssistantError("Standalone controller joined a group; reload integration")
+            return
+        if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or (0 if group.get("offset") is None and m["role"]=="master" else group.get("offset"))!=m["offset"]):
+            raise HomeAssistantError("Group changed; reload integration before streaming")
+
     async def validate(self):
-        for m in self.members:
-            g=await self.call(m,"/xled/v1/gestalt")
-            if str(g.get("mac","")).lower().replace(":","").replace("-","")!=m["mac"] or g.get("number_of_led")!=m["led_count"] or pixel_width(g)!=m["width"]:
-                raise HomeAssistantError("Controller identity or pixel format changed")
-            await self.login(m)
-            d=await self.call(m,"/xled/v1/application/group",token=self.tokens[m["mac"]])
-            group=d["group"]
-            if m["role"]=="none":
-                if group.get("mode")!="none":
-                    raise HomeAssistantError("Standalone controller joined a group; reload integration")
-                continue
-            if (str(group.get("uid","")).lower()!=m["uid"] or group.get("mode")!=m["role"] or group.get("size")!=sum(x["led_count"] for x in self.members) or (0 if group.get("offset") is None and m["role"]=="master" else group.get("offset"))!=m["offset"]):
-                raise HomeAssistantError("Group changed; reload integration before streaming")
+        await self.all_members(self.validate_member)
+
+    async def all_members(self, callback):
+        results=await asyncio.gather(*(callback(m) for m in self.members),return_exceptions=True)
+        for result in results:
+            if isinstance(result,BaseException):
+                raise result
 
     def load_maps(self, data):
         archives=data.get("_area_manager",{})
@@ -133,8 +140,7 @@ class Group:
         self.pane_overrides.clear()
         self.pane_states.clear()
         try:
-            await self.login(self.master)
-            await self.mode("off")
+            await self.shutdown("off")
             self.error=False
         except Exception:
             # Never restart streaming just because the physical off failed.
@@ -201,12 +207,46 @@ class Group:
                     raise HomeAssistantError(f"{m['name']}: frame connection failed after 3 attempts") from exc
                 await asyncio.sleep(.5*(attempt+1))
 
+    async def member_mode(self,m,value):
+        if time.monotonic()>=self.expiry.get(m["mac"],0):
+            await self.login(m)
+        try:
+            await self.call(m,MODE,method="POST",token=self.tokens[m["mac"]],payload={"mode":value})
+        except HomeAssistantError as exc:
+            if "HTTP 401" not in str(exc) and "HTTP 403" not in str(exc):
+                raise
+            await self.login(m)
+            await self.call(m,MODE,method="POST",token=self.tokens[m["mac"]],payload={"mode":value})
+
+    async def black_frames(self,duration):
+        if self.master["role"]=="none":
+            return
+        loop=asyncio.get_running_loop()
+        end=loop.time()+duration
+        with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
+            sock.setblocking(False)
+            while loop.time()<end:
+                start=loop.time()
+                for m in self.members:
+                    for packet in packets(self.tokens[m["mac"]],bytes(m["width"]*m["led_count"])):
+                        await loop.sock_sendto(sock,packet,(m["ip"],7777))
+                await asyncio.sleep(max(0,start+1/15-loop.time()))
+
     async def mode(self,value):
-        await self.call(self.master,MODE,method="POST",token=self.tokens[self.master["mac"]],payload={"mode":value})
+        await self.all_members(lambda m:self.member_mode(m,value))
+        if value=="rt":
+            await self.black_frames(2)
+
+    async def shutdown(self,value):
+        try:
+            if self.master["role"]!="none":
+                await self.all_members(self.login)
+                await self.black_frames(1)
+        finally:
+            await self.all_members(lambda m:self.member_mode(m,value))
 
     async def restore(self):
-        await self.login(self.master)
-        await self.mode(self.previous or "off")
+        await self.shutdown(self.previous or "off")
 
     def prepare(self,members,on,kwargs):
         """Compute all requested changes before sending any frame."""
@@ -279,7 +319,7 @@ class Group:
         failures=0
         while self.active:
             moving=any(self.state[k][0] and effect in MOVING_SPIRALS for k,effect in self.effects.items())
-            await asyncio.sleep((.2 if moving else .75) if failures==0 else min(10,2**failures))
+            await asyncio.sleep((1/15 if self.master["role"]!="none" else (.2 if moving else .75)) if failures==0 else min(10,2**failures))
             async with self.lock:
                 if not self.active:
                     return
@@ -318,8 +358,7 @@ class Group:
             if self.task:
                 self.task.cancel()
                 self.task=None
-            await self.login(self.master)
-            await self.mode("movie" if movie else self.previous or "off")
+            await self.shutdown("movie" if movie else "off")
             self.error=False
             self.state={k:(False,v[1],v[2]) for k,v in self.state.items()}
             self.pane_overrides.clear()
@@ -491,25 +530,11 @@ class VirtualLight(LightEntity):
         self._attr_supported_color_modes={self._attr_color_mode}
         mac=format_mac(m["mac"])
         connection=(CONNECTION_NETWORK_MAC,mac)
-        # Attach the entity directly to the native device, not a second
-        # device registration owned by this integration.
-        registry=dr.async_get(group.hass)
-        matches={}
-        for entry in group.hass.config_entries.async_entries("twinkly"):
-            for device in dr.async_entries_for_config_entry(registry,entry.entry_id):
-                if connection in device.connections or any(
-                    domain=="twinkly" and format_mac(value)==mac
-                    for domain,value in device.identifiers
-                ):
-                    matches[device.id]=device
-        if len(matches)==1:
-            self.device_entry=next(iter(matches.values()))
-            self._attr_device_info=None
-        else:
-            self._attr_device_info=DeviceInfo(
-                identifiers={(DOMAIN,m["mac"])},connections={connection},
-                name=m["name"]+" (Virtual)",manufacturer="Twinkly")
-            _LOGGER.warning("%s: expected one native device, found %s; using companion",m["name"],len(matches))
+        # Own the device registration even when the native integration is absent.
+        # MAC connection merges an existing device without changing entity unique IDs.
+        self._attr_device_info=DeviceInfo(
+            identifiers={(DOMAIN,m["mac"])},connections={connection},
+            name=m["name"],manufacturer="Twinkly")
     @property
     def effect_list(self):
         return ["Solid", *self.group.patterns[self.member["mac"]]]

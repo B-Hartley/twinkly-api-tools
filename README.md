@@ -12,7 +12,7 @@ The existing `custom_components/twinkly_area_state` integration now provides a *
 - **Capture 3D maps**: original 3D mappings from standalone controllers
 - **Verify maps and groups**: read-only checks against saved references
 
-The setup UI attempts to prefill the controller list from Home Assistant's built-in **Twinkly** integration. Your native Twinkly light controls remain untouched. No MQTT broker required.
+Area Manager controls the lights directly and works without Home Assistant's built-in **Twinkly** integration. Setup can optionally import existing native controller entries and saves them in Area Manager's own inventory, or you can enter controller IPs manually. No MQTT broker required.
 
 Add `https://github.com/B-Hartley/twinkly-api-tools` to Home Assistant **Marketplace / HACS → Custom repositories** as an Integration, install, restart, then select **Settings → Devices & services → Add integration → Twinkly Area Manager**.
 

@@ -535,6 +535,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     devices = validate_devices(entry.data[CONF_DEVICES_JSON])
     native = configured_twinkly_devices(hass.config_entries.async_entries("twinkly"))
     devices = merge_controller_inventory(devices, native)
+    # Persist migrated inventory before native config entries can be removed.
+    import json
+    saved_devices = validate_devices(entry.data[CONF_DEVICES_JSON])
+    if devices != saved_devices:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_DEVICES_JSON: json.dumps(devices)})
     store = Store(hass, 1, f"{DOMAIN}.states")
     lock = asyncio.Lock()
     session = async_get_clientsession(hass)
