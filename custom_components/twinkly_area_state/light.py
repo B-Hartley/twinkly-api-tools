@@ -36,6 +36,9 @@ class Group:
         self.geometry={}
         self.pane_maps={}
         self.pane_states={}
+        self.pane_effects={}
+        self.pane_patterns={}
+        self.pane_geometry={}
         self.pane_overrides=set()
         self.combined_geometry={}
         self.combined_selected=set()
@@ -113,6 +116,28 @@ class Group:
                 except (ValueError,KeyError,TypeError) as exc:
                     self.pane_maps.pop(mac,None)
                     _LOGGER.warning("%s: pane map unavailable: %s",m["name"],exc)
+            if name in ("front right","front right bush"):
+                for i,indices in enumerate(self.pane_maps.get(mac,[])):
+                    key=(mac,i)
+                    zone={}
+                    self.pane_geometry.pop(key,None)
+                    if saved:
+                        for label,axis,reverse in (("Static rainbow","y",False),("Static rainbow reversed","y",True),("Horizontal rainbow","x",False)):
+                            try:
+                                layout=dict(saved["layout"],coordinates=[saved["layout"]["coordinates"][j] for j in indices])
+                                zone[label]=mapped_rainbow(layout,len(indices),m["width"],axis,reverse)
+                            except (ValueError,KeyError,TypeError,IndexError):
+                                pass
+                    if original.get("led_count")==m["led_count"]:
+                        try:
+                            layout=dict(original["layout"],coordinates=[original["layout"]["coordinates"][j] for j in indices])
+                            self.pane_geometry[key]=spiral_geometry(layout,len(indices))
+                            zone.update({label:None for label in SPIRAL_EFFECTS})
+                        except (ValueError,KeyError,TypeError,IndexError):
+                            pass
+                    self.pane_patterns[key]=zone
+                    if self.pane_effects.get(key) not in zone:
+                        self.pane_effects[key]="Solid"
             self.patterns[mac]=patterns
             if self.effects[m["mac"]] not in patterns:
                 self.effects[m["mac"]]="Solid"
@@ -175,7 +200,17 @@ class Group:
                 enabled,level,color=self.pane_states[(mac,i)]
                 r,g,b,w=(round(c*level/255) if enabled else 0 for c in color)
                 pixel=bytes((w,r,g,b) if m["width"]==4 else (r,g,b))
-                composite(frame,m["width"],indices,pixel*m["led_count"])
+                key=(mac,i)
+                effect=self.pane_effects.get(key,"Solid")
+                pattern=self.pane_patterns.get(key,{}).get(effect)
+                if effect in SPIRAL_EFFECTS and key in self.pane_geometry:
+                    zone=spiral_frame(self.pane_geometry[key],m["width"],effect,now,color,level if enabled else 0)
+                elif pattern is not None:
+                    zone=bytes(round(c*level/255) if enabled else 0 for c in pattern)
+                else:
+                    zone=pixel*len(indices)
+                for k,j in enumerate(indices):
+                    frame[j*m["width"]:(j+1)*m["width"]]=zone[k*m["width"]:(k+1)*m["width"]]
             frame=bytes(frame)
         if m["role"] != "none":
             # Grouped firmware may reject local-sized HTTP frames. Use the
@@ -286,16 +321,23 @@ class Group:
                 await self.prepare_start()
             old_states=self.pane_states.copy()
             old_overrides=self.pane_overrides.copy()
+            old_effects=self.pane_effects.copy()
             try:
                 if mac not in self.pane_overrides:
                     for i in range(len(self.pane_maps[mac])):
                         self.pane_states[(mac,i)]=self.state[mac]
+                        self.pane_effects[(mac,i)]=self.effects[mac] if self.effects[mac] in self.pane_patterns.get((mac,i),{}) else "Solid"
                 self.pane_overrides.add(mac)
                 old=self.pane_states[(mac,index)]
                 color=tuple(kwargs.get("rgbw_color",kwargs.get("rgb_color",old[2])))
                 if len(color)==3:
                     color+=(0,)
-                self.pane_states[(mac,index)]=(on,kwargs.get("brightness",old[1]),color)
+                key=(mac,index)
+                effect=kwargs.get("effect","Solid" if "rgbw_color" in kwargs or "rgb_color" in kwargs else self.pane_effects.get(key,"Solid"))
+                if effect not in ("Solid",*self.pane_patterns.get(key,{})):
+                    raise HomeAssistantError("Effect requires a captured bush map")
+                self.pane_effects[key]=effect
+                self.pane_states[key]=(on,kwargs.get("brightness",old[1]),color)
                 if starting:
                     await self.mode("rt")
                 if self.any_on():
@@ -303,6 +345,7 @@ class Group:
             except BaseException:
                 self.pane_states=old_states
                 self.pane_overrides=old_overrides
+                self.pane_effects=old_effects
                 if starting:
                     await asyncio.gather(self.restore(),return_exceptions=True)
                 raise
@@ -572,6 +615,8 @@ class PaneLight(VirtualLight):
         super().__init__(group,m)
         self.index=index
         self._attr_name=pane_label(m["name"],index)
+        if " ".join(m["name"].casefold().split()) in ("front right","front right bush"):
+            self._attr_supported_features=LightEntityFeature.EFFECT
         self._attr_unique_id=f"{m['mac']}_pane_{index+1}"
 
     @property
@@ -598,11 +643,16 @@ class PaneLight(VirtualLight):
 
     @property
     def effect_list(self):
-        return None
+        if not self._attr_supported_features:
+            return None
+        return ["Solid",*self.group.pane_patterns.get((self.member["mac"],self.index),{})]
 
     @property
     def effect(self):
-        return None
+        if not self._attr_supported_features:
+            return None
+        key=(self.member["mac"],self.index)
+        return self.group.pane_effects.get(key,"Solid") if key[0] in self.group.pane_overrides else self.group.effects[key[0]]
 
     @property
     def extra_state_attributes(self):
