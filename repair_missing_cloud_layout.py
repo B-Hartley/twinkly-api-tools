@@ -77,6 +77,13 @@ def run(a):
         raise ValueError("Current object lacks required PUT fields")
     payload = {k: copy.deepcopy(obj[k]) for k in PUT_KEYS}
     payload["layout"] = layout
+    # The API's HTTP 422 response identifies these GET-only fields.
+    for slot in payload["devices"]:
+        slot.pop("type", None)
+        for field in ("updated", "id", "created"):
+            slot["device"].pop(field, None)
+    for field in ("updated", "objectId", "created", "id"):
+        payload["layout"].pop(field, None)
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     backup = Path("cloud-audits") / "layout-writes" / (stamp + "-missing-layout")
     backup.mkdir(parents=True, exist_ok=False)
@@ -102,7 +109,15 @@ def run(a):
             or actual.get("source") != "3d" or actual.get("synthesized") != saved["synthesized"]
             or not compare_points(saved["coordinates"], coordinates(actual), tolerance=0.0003)["matching"]):
         raise RuntimeError("Cloud readback failed; inspect before retrying")
-    if any(updated.get(k) != obj.get(k) for k in PUT_KEYS if k != "layout"):
+    def writable_devices(slots):
+        slots = copy.deepcopy(slots)
+        for slot in slots:
+            slot.pop("type", None)
+            for field in ("updated", "id", "created"):
+                slot["device"].pop(field, None)
+        return slots
+    if (any(updated.get(k) != obj.get(k) for k in PUT_KEYS if k not in ("layout", "devices"))
+            or writable_devices(updated["devices"]) != writable_devices(obj["devices"])):
         raise RuntimeError("Cloud non-layout metadata changed; inspect backups before continuing")
     print("VERIFIED: cloud 3D layout matches archive; no LAN writes.")
 
