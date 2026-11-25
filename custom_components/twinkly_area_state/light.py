@@ -22,6 +22,7 @@ MODE="/xled/v1/led/mode"
 class Group:
     def __init__(self,hass,members,lock,query):
         self.hass=hass
+        self.maintenance=None
         self.members=members
         self.lock=lock
         self.query=query
@@ -144,6 +145,8 @@ class Group:
             self.notify()
 
     async def send(self):
+        if self.maintenance:
+            self.maintenance.guard()
         now=time.monotonic()
         results=await asyncio.gather(*(self.send_member(m,now) for m in self.members),return_exceptions=True)
         for result in results:
@@ -224,6 +227,8 @@ class Group:
         return changes
 
     async def prepare_start(self):
+        if self.maintenance:
+            self.maintenance.guard()
         await self.validate()
         self.previous=(await self.call(self.master,MODE,token=self.tokens[self.master["mac"]]))["mode"]
         if self.previous not in ("off","movie","playlist","color","effect"):
@@ -235,6 +240,8 @@ class Group:
     async def update_pane(self,m,index,on,kwargs):
         mac=m["mac"]
         async with self.lock:
+            if self.maintenance:
+                self.maintenance.guard()
             if mac not in self.pane_maps:
                 raise HomeAssistantError("Capture a valid pane map first")
             if not on and not self.active:
@@ -331,6 +338,9 @@ async def update_together(targets,on,kwargs,combined=False):
     if not targets:
         return
     async with targets[0][0].lock:
+        for g,_ in targets:
+            if getattr(g,"maintenance",None):
+                g.maintenance.guard()
         targets=[(g,members) for g,members in targets if on or g.active or g.error]
         if not targets:
             return
@@ -628,6 +638,7 @@ async def async_setup_entry(hass,entry,async_add_entities):
             try:
                 members=[standalone_member(*items[0])] if uid.startswith("standalone:") else basic_group_members(items)
                 group=Group(hass,members,ctx["lock"],query)
+                group.maintenance=ctx.get("maintenance")
                 group.load_maps(data)
                 group.entities=[VirtualLight(group,m) for m in members]
                 group.entities.extend(PaneLight(group,m,i) for m in members for i in range(DEFAULTS.get(" ".join(m["name"].casefold().split()),0)))
