@@ -757,8 +757,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cloud = CloudSession(hass, entry.entry_id)
 
     async def verify_cloud_session(call: ServiceCall):
-        guard()
-        await cloud.get("/v3/installations")
+        async with lock:
+            guard()
+            await cloud.get("/v3/installations")
         async_create(hass, "Cloud authentication verified. Cached tokens will renew automatically when required.",
                      title="Twinkly cloud session", notification_id=f"{DOMAIN}_cloud_session")
 
