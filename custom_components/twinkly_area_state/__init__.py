@@ -823,7 +823,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vol.Optional("audio_base",default=""): str,
         vol.Optional("brightness_pct",default=2): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
         vol.Optional("volume",default=.05): vol.All(vol.Coerce(float),vol.Range(min=0,max=1)),
-        vol.Optional("offset_ms",default=0): vol.All(vol.Coerce(int),vol.Range(min=0,max=2000)),
+        vol.Optional("offset_ms",default=0): vol.All(vol.Coerce(int),vol.Range(min=-2000,max=2000)),
     }))
     hass.services.async_register(DOMAIN,"stop_christmas_show",show.stop)
     await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])

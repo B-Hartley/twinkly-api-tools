@@ -52,3 +52,5 @@ class WindowChaseTests(unittest.TestCase):
         self.assertEqual(zones[16],(("front right bush",(2,3)),))
         self.assertEqual(wc.chase_frame(self.members[0],zones,20.1*wc.PANE_SECONDS,255,(255,0,0,0),loop=True),bytes([255,0,0]*2+[0]*6))
         self.assertEqual(wc.house_zones(self.members+extra[:-1],maps),[])
+        extra[2]["name"]="Backl Bush"
+        self.assertEqual(wc.house_zones(self.members+extra,maps),zones)

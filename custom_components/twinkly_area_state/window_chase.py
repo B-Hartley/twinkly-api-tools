@@ -36,7 +36,7 @@ def house_zones(members, pane_maps):
     # Provisional route; keep top/bottom together and split Front Right.
     route = (
         ({"front left top"}, {"front left bottom"}),
-        ({"back left bush", "back left"},),
+        ({"back left bush", "back left", "backl bush"},),
         ({"light tree", "tree"},),
         ({"front right bush", "front right"},),
         ({"mid right", "mid right bush"},),
