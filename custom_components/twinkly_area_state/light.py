@@ -484,7 +484,7 @@ class CombinedBush(LightEntity):
         self.combined_map=None
         self._attr_unique_id="combined_"+slug
         self._attr_name=None
-        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly",model="Combined virtual bush")
+        self._attr_device_info=DeviceInfo(identifiers={(DOMAIN,self._attr_unique_id)},name=name,manufacturer="Twinkly",model="Combined bush")
         self._attr_color_mode=ColorMode.RGBW if all(m["width"]==4 for _,m in self.parts) else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
 
@@ -567,7 +567,7 @@ class VirtualLight(LightEntity):
     def __init__(self,group,m):
         self.group=group
         self.member=m
-        self._attr_name="Virtual light"
+        self._attr_name=None
         self._attr_unique_id=m["mac"]+"_virtual"
         self._attr_color_mode=ColorMode.RGBW if m["width"]==4 else ColorMode.RGB
         self._attr_supported_color_modes={self._attr_color_mode}
@@ -712,8 +712,8 @@ async def async_setup_entry(hass,entry,async_add_entities):
     ctx["virtual_groups"]=groups
     combined=[]
     definitions=(
-        ("Virtual Front Left Bush","front_left_bush",({"front left top"},{"front left bottom"})),
-        ("Virtual Back Right Bush","back_right_bush",({"back bush top","backr bush top","back right bush top"},{"back bush bottom","backr bush bottom","back right bush bottom"})),
+        ("Front Left Bush","front_left_bush",({"front left top"},{"front left bottom"})),
+        ("Back Right Bush","back_right_bush",({"back bush top","backr bush top","back right bush top"},{"back bush bottom","backr bush bottom","back right bush bottom"})),
     )
     for name,slug,aliases in definitions:
         matches=[[(g,m) for g in groups for m in g.members if " ".join(m["name"].casefold().split()) in names] for names in aliases]
