@@ -173,3 +173,14 @@ start_countdown_test:
 stop_countdown_test:
   name: Stop countdown test
   description: Stop the shared show session, its audio and lights.
+
+replace_group_reference:
+  name: Replace verified 2D group reference
+  description: Compare /config/twinkly_group_candidate.json with fresh controller reads and replace only its matching saved group reference. Retains previous reference and all original 3D maps. No device or cloud writes.
+  fields:
+    confirmation:
+      name: Confirmation
+      required: true
+      example: REPLACE GROUP REFERENCE
+      selector:
+        text: {}
