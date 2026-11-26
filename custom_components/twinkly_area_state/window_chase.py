@@ -6,7 +6,9 @@ WINDOW_CHASE = "Window Chase"
 HOUSE_CHASE = "House and Garden Chase"
 SLIDE_CHASE = "Bush and Window Chase V2"
 CHASE_EFFECTS = (WINDOW_CHASE, HOUSE_CHASE, SLIDE_CHASE)
-WINDOW_ORDER = ("office left", "office right", "master bedroom", "landing", "lounge", "bar")
+WINDOW_ORDER = ("lounge", "bar", "office right", "office left", "landing", "master bedroom")
+# Physical pane labels run left to right; the return across the upper floor runs right to left.
+REVERSE_ROUTE_WINDOWS = frozenset(("office right", "office left", "landing", "master bedroom"))
 PANE_SECONDS = 0.32
 
 def chase_zones(members, pane_maps):
@@ -23,7 +25,7 @@ def chase_zones(members, pane_maps):
         indices = [i for pane in panes for i in pane]
         if sorted(indices) != list(range(m["led_count"])):
             return []
-        zones.extend((m["mac"], tuple(pane)) for pane in panes)
+        zones.extend((m["mac"], tuple(pane)) for pane in (reversed(panes) if name in REVERSE_ROUTE_WINDOWS else panes))
     return zones
 
 def house_zones(members, pane_maps):
@@ -31,23 +33,13 @@ def house_zones(members, pane_maps):
     windows = chase_zones(members, pane_maps)
     if not windows:
         return []
-    result = [(zone,) for zone in windows]
+    result = []
     def find(aliases):
         matches = [m for m in members if " ".join(m["name"].casefold().split()) in aliases]
         return matches[0] if len(matches) == 1 else None
     def whole(m):
         return (m["mac"], tuple(range(m["led_count"])))
-    # Provisional route; keep top/bottom together and split Front Right.
-    route = (
-        ({"front left top"}, {"front left bottom"}),
-        ({"back left bush", "back left", "backl bush"},),
-        ({"light tree", "tree"},),
-        ({"front right bush", "front right"},),
-        ({"mid right", "mid right bush"},),
-        ({"back bush top", "backr bush top", "back right bush top", "back right top"},
-         {"back bush bottom", "backr bush bottom", "back right bush bottom", "back right bottom"}),
-        ({"icicles"},),
-    )
+    route = SLIDE_BUSHES
     for aliases in route:
         parts = [find(a) for a in aliases]
         if any(m is None for m in parts):
@@ -60,6 +52,12 @@ def house_zones(members, pane_maps):
             result.extend(((m["mac"], tuple(p)),) for p in panes)
         else:
             result.append(tuple(whole(m) for m in parts))
+    # The garden finishes beside the lounge; the upper floor is the return leg.
+    result.extend((zone,) for zone in windows)
+    icicles=find({"icicles"})
+    if icicles is None:
+        return []
+    result.insert(len(result)-10, (whole(icicles),))
     return result
 
 def chase_frame(member, zones, elapsed, brightness, rgbw, loop=False):
@@ -85,14 +83,15 @@ def chase_frame(member, zones, elapsed, brightness, rgbw, loop=False):
 # Each stop has a fully illuminated hold followed by a feathered spatial transfer.
 BUSH_HOLD, BUSH_TRANSFER = .35, 1.55
 PANE_HOLD, PANE_TRANSFER = .25, .95
-SLIDE_WINDOWS = ("lounge", "bar", "office left", "office right", "master bedroom", "landing")
+SLIDE_WINDOWS = WINDOW_ORDER
 SLIDE_BUSHES = (
     (("front left top",), ("front left bottom",)),
+    (("light tree", "tree"),),
     (("front right bush", "front right"),),
     (("mid right", "mid right bush"),),
-    (("back left bush", "back left", "backl bush"),),
     (("back bush top", "backr bush top", "back right bush top", "back right top"),
      ("back bush bottom", "backr bush bottom", "back right bush bottom", "back right bottom")),
+    (("back left bush", "back left", "backl bush"),),
 )
 
 def _points(layout, count, source, axes):
@@ -160,7 +159,12 @@ def slide_geometry(members,pane_maps,maps_3d,maps_2d):
         else:
             route.append((True,tuple(whole(m) for m in ms)))
     for name in SLIDE_WINDOWS:
-        route.extend((False,(part,)) for part in panes(find((name,))))
+        parts=panes(find((name,)))
+        if name in REVERSE_ROUTE_WINDOWS:
+            parts.reverse()
+        route.extend((False,(part,)) for part in parts)
+        if name=="bar":
+            route.append((False,(whole(find(("icicles",))),)))
     screen={}
     originals={}
     for bush,parts in route:
