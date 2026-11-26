@@ -617,6 +617,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                          title="Twinkly groups captured",
                          notification_id=f"{DOMAIN}_capture_group")
 
+    async def replace_group_reference(call: ServiceCall):
+        """Only replace a saved reference with explicitly reviewed matching live geometry."""
+        from .group_reference import match_candidate, replace_reference
+        from homeassistant.exceptions import HomeAssistantError
+        if call.data.get("confirmation") != "REPLACE GROUP REFERENCE":
+            raise HomeAssistantError("Type REPLACE GROUP REFERENCE to confirm")
+        async with lock:
+            try:
+                ctx = hass.data[DOMAIN][entry.entry_id]
+                if ctx["show"].task and not ctx["show"].task.done():
+                    raise ValueError("Stop the running show first")
+                if any(g.active or g.native_effect for g in ctx.get("virtual_groups", [])):
+                    raise ValueError("Turn all managed lights off first")
+                path = Path(hass.config.path("twinkly_group_candidate.json"))
+                def load_candidate():
+                    if path.stat().st_size > MAX_RESPONSE:
+                        raise ValueError("Candidate exceeds size limit")
+                    return json.loads(path.read_text(encoding="utf-8"))
+                candidate = await hass.async_add_executor_job(load_candidate)
+                live = await collect("replace-group-reference")
+                uid, record = match_candidate(candidate, _capture_local_groups(live), _geometry_matches)
+                data = await store.async_load() or {}
+                archives = data.setdefault("_area_manager", {"maps_3d": {}, "groups": {}})
+                replace_reference(archives, uid, record, datetime.now(timezone.utc).isoformat())
+                await store.async_save(data)
+                for group in ctx.get("virtual_groups", []):
+                    group.load_maps(data)
+                for bush in ctx.get("combined_bushes", []):
+                    bush.load_maps(data)
+                for group in ctx.get("virtual_groups", []):
+                    group.notify()
+                async_create(hass, f"Verified and updated local 2D group reference {uid}; "
+                             "previous reference retained, standalone 3D archives unchanged. "
+                             "Cloud verification is separate.",
+                             title="Twinkly group reference updated",
+                             notification_id=f"{DOMAIN}_replace_group_reference")
+            except (ValueError, OSError, TypeError, KeyError) as exc:
+                raise HomeAssistantError(f"Group reference replacement failed: {exc}") from exc
+
     async def capture_3d_maps(call: ServiceCall):
         async with lock:
             live = await collect("capture-3d-local")
@@ -764,6 +803,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.services.async_register(DOMAIN, "capture_layout_diagnostics", capture_layout_diagnostics)
     hass.services.async_register(DOMAIN, "capture_groups", capture_groups)
+    hass.services.async_register(DOMAIN, "replace_group_reference", replace_group_reference,
+        schema=vol.Schema({vol.Required("confirmation"): str}))
     hass.services.async_register(DOMAIN, "capture_3d_maps", capture_3d_maps)
     hass.services.async_register(DOMAIN, "import_3d_maps", import_3d_maps,
         schema=vol.Schema({vol.Optional("overwrite", default=False): bool,
@@ -840,7 +881,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.config_entries.async_unload_platforms(entry, ["button", "light"]):
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
-                    "capture_groups", "capture_3d_maps", "verify_archives",
+                    "capture_groups", "replace_group_reference", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
                     "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers"):
         hass.services.async_remove(DOMAIN, service)
