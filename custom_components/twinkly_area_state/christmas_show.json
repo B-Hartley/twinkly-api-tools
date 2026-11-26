@@ -45,30 +45,30 @@
   "zones": {
     "bushes": [
       "light.twinkly_front_left_bush",
-      "light.twinkly_back_left_bush",
-      "light.twinkly_back_right_bush",
-      "light.twinkly_mid_right",
       "light.twinkly_front_right_left_bush",
-      "light.twinkly_front_right_right_bush"
+      "light.twinkly_front_right_right_bush",
+      "light.twinkly_mid_right",
+      "light.twinkly_back_right_bush",
+      "light.twinkly_back_left_bush"
     ],
     "windows": [
-      "light.twinkly_office_left_pane_1",
-      "light.twinkly_office_left_pane_2",
-      "light.twinkly_office_left_pane_3",
-      "light.twinkly_office_right_pane_1",
-      "light.twinkly_office_right_pane_2",
-      "light.twinkly_office_right_pane_3",
-      "light.twinkly_master_bedroom_left",
-      "light.twinkly_master_bedroom_right",
-      "light.twinkly_landing_pane_1",
-      "light.twinkly_landing_pane_2",
       "light.twinkly_lounge_pane_1",
       "light.twinkly_lounge_pane_2",
       "light.twinkly_lounge_pane_3",
       "light.twinkly_bar_pane_1",
       "light.twinkly_bar_pane_2",
       "light.twinkly_bar_pane_3",
-      "light.twinkly_bar_pane_4"
+      "light.twinkly_bar_pane_4",
+      "light.twinkly_office_right_pane_3",
+      "light.twinkly_office_right_pane_2",
+      "light.twinkly_office_right_pane_1",
+      "light.twinkly_office_left_pane_3",
+      "light.twinkly_office_left_pane_2",
+      "light.twinkly_office_left_pane_1",
+      "light.twinkly_landing_pane_2",
+      "light.twinkly_landing_pane_1",
+      "light.twinkly_master_bedroom_right",
+      "light.twinkly_master_bedroom_left"
     ],
     "tree": [
       "light.twinkly_light_tree"
@@ -79,16 +79,6 @@
   },
   "routes": {
     "window_chase": [
-      "light.twinkly_office_left_pane_1",
-      "light.twinkly_office_left_pane_2",
-      "light.twinkly_office_left_pane_3",
-      "light.twinkly_office_right_pane_1",
-      "light.twinkly_office_right_pane_2",
-      "light.twinkly_office_right_pane_3",
-      "light.twinkly_master_bedroom_left",
-      "light.twinkly_master_bedroom_right",
-      "light.twinkly_landing_pane_1",
-      "light.twinkly_landing_pane_2",
       "light.twinkly_lounge_pane_1",
       "light.twinkly_lounge_pane_2",
       "light.twinkly_lounge_pane_3",
@@ -96,49 +86,59 @@
       "light.twinkly_bar_pane_2",
       "light.twinkly_bar_pane_3",
       "light.twinkly_bar_pane_4",
-      "light.twinkly_bar_pane_3",
-      "light.twinkly_bar_pane_2",
-      "light.twinkly_bar_pane_1",
-      "light.twinkly_lounge_pane_3",
-      "light.twinkly_lounge_pane_2",
-      "light.twinkly_lounge_pane_1",
-      "light.twinkly_landing_pane_2",
-      "light.twinkly_landing_pane_1",
-      "light.twinkly_master_bedroom_right",
-      "light.twinkly_master_bedroom_left",
       "light.twinkly_office_right_pane_3",
       "light.twinkly_office_right_pane_2",
       "light.twinkly_office_right_pane_1",
       "light.twinkly_office_left_pane_3",
       "light.twinkly_office_left_pane_2",
-      "light.twinkly_office_left_pane_1"
-    ],
-    "garden_loop": [
-      "light.twinkly_front_left_bush",
-      "light.twinkly_back_left_bush",
-      "light.twinkly_back_right_bush",
-      "light.twinkly_mid_right",
-      "light.twinkly_front_right_left_bush",
-      "light.twinkly_front_right_right_bush",
-      "light.twinkly_light_tree",
-      "light.twinkly_icicles",
+      "light.twinkly_office_left_pane_1",
+      "light.twinkly_landing_pane_2",
+      "light.twinkly_landing_pane_1",
+      "light.twinkly_master_bedroom_right",
+      "light.twinkly_master_bedroom_left",
+      "light.twinkly_master_bedroom_right",
+      "light.twinkly_landing_pane_1",
+      "light.twinkly_landing_pane_2",
       "light.twinkly_office_left_pane_1",
       "light.twinkly_office_left_pane_2",
       "light.twinkly_office_left_pane_3",
       "light.twinkly_office_right_pane_1",
       "light.twinkly_office_right_pane_2",
       "light.twinkly_office_right_pane_3",
-      "light.twinkly_master_bedroom_left",
-      "light.twinkly_master_bedroom_right",
-      "light.twinkly_landing_pane_1",
-      "light.twinkly_landing_pane_2",
+      "light.twinkly_bar_pane_4",
+      "light.twinkly_bar_pane_3",
+      "light.twinkly_bar_pane_2",
+      "light.twinkly_bar_pane_1",
+      "light.twinkly_lounge_pane_3",
+      "light.twinkly_lounge_pane_2",
+      "light.twinkly_lounge_pane_1"
+    ],
+    "garden_loop": [
+      "light.twinkly_front_left_bush",
+      "light.twinkly_light_tree",
+      "light.twinkly_front_right_left_bush",
+      "light.twinkly_front_right_right_bush",
+      "light.twinkly_mid_right",
+      "light.twinkly_back_right_bush",
+      "light.twinkly_back_left_bush",
       "light.twinkly_lounge_pane_1",
       "light.twinkly_lounge_pane_2",
       "light.twinkly_lounge_pane_3",
       "light.twinkly_bar_pane_1",
       "light.twinkly_bar_pane_2",
       "light.twinkly_bar_pane_3",
-      "light.twinkly_bar_pane_4"
+      "light.twinkly_bar_pane_4",
+      "light.twinkly_icicles",
+      "light.twinkly_office_right_pane_3",
+      "light.twinkly_office_right_pane_2",
+      "light.twinkly_office_right_pane_1",
+      "light.twinkly_office_left_pane_3",
+      "light.twinkly_office_left_pane_2",
+      "light.twinkly_office_left_pane_1",
+      "light.twinkly_landing_pane_2",
+      "light.twinkly_landing_pane_1",
+      "light.twinkly_master_bedroom_right",
+      "light.twinkly_master_bedroom_left"
     ]
   },
   "music": {
@@ -170,7 +170,7 @@
     {
       "id": "04_tree",
       "at": 32.299,
-      "until": 36.0,
+      "until": 36,
       "text": "Christmas tree... show us your sparkle!"
     },
     {
@@ -182,7 +182,7 @@
     {
       "id": "06_colours",
       "at": 42.0629,
-      "until": 50.0,
+      "until": 50,
       "text": "Splendid! Now, let's bring those Christmas colours together."
     },
     {
@@ -194,7 +194,7 @@
     {
       "id": "08_window_chase",
       "at": 74.1181,
-      "until": 82.0,
+      "until": 82,
       "text": "Windows... send that golden sparkle round the house, and back again!"
     },
     {
@@ -211,13 +211,13 @@
     },
     {
       "id": "11_finale",
-      "at": 98.0,
-      "until": 102.0,
+      "at": 98,
+      "until": 102,
       "text": "And now... a grand Christmas finale!"
     },
     {
       "id": "12_farewell",
-      "at": 130.0,
+      "at": 130,
       "until": 139.6,
       "text": "From all of us at the North Pole... have a wonderful Christmas! Good night, everyone. Ho, ho, ho!"
     }
@@ -245,14 +245,14 @@
       "duration": 10.3561,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front_left_bush"
           ],
@@ -273,7 +273,7 @@
         {
           "at": 1.0333,
           "targets": [
-            "light.twinkly_back_left_bush"
+            "light.twinkly_front_right_left_bush"
           ],
           "brightness": 115,
           "rgb": [
@@ -292,7 +292,7 @@
         {
           "at": 2.0898,
           "targets": [
-            "light.twinkly_back_right_bush"
+            "light.twinkly_front_right_right_bush"
           ],
           "brightness": 115,
           "rgb": [
@@ -330,7 +330,7 @@
         {
           "at": 4.1912,
           "targets": [
-            "light.twinkly_front_right_left_bush"
+            "light.twinkly_back_right_bush"
           ],
           "brightness": 115,
           "rgb": [
@@ -349,7 +349,7 @@
         {
           "at": 5.2129,
           "targets": [
-            "light.twinkly_front_right_right_bush"
+            "light.twinkly_back_left_bush"
           ],
           "brightness": 115,
           "rgb": [
@@ -368,7 +368,7 @@
         {
           "at": 6.7338,
           "targets": [
-            "light.twinkly_front_right_right_bush"
+            "light.twinkly_back_left_bush"
           ],
           "brightness": 125,
           "rgb": [
@@ -387,7 +387,7 @@
         {
           "at": 7.2563,
           "targets": [
-            "light.twinkly_front_right_left_bush"
+            "light.twinkly_back_right_bush"
           ],
           "brightness": 125,
           "rgb": [
@@ -425,7 +425,7 @@
         {
           "at": 8.3012,
           "targets": [
-            "light.twinkly_back_right_bush"
+            "light.twinkly_front_right_right_bush"
           ],
           "brightness": 125,
           "rgb": [
@@ -444,7 +444,7 @@
         {
           "at": 8.8236,
           "targets": [
-            "light.twinkly_back_left_bush"
+            "light.twinkly_front_right_left_bush"
           ],
           "brightness": 125,
           "rgb": [
@@ -481,223 +481,33 @@
       "duration": 12.9336,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
-          "targets": [
-            "light.twinkly_office_left_pane_1"
-          ],
-          "brightness": 130,
-          "rgb": [
-            255,
-            25,
-            10
-          ]
-        },
-        {
-          "at": 0.5225,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 0.5225,
-          "targets": [
-            "light.twinkly_office_left_pane_2"
-          ],
-          "brightness": 130,
-          "rgb": [
-            10,
-            230,
-            50
-          ]
-        },
-        {
-          "at": 1.0333,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 1.0333,
-          "targets": [
-            "light.twinkly_office_left_pane_3"
-          ],
-          "brightness": 130,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 1.5558,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 1.5558,
-          "targets": [
-            "light.twinkly_office_right_pane_1"
-          ],
-          "brightness": 130,
-          "rgb": [
-            30,
-            90,
-            255
-          ]
-        },
-        {
-          "at": 2.0666,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 2.0666,
-          "targets": [
-            "light.twinkly_office_right_pane_2"
-          ],
-          "brightness": 130,
-          "rgb": [
-            175,
-            35,
-            255
-          ]
-        },
-        {
-          "at": 2.5891,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 2.5891,
-          "targets": [
-            "light.twinkly_office_right_pane_3"
-          ],
-          "brightness": 130,
-          "rgb": [
-            10,
-            230,
-            50
-          ]
-        },
-        {
-          "at": 3.0651,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.0651,
-          "targets": [
-            "light.twinkly_master_bedroom_left"
-          ],
-          "brightness": 130,
-          "rgb": [
-            255,
-            25,
-            10
-          ]
-        },
-        {
-          "at": 3.5643,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.5643,
-          "targets": [
-            "light.twinkly_master_bedroom_right"
-          ],
-          "brightness": 130,
-          "rgb": [
-            10,
-            230,
-            50
-          ]
-        },
-        {
-          "at": 4.0635,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 4.0635,
-          "targets": [
-            "light.twinkly_landing_pane_1"
-          ],
-          "brightness": 130,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 4.5395,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 4.5395,
-          "targets": [
-            "light.twinkly_landing_pane_2"
-          ],
-          "brightness": 130,
-          "rgb": [
-            30,
-            90,
-            255
-          ]
-        },
-        {
-          "at": 5.062,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 5.062,
+          "at": 0,
           "targets": [
             "light.twinkly_lounge_pane_1"
           ],
           "brightness": 130,
           "rgb": [
-            175,
-            35,
-            255
+            255,
+            25,
+            10
           ]
         },
         {
-          "at": 5.5961,
+          "at": 0.5225,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 5.5961,
+          "at": 0.5225,
           "targets": [
             "light.twinkly_lounge_pane_2"
           ],
@@ -709,6 +519,196 @@
           ]
         },
         {
+          "at": 1.0333,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 1.0333,
+          "targets": [
+            "light.twinkly_lounge_pane_3"
+          ],
+          "brightness": 130,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 1.5558,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 1.5558,
+          "targets": [
+            "light.twinkly_bar_pane_1"
+          ],
+          "brightness": 130,
+          "rgb": [
+            30,
+            90,
+            255
+          ]
+        },
+        {
+          "at": 2.0666,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 2.0666,
+          "targets": [
+            "light.twinkly_bar_pane_2"
+          ],
+          "brightness": 130,
+          "rgb": [
+            175,
+            35,
+            255
+          ]
+        },
+        {
+          "at": 2.5891,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 2.5891,
+          "targets": [
+            "light.twinkly_bar_pane_3"
+          ],
+          "brightness": 130,
+          "rgb": [
+            10,
+            230,
+            50
+          ]
+        },
+        {
+          "at": 3.0651,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 3.0651,
+          "targets": [
+            "light.twinkly_bar_pane_4"
+          ],
+          "brightness": 130,
+          "rgb": [
+            255,
+            25,
+            10
+          ]
+        },
+        {
+          "at": 3.5643,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 3.5643,
+          "targets": [
+            "light.twinkly_office_right_pane_3"
+          ],
+          "brightness": 130,
+          "rgb": [
+            10,
+            230,
+            50
+          ]
+        },
+        {
+          "at": 4.0635,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 4.0635,
+          "targets": [
+            "light.twinkly_office_right_pane_2"
+          ],
+          "brightness": 130,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 4.5395,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 4.5395,
+          "targets": [
+            "light.twinkly_office_right_pane_1"
+          ],
+          "brightness": 130,
+          "rgb": [
+            30,
+            90,
+            255
+          ]
+        },
+        {
+          "at": 5.062,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.062,
+          "targets": [
+            "light.twinkly_office_left_pane_3"
+          ],
+          "brightness": 130,
+          "rgb": [
+            175,
+            35,
+            255
+          ]
+        },
+        {
+          "at": 5.5961,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.5961,
+          "targets": [
+            "light.twinkly_office_left_pane_2"
+          ],
+          "brightness": 130,
+          "rgb": [
+            10,
+            230,
+            50
+          ]
+        },
+        {
           "at": 6.014,
           "targets": [
             "light.twinkly_front"
@@ -718,7 +718,7 @@
         {
           "at": 6.014,
           "targets": [
-            "light.twinkly_lounge_pane_3"
+            "light.twinkly_office_left_pane_1"
           ],
           "brightness": 130,
           "rgb": [
@@ -737,7 +737,7 @@
         {
           "at": 6.5713,
           "targets": [
-            "light.twinkly_bar_pane_1"
+            "light.twinkly_landing_pane_2"
           ],
           "brightness": 130,
           "rgb": [
@@ -756,7 +756,7 @@
         {
           "at": 7.0589,
           "targets": [
-            "light.twinkly_bar_pane_2"
+            "light.twinkly_landing_pane_1"
           ],
           "brightness": 130,
           "rgb": [
@@ -775,7 +775,7 @@
         {
           "at": 7.5581,
           "targets": [
-            "light.twinkly_bar_pane_3"
+            "light.twinkly_master_bedroom_right"
           ],
           "brightness": 130,
           "rgb": [
@@ -794,7 +794,7 @@
         {
           "at": 8.0806,
           "targets": [
-            "light.twinkly_bar_pane_4"
+            "light.twinkly_master_bedroom_left"
           ],
           "brightness": 130,
           "rgb": [
@@ -813,8 +813,7 @@
         {
           "at": 8.5556,
           "targets": [
-            "light.twinkly_office_left_pane_1",
-            "light.twinkly_office_right_pane_3"
+            "light.twinkly_lounge_pane_1"
           ],
           "brightness": 140,
           "rgb": [
@@ -833,8 +832,7 @@
         {
           "at": 9.5667,
           "targets": [
-            "light.twinkly_master_bedroom_left",
-            "light.twinkly_master_bedroom_right"
+            "light.twinkly_bar_pane_3"
           ],
           "brightness": 140,
           "rgb": [
@@ -853,8 +851,7 @@
         {
           "at": 10.5071,
           "targets": [
-            "light.twinkly_landing_pane_1",
-            "light.twinkly_landing_pane_2"
+            "light.twinkly_office_left_pane_3"
           ],
           "brightness": 140,
           "rgb": [
@@ -873,8 +870,7 @@
         {
           "at": 11.4707,
           "targets": [
-            "light.twinkly_lounge_pane_1",
-            "light.twinkly_bar_pane_4"
+            "light.twinkly_master_bedroom_left"
           ],
           "brightness": 140,
           "rgb": [
@@ -892,14 +888,14 @@
       "duration": 4.1563,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_light_tree"
           ],
@@ -943,14 +939,14 @@
       "duration": 5.6076,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_icicles"
           ],
@@ -1018,14 +1014,14 @@
       "duration": 16.6604,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_office_left_pane_1",
             "light.twinkly_office_left_pane_2",
@@ -1042,7 +1038,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_master_bedroom_left",
             "light.twinkly_master_bedroom_right",
@@ -1057,7 +1053,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_lounge_pane_1",
             "light.twinkly_lounge_pane_2",
@@ -1075,7 +1071,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front_left_bush",
             "light.twinkly_back_right_bush",
@@ -1089,7 +1085,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_back_left_bush",
             "light.twinkly_mid_right",
@@ -1103,7 +1099,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_light_tree"
           ],
@@ -1115,7 +1111,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_icicles"
           ],
@@ -1745,14 +1741,14 @@
       "duration": 15.3948,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_office_left_pane_1",
             "light.twinkly_office_left_pane_2",
@@ -1780,7 +1776,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front_left_bush",
             "light.twinkly_back_left_bush",
@@ -1798,7 +1794,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_icicles"
           ],
@@ -1810,7 +1806,7 @@
           ]
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_office_left_pane_1",
             "light.twinkly_office_right_pane_2",
@@ -1833,7 +1829,7 @@
           "brightness": 185
         },
         {
-          "at": 3.0,
+          "at": 3,
           "targets": [
             "light.twinkly_office_left_pane_3",
             "light.twinkly_master_bedroom_left",
@@ -1935,16 +1931,16 @@
       "duration": 13.8391,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
-            "light.twinkly_office_left_pane_1"
+            "light.twinkly_lounge_pane_1"
           ],
           "brightness": 200,
           "rgb": [
@@ -1963,196 +1959,6 @@
         {
           "at": 0.375,
           "targets": [
-            "light.twinkly_office_left_pane_2"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 0.75,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 0.75,
-          "targets": [
-            "light.twinkly_office_left_pane_3"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 1.125,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 1.125,
-          "targets": [
-            "light.twinkly_office_right_pane_1"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 1.5,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 1.5,
-          "targets": [
-            "light.twinkly_office_right_pane_2"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 1.875,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 1.875,
-          "targets": [
-            "light.twinkly_office_right_pane_3"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 2.25,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 2.25,
-          "targets": [
-            "light.twinkly_master_bedroom_left"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 2.625,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 2.625,
-          "targets": [
-            "light.twinkly_master_bedroom_right"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 3.0,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.0,
-          "targets": [
-            "light.twinkly_landing_pane_1"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 3.375,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.375,
-          "targets": [
-            "light.twinkly_landing_pane_2"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 3.75,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.75,
-          "targets": [
-            "light.twinkly_lounge_pane_1"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 4.125,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 4.125,
-          "targets": [
             "light.twinkly_lounge_pane_2"
           ],
           "brightness": 200,
@@ -2163,14 +1969,14 @@
           ]
         },
         {
-          "at": 4.5,
+          "at": 0.75,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 4.5,
+          "at": 0.75,
           "targets": [
             "light.twinkly_lounge_pane_3"
           ],
@@ -2182,14 +1988,14 @@
           ]
         },
         {
-          "at": 4.875,
+          "at": 1.125,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 4.875,
+          "at": 1.125,
           "targets": [
             "light.twinkly_bar_pane_1"
           ],
@@ -2201,14 +2007,14 @@
           ]
         },
         {
-          "at": 5.25,
+          "at": 1.5,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 5.25,
+          "at": 1.5,
           "targets": [
             "light.twinkly_bar_pane_2"
           ],
@@ -2220,14 +2026,14 @@
           ]
         },
         {
-          "at": 5.625,
+          "at": 1.875,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 5.625,
+          "at": 1.875,
           "targets": [
             "light.twinkly_bar_pane_3"
           ],
@@ -2239,14 +2045,14 @@
           ]
         },
         {
-          "at": 6.0,
+          "at": 2.25,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 6.0,
+          "at": 2.25,
           "targets": [
             "light.twinkly_bar_pane_4"
           ],
@@ -2258,204 +2064,14 @@
           ]
         },
         {
-          "at": 6.375,
+          "at": 2.625,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 6.375,
-          "targets": [
-            "light.twinkly_bar_pane_3"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 6.75,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 6.75,
-          "targets": [
-            "light.twinkly_bar_pane_2"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 7.125,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 7.125,
-          "targets": [
-            "light.twinkly_bar_pane_1"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 7.5,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 7.5,
-          "targets": [
-            "light.twinkly_lounge_pane_3"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 7.875,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 7.875,
-          "targets": [
-            "light.twinkly_lounge_pane_2"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 8.25,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 8.25,
-          "targets": [
-            "light.twinkly_lounge_pane_1"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 8.625,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 8.625,
-          "targets": [
-            "light.twinkly_landing_pane_2"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 9.0,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 9.0,
-          "targets": [
-            "light.twinkly_landing_pane_1"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 9.375,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 9.375,
-          "targets": [
-            "light.twinkly_master_bedroom_right"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 9.75,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 9.75,
-          "targets": [
-            "light.twinkly_master_bedroom_left"
-          ],
-          "brightness": 200,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 10.125,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 10.125,
+          "at": 2.625,
           "targets": [
             "light.twinkly_office_right_pane_3"
           ],
@@ -2467,14 +2083,14 @@
           ]
         },
         {
-          "at": 10.5,
+          "at": 3,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 10.5,
+          "at": 3,
           "targets": [
             "light.twinkly_office_right_pane_2"
           ],
@@ -2486,14 +2102,14 @@
           ]
         },
         {
-          "at": 10.875,
+          "at": 3.375,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 10.875,
+          "at": 3.375,
           "targets": [
             "light.twinkly_office_right_pane_1"
           ],
@@ -2505,14 +2121,14 @@
           ]
         },
         {
-          "at": 11.25,
+          "at": 3.75,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 11.25,
+          "at": 3.75,
           "targets": [
             "light.twinkly_office_left_pane_3"
           ],
@@ -2524,14 +2140,14 @@
           ]
         },
         {
-          "at": 11.625,
+          "at": 4.125,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 11.625,
+          "at": 4.125,
           "targets": [
             "light.twinkly_office_left_pane_2"
           ],
@@ -2543,14 +2159,14 @@
           ]
         },
         {
-          "at": 12.0,
+          "at": 4.5,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 12.0,
+          "at": 4.5,
           "targets": [
             "light.twinkly_office_left_pane_1"
           ],
@@ -2562,6 +2178,386 @@
           ]
         },
         {
+          "at": 4.875,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 4.875,
+          "targets": [
+            "light.twinkly_landing_pane_2"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 5.25,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.25,
+          "targets": [
+            "light.twinkly_landing_pane_1"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 5.625,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.625,
+          "targets": [
+            "light.twinkly_master_bedroom_right"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 6,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6,
+          "targets": [
+            "light.twinkly_master_bedroom_left"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 6.375,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6.375,
+          "targets": [
+            "light.twinkly_master_bedroom_right"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 6.75,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6.75,
+          "targets": [
+            "light.twinkly_landing_pane_1"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 7.125,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.125,
+          "targets": [
+            "light.twinkly_landing_pane_2"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 7.5,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.5,
+          "targets": [
+            "light.twinkly_office_left_pane_1"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 7.875,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.875,
+          "targets": [
+            "light.twinkly_office_left_pane_2"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 8.25,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8.25,
+          "targets": [
+            "light.twinkly_office_left_pane_3"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 8.625,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8.625,
+          "targets": [
+            "light.twinkly_office_right_pane_1"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 9,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 9,
+          "targets": [
+            "light.twinkly_office_right_pane_2"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 9.375,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 9.375,
+          "targets": [
+            "light.twinkly_office_right_pane_3"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 9.75,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 9.75,
+          "targets": [
+            "light.twinkly_bar_pane_4"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 10.125,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 10.125,
+          "targets": [
+            "light.twinkly_bar_pane_3"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 10.5,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 10.5,
+          "targets": [
+            "light.twinkly_bar_pane_2"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 10.875,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 10.875,
+          "targets": [
+            "light.twinkly_bar_pane_1"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 11.25,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 11.25,
+          "targets": [
+            "light.twinkly_lounge_pane_3"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 11.625,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 11.625,
+          "targets": [
+            "light.twinkly_lounge_pane_2"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_lounge_pane_1"
+          ],
+          "brightness": 200,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
           "at": 12.375,
           "targets": [
             "light.twinkly_front"
@@ -2571,8 +2567,7 @@
         {
           "at": 12.375,
           "targets": [
-            "light.twinkly_office_left_pane_1",
-            "light.twinkly_bar_pane_4"
+            "light.twinkly_office_right_pane_2"
           ],
           "brightness": 185,
           "rgb": [
@@ -2591,8 +2586,7 @@
         {
           "at": 13.125,
           "targets": [
-            "light.twinkly_master_bedroom_left",
-            "light.twinkly_landing_pane_2"
+            "light.twinkly_lounge_pane_1"
           ],
           "brightness": 185,
           "rgb": [
@@ -2610,14 +2604,14 @@
       "duration": 14.2454,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front_left_bush"
           ],
@@ -2638,7 +2632,7 @@
         {
           "at": 0.375,
           "targets": [
-            "light.twinkly_back_left_bush"
+            "light.twinkly_light_tree"
           ],
           "brightness": 205,
           "rgb": [
@@ -2656,44 +2650,6 @@
         },
         {
           "at": 0.75,
-          "targets": [
-            "light.twinkly_back_right_bush"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 1.125,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 1.125,
-          "targets": [
-            "light.twinkly_mid_right"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 1.5,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 1.5,
           "targets": [
             "light.twinkly_front_right_left_bush"
           ],
@@ -2705,14 +2661,14 @@
           ]
         },
         {
-          "at": 1.875,
+          "at": 1.125,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 1.875,
+          "at": 1.125,
           "targets": [
             "light.twinkly_front_right_right_bush"
           ],
@@ -2724,6 +2680,44 @@
           ]
         },
         {
+          "at": 1.5,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 1.5,
+          "targets": [
+            "light.twinkly_mid_right"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 1.875,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 1.875,
+          "targets": [
+            "light.twinkly_back_right_bush"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
           "at": 2.25,
           "targets": [
             "light.twinkly_front"
@@ -2733,7 +2727,7 @@
         {
           "at": 2.25,
           "targets": [
-            "light.twinkly_light_tree"
+            "light.twinkly_back_left_bush"
           ],
           "brightness": 205,
           "rgb": [
@@ -2751,215 +2745,6 @@
         },
         {
           "at": 2.625,
-          "targets": [
-            "light.twinkly_icicles"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 3.0,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.0,
-          "targets": [
-            "light.twinkly_office_left_pane_1"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 3.375,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.375,
-          "targets": [
-            "light.twinkly_office_left_pane_2"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 3.75,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 3.75,
-          "targets": [
-            "light.twinkly_office_left_pane_3"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 4.125,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 4.125,
-          "targets": [
-            "light.twinkly_office_right_pane_1"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 4.5,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 4.5,
-          "targets": [
-            "light.twinkly_office_right_pane_2"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 4.875,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 4.875,
-          "targets": [
-            "light.twinkly_office_right_pane_3"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 5.25,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 5.25,
-          "targets": [
-            "light.twinkly_master_bedroom_left"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 5.625,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 5.625,
-          "targets": [
-            "light.twinkly_master_bedroom_right"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 6.0,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 6.0,
-          "targets": [
-            "light.twinkly_landing_pane_1"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 6.375,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 6.375,
-          "targets": [
-            "light.twinkly_landing_pane_2"
-          ],
-          "brightness": 205,
-          "rgb": [
-            255,
-            165,
-            35
-          ]
-        },
-        {
-          "at": 6.75,
-          "targets": [
-            "light.twinkly_front"
-          ],
-          "off": true
-        },
-        {
-          "at": 6.75,
           "targets": [
             "light.twinkly_lounge_pane_1"
           ],
@@ -2971,14 +2756,14 @@
           ]
         },
         {
-          "at": 7.125,
+          "at": 3,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 7.125,
+          "at": 3,
           "targets": [
             "light.twinkly_lounge_pane_2"
           ],
@@ -2990,14 +2775,14 @@
           ]
         },
         {
-          "at": 7.5,
+          "at": 3.375,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 7.5,
+          "at": 3.375,
           "targets": [
             "light.twinkly_lounge_pane_3"
           ],
@@ -3009,14 +2794,14 @@
           ]
         },
         {
-          "at": 7.875,
+          "at": 3.75,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 7.875,
+          "at": 3.75,
           "targets": [
             "light.twinkly_bar_pane_1"
           ],
@@ -3028,14 +2813,14 @@
           ]
         },
         {
-          "at": 8.25,
+          "at": 4.125,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 8.25,
+          "at": 4.125,
           "targets": [
             "light.twinkly_bar_pane_2"
           ],
@@ -3047,14 +2832,14 @@
           ]
         },
         {
-          "at": 8.625,
+          "at": 4.5,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 8.625,
+          "at": 4.5,
           "targets": [
             "light.twinkly_bar_pane_3"
           ],
@@ -3066,16 +2851,225 @@
           ]
         },
         {
-          "at": 9.0,
+          "at": 4.875,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 9.0,
+          "at": 4.875,
           "targets": [
             "light.twinkly_bar_pane_4"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 5.25,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.25,
+          "targets": [
+            "light.twinkly_icicles"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 5.625,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.625,
+          "targets": [
+            "light.twinkly_office_right_pane_3"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 6,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6,
+          "targets": [
+            "light.twinkly_office_right_pane_2"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 6.375,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6.375,
+          "targets": [
+            "light.twinkly_office_right_pane_1"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 6.75,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6.75,
+          "targets": [
+            "light.twinkly_office_left_pane_3"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 7.125,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.125,
+          "targets": [
+            "light.twinkly_office_left_pane_2"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 7.5,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.5,
+          "targets": [
+            "light.twinkly_office_left_pane_1"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 7.875,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.875,
+          "targets": [
+            "light.twinkly_landing_pane_2"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 8.25,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8.25,
+          "targets": [
+            "light.twinkly_landing_pane_1"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 8.625,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8.625,
+          "targets": [
+            "light.twinkly_master_bedroom_right"
+          ],
+          "brightness": 205,
+          "rgb": [
+            255,
+            165,
+            35
+          ]
+        },
+        {
+          "at": 9,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 9,
+          "targets": [
+            "light.twinkly_master_bedroom_left"
           ],
           "brightness": 205,
           "rgb": [
@@ -3164,7 +3158,7 @@
           ]
         },
         {
-          "at": 12.0,
+          "at": 12,
           "targets": [
             "light.twinkly_office_left_pane_1",
             "light.twinkly_office_left_pane_2",
@@ -3244,7 +3238,7 @@
       "duration": 16.8577,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
@@ -3261,7 +3255,7 @@
       "duration": 10.9397,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
