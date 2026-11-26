@@ -26,6 +26,10 @@ BUSHES = [PREFIX + name for name in (
 TREE, ICICLES = PREFIX + "light_tree", PREFIX + "icicles"
 GARDEN = BUSHES + [TREE, ICICLES]
 ALL = WINDOWS + GARDEN
+# Physical routes are separate from palette groupings.
+BUSH_ROUTE = [BUSHES[i] for i in (0,4,5,3,2,1)]
+WINDOW_ROUTE = [WINDOWS[i] for i in (10,11,12,13,14,15,16,5,4,3,2,1,0,9,8,7,6)]
+GARDEN_ROUTE = [BUSH_ROUTE[0], TREE] + BUSH_ROUTE[1:] + WINDOW_ROUTE[:7] + [ICICLES] + WINDOW_ROUTE[7:]
 RED, GREEN, GOLD, BLUE, PURPLE, ICE = (
     [255, 25, 10], [10, 230, 50], [255, 165, 35], [30, 90, 255],
     [175, 35, 255], [140, 210, 255],
@@ -57,23 +61,20 @@ def build():
 
     off(0)
     palette = [RED, GREEN, GOLD, BLUE, PURPLE, GREEN]
-    for at, target, color in zip(grid["bush_solo_beats"], BUSHES, palette):
+    for at, target, color in zip(grid["bush_solo_beats"], BUSH_ROUTE, palette):
         solo(at, target, color, 115)
     # A second, quicker solo pass keeps every bush separate until the windows.
     for index, at in enumerate([15.7431, 16.2656, 16.8112, 17.3105, 17.8329, 18.367]):
-        solo(at, BUSHES[::-1][index], palette[(index + 2) % 6], 125)
+        solo(at, BUSH_ROUTE[::-1][index], palette[(index + 2) % 6], 125)
 
-    for index, (at, target) in enumerate(zip(grid["window_solo_beats"], WINDOWS)):
+    for index, (at, target) in enumerate(zip(grid["window_solo_beats"], WINDOW_ROUTE)):
         solo(at, target, palette[index % len(palette)], 130)
-    # Only after every pane has had its own moment do matched pairs appear.
-    for at, pair, color in [
-        (27.921, [WINDOWS[0], WINDOWS[5]], RED),
-        (28.9321, [WINDOWS[6], WINDOWS[7]], GREEN),
-        (29.8725, [WINDOWS[8], WINDOWS[9]], GOLD),
-        (30.8361, [WINDOWS[10], WINDOWS[16]], BLUE),
+    # Extra individual panes on the remaining four spoken beats.
+    for at, index, color in [
+        (27.921, 0, RED), (28.9321, 5, GREEN),
+        (29.8725, 10, GOLD), (30.8361, 16, BLUE),
     ]:
-        off(at)
-        solid(at, pair, color, 140)
+        solo(at, WINDOW_ROUTE[index], color, 140)
 
     solo(32.299, TREE, GOLD, 150)
     solid(nearest(33.7), [TREE], GREEN, 170)
@@ -116,20 +117,16 @@ def build():
 
     # A complete outward and return sweep: 17 panes, then 16 back to the first.
     # The settled music is 160 BPM here: one selected logical zone per beat.
-    window_route = WINDOWS + WINDOWS[-2::-1]
+    window_route = WINDOW_ROUTE + WINDOW_ROUTE[-2::-1]
     for index, target in enumerate(window_route):
         solo(74.1181 + index * .375, target, GOLD, 200)
-    # Close the window phrase with balanced pairs before entering the garden.
-    for at, pair in [(86.4931, [WINDOWS[0], WINDOWS[16]]),
-                     (87.2431, [WINDOWS[6], WINDOWS[9]])]:
-        off(at)
-        solid(at, pair, GOLD, 185)
+    # Keep each extra beat on one individual pane.
+    for at, index in [(86.4931, 8), (87.2431, 0)]:
+        solo(at, WINDOW_ROUTE[index], GOLD, 185)
 
-    # Santa names the bushes at 87.9572, then windows at 90.9572. The eight
-    # garden steps are six actual bushes followed by the tree and icicles.
-    garden_route = [BUSHES[0], BUSHES[1], BUSHES[2], BUSHES[3],
-                    BUSHES[4], BUSHES[5], TREE, ICICLES]
-    for index, target in enumerate(garden_route + WINDOWS):
+    # Tree is one complete stop between the front bushes; the back-left
+    # bush hands the spotlight to Lounge. Icicles follow Bar.
+    for index, target in enumerate(GARDEN_ROUTE):
         solo(87.9572 + index * .375, target, GOLD, 205)
     # Complete one full loop, then gather the display for the native finale.
     off(97.3322)
@@ -173,10 +170,10 @@ def build():
         "requires_stored_movies": True,
         "voice": {"provider": "HeyGen", "name": "Santa - Public", "synthetic": True},
         "targets": ALL + [FRONT],
-        "zones": {"bushes": BUSHES, "windows": WINDOWS,
+        "zones": {"bushes": BUSH_ROUTE, "windows": WINDOW_ROUTE,
                   "tree": [TREE], "icicles": [ICICLES]},
         "routes": {"window_chase": window_route,
-                   "garden_loop": garden_route + WINDOWS},
+                   "garden_loop": GARDEN_ROUTE},
         "music": {"title": "We Wish you a Merry Christmas", "artist": "Kevin MacLeod",
                   "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100369",
                   "license": "CC BY 4.0", "license_url": "https://creativecommons.org/licenses/by/4.0/"},
