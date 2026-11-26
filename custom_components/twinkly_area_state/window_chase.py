@@ -44,7 +44,7 @@ def house_zones(members, pane_maps):
         parts = [find(a) for a in aliases]
         if any(m is None for m in parts):
             return []
-        if aliases[0] == {"front right bush", "front right"}:
+        if "front right bush" in aliases[0]:
             m = parts[0]
             panes = pane_maps.get(m["mac"], [])
             if len(panes) != 2 or any(not p for p in panes) or sorted(i for p in panes for i in p) != list(range(m["led_count"])):
@@ -53,11 +53,14 @@ def house_zones(members, pane_maps):
         else:
             result.append(tuple(whole(m) for m in parts))
     # The garden finishes beside the lounge; the upper floor is the return leg.
-    result.extend((zone,) for zone in windows)
     icicles=find({"icicles"})
-    if icicles is None:
+    bar=find({"bar"})
+    if icicles is None or bar is None:
         return []
-    result.insert(len(result)-10, (whole(icicles),))
+    for index,zone in enumerate(windows):
+        result.append((zone,))
+        if zone[0]==bar["mac"] and (index+1==len(windows) or windows[index+1][0]!=bar["mac"]):
+            result.append((whole(icicles),))
     return result
 
 def chase_frame(member, zones, elapsed, brightness, rgbw, loop=False):
