@@ -122,7 +122,7 @@ class Simulation:
         if action == "play_media":
             self.states[self.speaker] = SimpleNamespace(state="playing", attributes={
                 "media_content_id": data["media_content_id"], "media_position": 0,
-                "media_position_updated_at": self.utc(), "media_duration": 140,
+                "media_position_updated_at": self.utc(), "media_duration": self.plan["soundtrack"]["duration"],
                 "volume_level": 0.05,
             })
         elif action == "media_stop":
@@ -250,6 +250,37 @@ class Simulation:
 
 
 class FullShowIntegrationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_countdown_sync_with_no_movies_and_only_landing_lit(self):
+        sim = Simulation(movies=0,brightness=100)
+        sim.plan=json.loads((ROOT/"countdown_test.json").read_text())
+        member=next(m for m in sim.group.members if m["name"]=="landing")
+        spec=importlib.util.spec_from_file_location("integration_countdown",ROOT/"countdown.py")
+        digits=importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(digits)
+        layout={"source":"2d","coordinates":[{"x":i/9,"y":j/20} for i in range(10) for j in range(21)]}
+        patterns=digits.countdown_patterns(layout,210,3)
+        sim.group.patterns[member["mac"]].update(patterns)
+        entity=sim.light.VirtualLight.__new__(sim.light.VirtualLight)
+        entity.group,entity.member=sim.group,member
+        entity.show_key=entity.entity_id="light.twinkly_landing"
+        sim.group.entities.append(entity)
+        sim.states[entity.entity_id]=SimpleNamespace(state="off",attributes={})
+        resolved=sim.show.resolve(sim.plan)
+        sim.show.lights=sim.scene.ShowLights(sim.hass,sim.show.ctx,resolved)
+        await sim.run()
+        self.assertIsNone(sim.show.last_error)
+        self.assertAlmostEqual(sim.now,12)
+        self.assertEqual([at for at,action,data in sim.events if action=="play_media"],[2])
+        for at,digit in enumerate((5,4,3,2,1),3):
+            self.assertEqual(sim.frame_at(at,"landing"),patterns[f"Countdown {digit}"])
+            for other in sim.group.members:
+                if other is not member:
+                    self.assertFalse(any(sim.frame_at(at,other["name"])))
+        self.assertFalse(any(sim.frame_at(8,"landing")))
+        sim.group.shutdown.assert_awaited_once_with("off")
+        self.assertFalse(sim.group.active)
+        self.assertIsNone(sim.group.native_effect)
+
     async def test_shipped_show_real_entities_render_and_two_movie_finale(self):
         sim = Simulation()
         self.assertEqual(len(sim.group.members), 15)
