@@ -106,9 +106,11 @@ class ChristmasScoreTests(unittest.TestCase):
     def test_garden_loop_visits_every_zone_and_returns_on_spoken_cue(self):
         selected=[next(iter(active)) for at,active in self.active_scenes() if 87.9572<=at<97.3322 and len(active)==1]
         self.assertEqual(len(selected),25)
-        self.assertEqual(set(selected[:6]),self.bushes)
-        self.assertEqual(set(selected[6:8]),self.tree|self.icicles)
-        self.assertEqual(set(selected[8:]),self.windows)
+        self.assertEqual(set(selected[:7]),self.bushes|self.tree)
+        self.assertEqual(set(selected[1:2]),self.tree)
+        self.assertEqual(set(selected[7:]),self.windows|self.icicles)
+        self.assertEqual(set(selected[14:15]),self.icicles)
+        self.assertEqual(selected,self.plan["routes"]["garden_loop"])
         self.assertEqual(len(set(selected)),25)
         self.assertTrue(dict(self.active_scenes())[90.9572]<=self.windows)
 
