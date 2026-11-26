@@ -1,0 +1,78 @@
+{
+  "schema_version": 2,
+  "name": "Landing countdown sync test",
+  "speaker": "media_player.sonos_move",
+  "soundtrack": {
+    "file": "landing_countdown_test.mp3",
+    "duration": 10
+  },
+  "requires_stored_movies": false,
+  "targets": [
+    "light.twinkly_front",
+    "light.twinkly_landing"
+  ],
+  "sections": [
+    {
+      "id": "countdown",
+      "title": "5 4 3 2 1",
+      "start": 0,
+      "duration": 10,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 3,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 5",
+          "brightness": 255
+        },
+        {
+          "at": 4,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 4",
+          "brightness": 255
+        },
+        {
+          "at": 5,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 3",
+          "brightness": 255
+        },
+        {
+          "at": 6,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 2",
+          "brightness": 255
+        },
+        {
+          "at": 7,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 1",
+          "brightness": 255
+        },
+        {
+          "at": 8,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        }
+      ]
+    }
+  ]
+}

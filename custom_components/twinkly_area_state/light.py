@@ -146,6 +146,12 @@ class Group:
                 except (ValueError,KeyError,TypeError) as exc:
                     _LOGGER.warning("%s: spiral unavailable: %s",m["name"],exc)
             name=" ".join(m["name"].casefold().split())
+            if name=="landing" and saved:
+                from .countdown import countdown_patterns
+                try:
+                    patterns.update(countdown_patterns(saved["layout"],m["led_count"],m["width"]))
+                except (ValueError,KeyError,TypeError) as exc:
+                    _LOGGER.warning("Landing countdown unavailable: %s",exc)
             if name in DEFAULTS:
                 config=data.get("_virtual_panes",{}).get(mac,{})
                 try:

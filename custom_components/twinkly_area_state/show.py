@@ -147,7 +147,7 @@ class Show:
         base = options.get("audio_base", "").strip()
         if not base:
             raise HomeAssistantError(
-                "Set audio_base to the new soundtrack folder, or use audio: false for a silent rehearsal")
+                "Set audio_base to the folder containing " + plan["soundtrack"]["file"] + ", or use audio: false for a silent rehearsal")
         speaker = plan["speaker"]
         state = self.hass.states.get(speaker)
         if state is None or state.state not in ("idle", "standby", "off", "paused"):
@@ -160,12 +160,16 @@ class Show:
         async with self._lifecycle_lock:
             await self._start(call)
 
-    async def _start(self, call):
+    async def start_countdown(self, call):
+        async with self._lifecycle_lock:
+            await self._start(call, "countdown_test.json")
+
+    async def _start(self, call, filename="christmas_show.json"):
         self.guard()
         if self.task and not self.task.done():
             raise HomeAssistantError("Christmas show already running")
         plan = await self.hass.async_add_executor_job(
-            lambda: json.loads(Path(__file__).with_name("christmas_show.json").read_text(encoding="utf-8")))
+            lambda: json.loads(Path(__file__).with_name(filename).read_text(encoding="utf-8")))
         build_timeline(plan)
         entities = self.resolve(plan)
         self.audio_ready(plan, call.data)
