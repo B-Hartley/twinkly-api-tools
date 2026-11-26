@@ -76,7 +76,7 @@ class SlideChaseTests(unittest.TestCase):
         self.assertEqual(set(self.stops[1]["pixels"]),{"light tree"})
         self.assertEqual(set(self.stops[2]["pixels"]),{"front right bush"})
         self.assertEqual(set(self.stops[5]["pixels"]),{"back bush top","back bush bottom"})
-        self.assertEqual(set(self.stops[6]["pixels"]),{"back left bush"}
+        self.assertEqual(set(self.stops[6]["pixels"]),{"back left bush"})
         self.assertEqual(set(self.stops[7]["pixels"]),{"lounge"})
         self.assertEqual(set(self.stops[3]["pixels"]),{"front right bush"})
         self.assertEqual(set(self.stops[11]["pixels"]),{"icicles"})
