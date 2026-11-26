@@ -512,21 +512,40 @@ def _verify_archives(state, archives):
         elif observed["group"].get("mode") == "none":
             if observed["layout"]["source"] != "3d" or not _geometry_matches(observed["layout"], ref["layout"]):
                 notes.append("3D reference differs for " + ref.get("name", mac[-4:]))
-    saved_groups = archives.get("groups", {})
-    for uid, group in saved_groups.items():
-        live_members = [(m, current.get(m["mac"])) for m in group["members"]]
-        if not all(observed is not None for _, observed in live_members):
-            notes.append("Group " + uid[:8] + ": member missing")
+    saved_groups = {str(uid).lower(): ref for uid, ref in archives.get("groups", {}).items()}
+    active = {}
+    for mac, observed in current.items():
+        group = observed["group"]
+        if group.get("mode") in ("master", "slave"):
+            uid = str(group.get("uid", "")).lower()
+            if not re.fullmatch(r"[0-9a-f-]{36}", uid):
+                notes.append("Active group UID missing for controller " + mac[-4:])
+                continue
+            active.setdefault(uid, {})[mac] = observed
+    for uid, live in active.items():
+        prefix = "Group " + uid + ": "
+        ref = saved_groups.get(uid)
+        if ref is None:
+            notes.append(prefix + "no saved reference")
             continue
-        # Saved UUID identifies the historical group. New cloud groups receive
-        # new UIDs, so compare geometry only if the live group still has that UID.
-        if all(observed["group"].get("mode") in ("master", "slave")
-               for _, observed in live_members):
-            for member, observed in live_members:
-                if observed["layout"]["source"] != "2d":
-                    notes.append("Group member not 2D: " + member["name"])
-                elif not _geometry_matches(observed["layout"], member["layout"]):
-                    notes.append("Saved group layout differs: " + member["name"])
+        expected = {m["mac"]: m for m in ref["members"]}
+        if set(live) != set(expected):
+            notes.append(prefix + "membership differs")
+        for mac in sorted(set(live) & set(expected)):
+            member, observed = expected[mac], live[mac]
+            group = observed["group"]
+            offset = group.get("offset")
+            if group.get("mode") == "master" and offset is None:
+                offset = 0
+            if (observed["count"] != member["led_count"]
+                    or group.get("mode") != member.get("role")
+                    or offset != member.get("offset")
+                    or group.get("size") != member.get("size")):
+                notes.append(prefix + "member configuration differs: " + member["name"])
+            if observed["layout"]["source"] != "2d":
+                notes.append(prefix + "member not 2D: " + member["name"])
+            elif not _geometry_matches(observed["layout"], member["layout"]):
+                notes.append(prefix + "saved layout differs: " + member["name"])
     return notes
 
 
