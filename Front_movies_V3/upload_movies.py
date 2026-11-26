@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Private Front movie installer. Default is read-only, never deletes or changes maps/mode."""
+import http.client
 import argparse, base64, hashlib, ipaddress, json, os, sys, time, urllib.request, urllib.error
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
@@ -28,7 +29,7 @@ def call(ip,endpoint,timeout,token=None,payload=None):
     except urllib.error.HTTPError as exc:
         detail=exc.read(8192).decode('utf-8',errors='replace') if endpoint in ('movies/new','movies/full') else '(body omitted)'
         raise RuntimeError(f'{ip} {endpoint}: HTTP {exc.code}: {detail}') from exc
-    except OSError as exc:
+    except (OSError, http.client.HTTPException) as exc:
         raise RuntimeError(f'{ip} {endpoint}: {type(exc).__name__}: {exc}') from exc
     finally:
         _last_request=time.monotonic()
@@ -45,7 +46,7 @@ def authenticate(ip,timeout):
     t=d['authentication_token'];call(ip,'verify',timeout,t,{'challenge-response':d['challenge-response']});return t
 
 def mac(s): return s.lower().replace(':','').replace('-','')
-def inspect(m,timeout):
+def inspect_once(m,timeout):
     ip=m['ip']; g=call(ip,'gestalt',timeout);t=authenticate(ip,timeout)
     if mac(g['mac'])!=m['mac'] or g['number_of_led']!=m['count'] or g.get('led_profile')!='RGBW':
         raise ValueError(f"{m['name']}: identity, count or RGBW format changed; actual profile={g.get('led_profile')}")
@@ -55,6 +56,17 @@ def inspect(m,timeout):
     mode=call(ip,'led/mode',timeout,t)['mode'];cat=call(ip,'movies',timeout,t)
     if not isinstance(cat.get('movies'),list) or type(cat.get('available_frames')) is not int or type(cat.get('max')) is not int:raise ValueError('Unknown capacity')
     return {'mode':mode,'catalogue':cat},t
+
+def inspect(m, timeout):
+    # Retry the entire read/auth session, not a write or a stale token.
+    for attempt in range(3):
+        try:
+            return inspect_once(m, timeout)
+        except (OSError, http.client.HTTPException, RuntimeError) as exc:
+            if attempt == 2:
+                raise
+            print(f"  {m['name']}: read attempt {attempt+1} failed: {exc}; retry in 5s", flush=True)
+            time.sleep(5)
 
 def read_bundle(names):
     p=json.loads((ROOT/'manifest.json').read_text());members=p['controllers'];movies=[m for m in p['movies'] if not names or m['slug'] in names]
@@ -158,8 +170,21 @@ def main():
     print('Beginning experimental uploads. Do not interrupt or use Twinkly/HA during upload.',flush=True)
     for movie in movies:
         print('Movie:',movie['name'],flush=True)
-        for m in sorted(members,key=lambda x:x['role']=='master'):
-            before,t=inspect(m,a.timeout);k=m['mac']
+        queue=sorted(members,key=lambda x:x['role']=='master')
+        deferred=set()
+        while queue:
+            m=queue.pop(0)
+            k=m['mac']
+            try:
+                before,t=inspect(m,a.timeout)
+            except (OSError, http.client.HTTPException, RuntimeError) as exc:
+                if m['role']=='master' or k in deferred:
+                    raise
+                deferred.add(k)
+                # Revisit before the master; never defer an ambiguous write.
+                queue.insert(len(queue)-1,m)
+                print(f"  Deferred {m['name']}: {exc}",flush=True)
+                continue
             if before!=snapshots[k]:raise ValueError(f"{m['name']}: live state changed; stop")
             meta,data=jobs[movie['slug'],k]; key=journal_key(m,meta,data)
             if movie['slug'] not in pending[k]:
@@ -187,10 +212,12 @@ def main():
             if after['mode']!='off' or len(new)!=len(old)+1 or not all(x in new for x in old) or sum(matches(x) for x in new)!=1:raise ValueError(f"{m['name']}: catalogue readback failed")
             record_stage(records,key,'verified')
             snapshots[k]=after;print('  verified',m['name'],flush=True)
+    print('Final verification:',flush=True)
     for m in members:
         state,_=inspect(m,a.timeout)
         if state != snapshots[m['mac']] or any(not matching_entry(state['catalogue'],jobs[movie['slug'],m['mac']][0]) for movie in movies):
             raise ValueError(f"{m['name']}: final catalogue verification failed")
+        print(f"  PASS {m['name']}",flush=True)
     print('All movie catalogues verified. Reload Area Manager. Actual playback sync still requires rehearsal.')
 if __name__=='__main__':
     try:main()
