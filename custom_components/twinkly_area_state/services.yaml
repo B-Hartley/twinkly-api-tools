@@ -127,3 +127,49 @@ start_christmas_show:
 stop_christmas_show:
   name: Stop Santa's Christmas Magic
   description: Stop the soundtrack and turn off this show's display, including a stored movie left running after the finale.
+
+start_countdown_test:
+  name: Test Landing countdown and audio
+  description: Standalone 10-second spoken countdown, using the whole mapped Landing window. All other Front lights are dark. Stops automatically; no stored movies or Christmas show changes.
+  fields:
+    audio:
+      name: Play spoken countdown
+      default: true
+      selector:
+        boolean: {}
+    audio_base:
+      name: Audio folder URL
+      description: Folder containing landing_countdown_test.mp3
+      selector:
+        text: {}
+    brightness_pct:
+      name: Digit brightness
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    volume:
+      name: Speaker volume
+      default: 0.05
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+    offset_ms:
+      name: Light timing adjustment
+      description: Positive delays digits; negative advances them.
+      default: 0
+      selector:
+        number:
+          min: -2000
+          max: 2000
+          step: 50
+          unit_of_measurement: ms
+
+stop_countdown_test:
+  name: Stop countdown test
+  description: Stop the shared show session, its audio and lights.
