@@ -15,7 +15,7 @@ class WindowChaseTests(unittest.TestCase):
     def test_complete_and_ordered(self):
         self.assertEqual(len(self.zones),12)
         self.assertEqual(self.zones[0],("0",(0,1)))
-        self.assertEqual(self.zones[-1],("5",(2,3)))
+        self.assertEqual(self.zones[-1],("5",(0,1)))
         self.assertEqual(wc.chase_zones(self.members[:-1],self.maps),[])
         self.maps["0"]=[[0,1],[1,3]]
         self.assertEqual(wc.chase_zones(self.members,self.maps),[])
@@ -35,8 +35,8 @@ class WindowChaseTests(unittest.TestCase):
 
     def test_reverse_and_wrap(self):
         m=self.members[-1]
-        self.assertEqual(wc.chase_frame(m,self.zones,11.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([0]*8+[0,255,0,0]*2))
-        self.assertEqual(wc.chase_frame(m,self.zones,12.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([0,255,0,0]*2+[0]*8))
+        self.assertEqual(wc.chase_frame(m,self.zones,11.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([0,255,0,0]*2+[0]*8))
+        self.assertEqual(wc.chase_frame(m,self.zones,12.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([0]*8+[0,255,0,0]*2))
         self.assertEqual(wc.chase_frame(self.members[0],self.zones,22.1*wc.PANE_SECONDS,255,(255,0,0,0)),bytes([255,0,0]*2+[0]*6))
 
     def test_house_route(self):
@@ -45,12 +45,12 @@ class WindowChaseTests(unittest.TestCase):
         maps={**self.maps,"front right bush":[[0,1],[2,3]]}
         zones=wc.house_zones(self.members+extra,maps)
         self.assertEqual(len(zones),20)
-        self.assertEqual({mac for mac,_ in zones[12]},{"front left top","front left bottom"})
+        self.assertEqual({mac for mac,_ in zones[0]},{"front left top","front left bottom"})
         for m in extra[:2]:
-            self.assertEqual(wc.chase_frame(m,zones,12.1*wc.PANE_SECONDS,255,(255,0,0,0),loop=True),bytes([255,0,0]*4))
-        self.assertEqual(zones[15],(("front right bush",(0,1)),))
-        self.assertEqual(zones[16],(("front right bush",(2,3)),))
-        self.assertEqual(wc.chase_frame(self.members[0],zones,20.1*wc.PANE_SECONDS,255,(255,0,0,0),loop=True),bytes([255,0,0]*2+[0]*6))
+            self.assertEqual(wc.chase_frame(m,zones,0.1*wc.PANE_SECONDS,255,(255,0,0,0),loop=True),bytes([255,0,0]*4))
+        self.assertEqual(zones[2],(("front right bush",(0,1)),))
+        self.assertEqual(zones[3],(("front right bush",(2,3)),))
+        self.assertEqual(wc.chase_frame(self.members[0],zones,7.1*wc.PANE_SECONDS,255,(255,0,0,0),loop=True),bytes([255,0,0]*2+[0]*6))
         self.assertEqual(wc.house_zones(self.members+extra[:-1],maps),[])
         extra[2]["name"]="Backl Bush"
         self.assertEqual(wc.house_zones(self.members+extra,maps),zones)
@@ -59,7 +59,7 @@ class WindowChaseTests(unittest.TestCase):
 class SlideChaseTests(unittest.TestCase):
     def setUp(self):
         names=["front left top","front left bottom","front right bush","mid right",
-               "back left bush","back bush top","back bush bottom",*wc.SLIDE_WINDOWS]
+               "back left bush","back bush top","back bush bottom","light tree","icicles",*wc.SLIDE_WINDOWS]
         self.members=[dict(name=n,mac=n,led_count=4,width=4 if i%2 else 3) for i,n in enumerate(names)]
         self.panes={n:[[0,1],[2,3]] for n in ("front right bush",*wc.SLIDE_WINDOWS)}
         self.screen={}
@@ -71,12 +71,15 @@ class SlideChaseTests(unittest.TestCase):
         self.stops=wc.slide_geometry(self.members,self.panes,self.originals,self.screen)
 
     def test_route_combined_bushes_and_lounge_handoff(self):
-        self.assertEqual(len(self.stops),18)
+        self.assertEqual(len(self.stops),20)
         self.assertEqual(set(self.stops[0]["pixels"]),{"front left top","front left bottom"})
-        self.assertEqual(set(self.stops[1]["pixels"]),{"front right bush"})
+        self.assertEqual(set(self.stops[1]["pixels"]),{"light tree"})
         self.assertEqual(set(self.stops[2]["pixels"]),{"front right bush"})
         self.assertEqual(set(self.stops[5]["pixels"]),{"back bush top","back bush bottom"})
-        self.assertEqual(set(self.stops[6]["pixels"]),{"lounge"})
+        self.assertEqual(set(self.stops[6]["pixels"]),{"back left bush"}
+        self.assertEqual(set(self.stops[7]["pixels"]),{"lounge"})
+        self.assertEqual(set(self.stops[3]["pixels"]),{"front right bush"})
+        self.assertEqual(set(self.stops[11]["pixels"]),{"icicles"})
 
     def test_whole_zone_and_spatial_transfer(self):
         first=self.members[0]
