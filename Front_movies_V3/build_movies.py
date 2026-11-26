@@ -144,14 +144,14 @@ def build(source,dest):
         print(name,nf,nf/FPS,sum(len(x) for x in buffers.values()))
     # Uniform samples across the exact loop; no duplicate final frame.
     nf=round(total*FPS)
-    write('bush-window-v2','Bush and Window Chase V2', (slide(members,stops,i*total/nf) for i in range(nf)), 'Adaptive spatial wipe, 3D garden geometry, entire bush/pane holds, rainbow wake. Includes tree and icicles.')
+    write('bush-window-v2','Bush Window V2', (slide(members,stops,i*total/nf) for i in range(nf)), 'Adaptive spatial wipe, 3D garden geometry, entire bush/pane holds, rainbow wake. Includes tree and icicles.')
     wr=WINDOWS+WINDOWS[-2:0:-1]
     write('window-chase','Window Chase V3',(solid(members,zones,n,GOLD) for n in wr for _ in range(3)),'17 panes forward and back; garden dark; 0.3 seconds per pane.')
-    write('house-garden','House and Garden Chase V3',(solid(members,zones,n,GOLD) for n in ROUTE for _ in range(3)),'25 logical objects; crisp steps along same route.')
+    write('house-garden','House Garden V3',(solid(members,zones,n,GOLD) for n in ROUTE for _ in range(3)),'25 logical objects; crisp steps along same route.')
     bt=[0,1.0333,2.0898,3.158,4.1912,5.2129,6.7338,7.2563,7.8019,8.3012,8.8236,9.3577]
     write('bush-startup','Bush Startup V3',startup(members,zones,bt,BUSHES+BUSHES[::-1],PALETTE+[PALETTE[(i+2)%6] for i in range(6)],[115]*6+[125]*6,10.3561),'Christmas score chapter 02, individual whole bushes, no tree or windows; timing quantised to 0.1s.')
     wt=[0,.5225,1.0333,1.5558,2.0666,2.5891,3.0651,3.5643,4.0635,4.5395,5.062,5.5961,6.014,6.5713,7.0589,7.5581,8.0806,8.5556,9.5667,10.5071,11.4707]
-    write('window-startup','Window Startup V3',startup(members,zones,wt,WINDOWS+[WINDOWS[i] for i in (0,5,10,16)],[PALETTE[i%6] for i in range(17)]+[PALETTE[i] for i in (0,1,2,3)],[130]*17+[140]*4,12.9336),'Christmas score chapter 03, individually selected panes; timing quantised to 0.1s.')
+    write('window-startup','Window Start V3',startup(members,zones,wt,WINDOWS+[WINDOWS[i] for i in (0,5,10,16)],[PALETTE[i%6] for i in range(17)]+[PALETTE[i] for i in (0,1,2,3)],[130]*17+[140]*4,12.9336),'Christmas score chapter 03, individually selected panes; timing quantised to 0.1s.')
     manifest['total_frames_per_controller']=sum(m['frames'] for m in manifest['movies']);manifest['total_raw_bytes']=sum(j['bytes'] for m in manifest['movies'] for j in m['jobs'])
     (dest/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     print('Total frames',manifest['total_frames_per_controller'],'bytes',manifest['total_raw_bytes'])
