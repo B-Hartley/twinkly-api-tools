@@ -82,21 +82,75 @@ def capacity(cat,movies):
     for existing in cat['movies']:
         if any(existing.get('name')==m['name'] or str(existing.get('unique_id','')).lower()==m['unique_id'].lower() for m in movies):raise ValueError('Movie name or UUID already present; refusing duplicates/partial retry')
 
+def matching_entry(cat, meta):
+    candidates = [x for x in cat['movies'] if x.get('name') == meta['name']
+                  or str(x.get('unique_id','')).lower() == meta['unique_id'].lower()]
+    if not candidates:
+        return False
+    if len(candidates) != 1 or not all(
+        str(candidates[0].get(k,'')).lower() == v.lower() if k == 'unique_id'
+        else candidates[0].get(k) == v for k,v in meta.items()):
+        raise ValueError('Conflicting movie name/UUID or metadata: ' + meta['name'])
+    return True
+
+JOURNAL = ROOT / 'private-movie-upload-journal.jsonl'
+
+def journal_key(member, meta, data):
+    return (member['group_uid'].lower(), member['mac'], meta['unique_id'].lower(),
+            hashlib.sha256(data).hexdigest())
+
+def read_journal():
+    records = {}
+    if JOURNAL.exists():
+        for line in JOURNAL.read_text(encoding='utf-8').splitlines():
+            row = json.loads(line)
+            records[tuple(row['key'])] = row['stage']
+    return records
+
+def record_stage(records, key, stage):
+    with JOURNAL.open('a', encoding='utf-8') as f:
+        f.write(json.dumps({'key': key, 'stage': stage, 'time': time.time()})+'\n')
+        f.flush()
+        os.fsync(f.fileno())
+    records[key] = stage
+
+def pending_movies(member, cat, movies, jobs, records, resume, accept_existing):
+    pending = []
+    for movie in movies:
+        meta,data = jobs[movie['slug'],member['mac']]
+        key = journal_key(member,meta,data)
+        present = matching_entry(cat,meta)
+        stage = records.get(key)
+        if not present:
+            pending.append(movie)
+        elif not resume:
+            raise ValueError('Movie already present; use --resume')
+        elif stage in ('attempt','created'):
+            raise ValueError('Existing entry may have incomplete binary transfer: '+meta['name'])
+        elif stage not in ('binary-ok','verified') and not accept_existing:
+            raise ValueError('Existing metadata has no transfer journal; use --accept-existing only with prior successful upload evidence')
+    capacity(cat,pending)
+    return pending
+
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--resume',action='store_true');p.add_argument('--accept-existing',action='store_true',help='Trust matching legacy catalogue entries only when prior binary upload success is known');p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');a=p.parse_args()
     members,movies,jobs=read_bundle(a.movie);frames=sum(m['frames'] for m in movies)
     print(f'Validated {len(jobs)} raw files; {len(movies)} movies, {frames} frames per controller.')
     if a.verify_files:return
-    snapshots={};issues=[]
+    if a.accept_existing and not a.resume: raise ValueError('--accept-existing requires --resume')
+    records=read_journal(); snapshots={};issues=[]; pending={}
     for m in members:
         try:
             state,_=inspect(m,a.timeout); snapshots[m['mac']]=state;cat=state['catalogue']; print(f"{m['name']:24s} free={cat['available_frames']:5d} slots={cat['max']-len(cat['movies']):2d} mode={state['mode']}")
-            capacity(cat,movies)
+            todo=pending_movies(m,cat,movies,jobs,records,a.resume,a.accept_existing)
+            pending[m['mac']]={movie['slug'] for movie in todo}
+            print(f"  {len(todo)} missing, {len(movies)-len(todo)} already present",flush=True)
             if state['mode']!='off':raise ValueError('Controller must be off')
         except Exception as e:issues.append(f"{m['name']}: {e}")
     if issues:raise ValueError('Preflight failed; NO movie writes attempted:\n'+'\n'.join(issues))
     print('PASS: all 15 controllers, group roles/offsets/UUID, capacity and off mode checked.')
     if not a.execute: print('Read-only preflight. No writes except authentication.');return
+    if not any(pending.values()): print('All selected movie catalogues already match. No writes.');return
     if input('Type UPLOAD FRONT to attempt additive movie upload: ')!='UPLOAD FRONT':return
     for m in members:
         state,_=inspect(m,a.timeout)
@@ -107,11 +161,19 @@ def main():
         for m in sorted(members,key=lambda x:x['role']=='master'):
             before,t=inspect(m,a.timeout);k=m['mac']
             if before!=snapshots[k]:raise ValueError(f"{m['name']}: live state changed; stop")
-            capacity(before['catalogue'],[movie]);meta,data=jobs[movie['slug'],k]
+            meta,data=jobs[movie['slug'],k]; key=journal_key(m,meta,data)
+            if movie['slug'] not in pending[k]:
+                if not matching_entry(before['catalogue'],meta): raise ValueError('Previously present movie disappeared')
+                print('  skipped existing',m['name'],flush=True)
+                continue
+            capacity(before['catalogue'],[movie])
             print(f"  Uploading {m['name']}: {meta!r}; {len(data)} binary bytes",flush=True)
             try:
+                record_stage(records,key,'attempt')
                 call(m['ip'],'movies/new',a.timeout,t,meta)
+                record_stage(records,key,'created')
                 call(m['ip'],'movies/full',a.timeout,t,data)
+                record_stage(records,key,'binary-ok')
             except (OSError, ValueError, RuntimeError) as exc:
                 try:
                     observed,_=inspect(m,a.timeout)
@@ -123,7 +185,12 @@ def main():
             after,_=inspect(m,a.timeout);old=before['catalogue']['movies'];new=after['catalogue']['movies']
             def matches(n):return all((str(n.get(k,'')).lower()==v.lower() if k=='unique_id' else n.get(k)==v) for k,v in meta.items())
             if after['mode']!='off' or len(new)!=len(old)+1 or not all(x in new for x in old) or sum(matches(x) for x in new)!=1:raise ValueError(f"{m['name']}: catalogue readback failed")
+            record_stage(records,key,'verified')
             snapshots[k]=after;print('  verified',m['name'],flush=True)
+    for m in members:
+        state,_=inspect(m,a.timeout)
+        if state != snapshots[m['mac']] or any(not matching_entry(state['catalogue'],jobs[movie['slug'],m['mac']][0]) for movie in movies):
+            raise ValueError(f"{m['name']}: final catalogue verification failed")
     print('All movie catalogues verified. Reload Area Manager. Actual playback sync still requires rehearsal.')
 if __name__=='__main__':
     try:main()
