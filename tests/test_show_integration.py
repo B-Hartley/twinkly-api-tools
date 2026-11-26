@@ -277,9 +277,9 @@ class FullShowIntegrationTests(unittest.IsolatedAsyncioTestCase):
         for name in ("office left", "office right", "master bedroom", "landing", "lounge", "bar"):
             self.assertFalse(any(sim.frame_at(9.0093, name)))
         # The first window scene completely replaces bushes and illuminates only pane 1.
-        pixels = sim.frame_at(19.3654, "office left")
-        self.assertTrue(any(pixels[:63 * 3]))
-        self.assertFalse(any(pixels[63 * 3:]))
+        pixels = sim.frame_at(19.3654, "lounge")
+        self.assertTrue(any(pixels[-63 * 3:]))
+        self.assertFalse(any(pixels[:-63 * 3]))
         self.assertFalse(any(sim.frame_at(19.3654, "front left top")))
         # A many-target colour arrangement emits exactly one final frame per
         # physical controller, despite its same-time all-off and colour cues.
@@ -290,7 +290,7 @@ class FullShowIntegrationTests(unittest.IsolatedAsyncioTestCase):
                 colors = {frame[pixel * 3:(pixel + 1) * 3] for pixel in pane}
                 self.assertGreaterEqual(len(colors), 3)
                 self.assertNotIn(bytes(3), colors)
-        self.assertTrue(any(sim.frame_at(90.9572, "office left")))
+        self.assertTrue(any(sim.frame_at(90.9572, "lounge")))
         self.assertFalse(any(sim.frame_at(90.9572, "front left top")))
         # The split front-right controller retains two separate 300-pixel bush zones.
         right_key = "light.twinkly_front_right_left_bush"
