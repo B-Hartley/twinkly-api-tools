@@ -7,10 +7,41 @@ ROOT=Path(__file__).resolve().parent
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs): return None
 OPENER=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
-_last_request = 0.0
+class Pacing:
+    """Sequential requests; sticky per-controller fallback for this run."""
+    LEVELS = (0.25, 0.75, 2.0)
+    WRITE_ENDPOINTS = frozenset(('movies/new', 'movies/full'))
+    def __init__(self, slow=True):
+        self.initial = 2 if slow else 0
+        self.levels = {}
+        self.last_finished = None
+        self.last_write = False
+
+    def gap(self, ip, endpoint):
+        if self.last_write or endpoint in self.WRITE_ENDPOINTS:
+            return 2.0
+        return self.LEVELS[self.levels.get(str(ip), self.initial)]
+
+    def wait(self, ip, endpoint):
+        if self.last_finished is not None:
+            time.sleep(max(0, self.gap(ip, endpoint) - (time.monotonic() - self.last_finished)))
+
+    def finished(self, endpoint):
+        self.last_finished = time.monotonic()
+        self.last_write = endpoint in self.WRITE_ENDPOINTS
+
+    def backoff(self, ip):
+        key = str(ip)
+        old = self.levels.get(key, self.initial)
+        new = min(old + 1, len(self.LEVELS) - 1)
+        self.levels[key] = new
+        if new != old:
+            print(f'  {ip}: pacing fallback {self.LEVELS[old]:g}s -> {self.LEVELS[new]:g}s (rest of run)', flush=True)
+
+# Imports by diagnostic/clear scripts keep the original conservative default.
+PACING = Pacing()
 
 def call(ip,endpoint,timeout,token=None,payload=None):
-    global _last_request
     ip=ipaddress.ip_address(ip)
     if ip.version!=4 or not ip.is_private or ip.is_loopback or ip.is_link_local: raise ValueError('Expected private LAN IPv4 address')
     headers={'Accept':'application/json','Connection':'close'}
@@ -19,7 +50,7 @@ def call(ip,endpoint,timeout,token=None,payload=None):
     if payload is not None:
         binary=isinstance(payload,bytes);body=payload if binary else json.dumps(payload).encode();headers['Content-Type']='application/octet-stream' if binary else 'application/json'
     req=urllib.request.Request(f'http://{ip}/xled/v1/{endpoint}',data=body,headers=headers)
-    time.sleep(max(0, 2.0 - (time.monotonic() - _last_request)))
+    PACING.wait(ip,endpoint)
     started=time.monotonic()
     print(f'{ip} {req.get_method()} /xled/v1/{endpoint} ({len(body or b"")} request bytes)',flush=True)
     try:
@@ -27,12 +58,14 @@ def call(ip,endpoint,timeout,token=None,payload=None):
             raw=response.read(1024*1024+1)
             print(f'  HTTP {response.status}, {len(raw)} bytes, {time.monotonic()-started:.2f}s',flush=True)
     except urllib.error.HTTPError as exc:
+        PACING.backoff(ip)
         detail=exc.read(8192).decode('utf-8',errors='replace') if endpoint in ('movies/new','movies/full') else '(body omitted)'
         raise RuntimeError(f'{ip} {endpoint}: HTTP {exc.code}: {detail}') from exc
     except (OSError, http.client.HTTPException) as exc:
+        PACING.backoff(ip)
         raise RuntimeError(f'{ip} {endpoint}: {type(exc).__name__}: {exc}') from exc
     finally:
-        _last_request=time.monotonic()
+        PACING.finished(endpoint)
     if len(raw)>1024*1024: raise ValueError('Oversized API reply')
     try: d=json.loads(raw)
     except ValueError:
@@ -145,10 +178,13 @@ def pending_movies(member, cat, movies, jobs, records, resume, accept_existing):
     return pending
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--resume',action='store_true');p.add_argument('--accept-existing',action='store_true',help='Trust matching legacy catalogue entries only when prior binary upload success is known');p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');a=p.parse_args()
+    global PACING
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--resume',action='store_true');p.add_argument('--accept-existing',action='store_true',help='Trust matching legacy catalogue entries only when prior binary upload success is known');p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');p.add_argument('--slow',action='store_true',help='Use original 2-second gap for every request');a=p.parse_args()
     members,movies,jobs=read_bundle(a.movie);frames=sum(m['frames'] for m in movies)
     print(f'Validated {len(jobs)} raw files; {len(movies)} movies, {frames} frames per controller.')
     if a.verify_files:return
+    PACING = Pacing(slow=a.slow)
+    print('Pacing: '+('conservative 2s' if a.slow else 'adaptive 0.25s / 0.75s / 2s')+'; movie writes retain 2s gaps.',flush=True)
     if a.accept_existing and not a.resume: raise ValueError('--accept-existing requires --resume')
     records=read_journal(); snapshots={};issues=[]; pending={}
     for m in members:
