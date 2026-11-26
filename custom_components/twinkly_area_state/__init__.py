@@ -818,13 +818,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ctx=hass.data[DOMAIN][entry.entry_id]
     show=Show(hass,ctx)
     ctx["show"]=show
-    hass.services.async_register(DOMAIN,"start_christmas_show",show.start,schema=vol.Schema({
+    show_schema=vol.Schema({
         vol.Optional("audio",default=True): bool,
         vol.Optional("audio_base",default=""): str,
         vol.Optional("brightness_pct",default=2): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
         vol.Optional("volume",default=.05): vol.All(vol.Coerce(float),vol.Range(min=0,max=1)),
         vol.Optional("offset_ms",default=0): vol.All(vol.Coerce(int),vol.Range(min=-2000,max=2000)),
-    }))
+    })
+    hass.services.async_register(DOMAIN,"start_christmas_show",show.start,schema=show_schema)
+    hass.services.async_register(DOMAIN,"start_countdown_test",show.start_countdown,schema=show_schema)
+    hass.services.async_register(DOMAIN,"stop_countdown_test",show.stop)
     hass.services.async_register(DOMAIN,"stop_christmas_show",show.stop)
     await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])
     return True
@@ -839,7 +842,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
-                    "start_christmas_show", "stop_christmas_show", "rescan_controllers"):
+                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
