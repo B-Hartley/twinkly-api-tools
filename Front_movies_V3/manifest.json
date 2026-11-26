@@ -1,0 +1,1315 @@
+{
+  "format_version": 1,
+  "source_sha256": "efccc13b9c8b22bd4da9f91d4064c131f6740bf57b816be64f1841a9a6f9768f",
+  "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4",
+  "group_led_count": 4900,
+  "controllers": [
+    {
+      "name": "BackR Bush Bottom",
+      "mac": "e831cd7153b1",
+      "ip": "192.168.21.86",
+      "count": 400,
+      "offset": 0,
+      "role": "master",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "BackR Bush Top",
+      "mac": "e831cd7018e9",
+      "ip": "192.168.21.80",
+      "count": 400,
+      "offset": 400,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "BackL Bush",
+      "mac": "e868e722e3ed",
+      "ip": "192.168.21.84",
+      "count": 400,
+      "offset": 800,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Bar",
+      "mac": "a8032a24ddb5",
+      "ip": "192.168.21.104",
+      "count": 210,
+      "offset": 1200,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Front Left Bottom",
+      "mac": "244cabefd0ad",
+      "ip": "192.168.21.87",
+      "count": 400,
+      "offset": 1410,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Front Left Top",
+      "mac": "98f4ab3c0f0d",
+      "ip": "192.168.21.82",
+      "count": 400,
+      "offset": 1810,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Front Right",
+      "mac": "90380c69f3ed",
+      "ip": "192.168.21.145",
+      "count": 600,
+      "offset": 2210,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Icicles",
+      "mac": "98f4ab3bb06d",
+      "ip": "192.168.21.81",
+      "count": 190,
+      "offset": 2810,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Landing",
+      "mac": "f008d1ebbc8d",
+      "ip": "192.168.21.92",
+      "count": 210,
+      "offset": 3000,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Light Tree",
+      "mac": "943cc6189ff1",
+      "ip": "192.168.21.85",
+      "count": 450,
+      "offset": 3210,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Lounge",
+      "mac": "e8db840e0e55",
+      "ip": "192.168.21.89",
+      "count": 210,
+      "offset": 3660,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Master Bedroom",
+      "mac": "40f520acd84d",
+      "ip": "192.168.21.94",
+      "count": 210,
+      "offset": 3870,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Mid Right",
+      "mac": "e868e725d485",
+      "ip": "192.168.21.83",
+      "count": 400,
+      "offset": 4080,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Office Left",
+      "mac": "e868e71f85a5",
+      "ip": "192.168.21.90",
+      "count": 210,
+      "offset": 4480,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    },
+    {
+      "name": "Office Right",
+      "mac": "a8032a239df9",
+      "ip": "192.168.21.93",
+      "count": 210,
+      "offset": 4690,
+      "role": "slave",
+      "width": 4,
+      "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+    }
+  ],
+  "movies": [
+    {
+      "slug": "bush-window-v2",
+      "name": "Bush and Window Chase V2",
+      "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+      "fps": 10,
+      "frames": 364,
+      "seconds": 36.4,
+      "notes": "Adaptive spatial wipe, 3D garden geometry, entire bush/pane holds, rainbow wake. Includes tree and icicles.",
+      "jobs": [
+        {
+          "mac": "e831cd7153b1",
+          "file": "bush-window-v2/e831cd7153b1.bin",
+          "bytes": 582400,
+          "sha256": "00900b9a527ddba69927f50ea24861ce0d0601cd926522f57a1a478cb368b423",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e831cd7018e9",
+          "file": "bush-window-v2/e831cd7018e9.bin",
+          "bytes": 582400,
+          "sha256": "0ad62a420d65897f26054e7ed1ffbdbcab612250f41c650c486e6f3c7a916eab",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e722e3ed",
+          "file": "bush-window-v2/e868e722e3ed.bin",
+          "bytes": 582400,
+          "sha256": "4d001d8f4c3edd61f6653ae4d27470da0fd45596949601a37c8ebc914393c48f",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a24ddb5",
+          "file": "bush-window-v2/a8032a24ddb5.bin",
+          "bytes": 305760,
+          "sha256": "4965cabadd955a90d5e2ac3bb20fd7f2efe00c7cb5aa618047f210d2b68543d8",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "244cabefd0ad",
+          "file": "bush-window-v2/244cabefd0ad.bin",
+          "bytes": 582400,
+          "sha256": "3f428847ed5b1ec8aa1f942372d95ca111b0e456dde82e24d283a7a8229fb994",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3c0f0d",
+          "file": "bush-window-v2/98f4ab3c0f0d.bin",
+          "bytes": 582400,
+          "sha256": "83d71fd31dc3febd6c50b0ab68e18a1aa906604d81dacb2e04e3108ad755f3ff",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "90380c69f3ed",
+          "file": "bush-window-v2/90380c69f3ed.bin",
+          "bytes": 873600,
+          "sha256": "8ea4af20dcc6407ed1ad5d02ccfafd8ec5ce1bb7ea7fe0842470254c8ae54737",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3bb06d",
+          "file": "bush-window-v2/98f4ab3bb06d.bin",
+          "bytes": 276640,
+          "sha256": "bcecd81ddf57546aea8795c286ff5b57a1ee8bdb051a4c80417618d0d7badc31",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "f008d1ebbc8d",
+          "file": "bush-window-v2/f008d1ebbc8d.bin",
+          "bytes": 305760,
+          "sha256": "a0720b0488fad95b7fa5738efaf34e932e84d01b9cf954f3bd98cae9b307bb2a",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "943cc6189ff1",
+          "file": "bush-window-v2/943cc6189ff1.bin",
+          "bytes": 655200,
+          "sha256": "080a9c6af8bf9721864684c4f0ec3f3a8bc0ab05bc2a34332ed0cb383670f950",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e8db840e0e55",
+          "file": "bush-window-v2/e8db840e0e55.bin",
+          "bytes": 305760,
+          "sha256": "7f1fc3628404e3ccab0a735fdadb9b0ec19eeae6cdfae4fa1d93aeffdba79e4d",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "40f520acd84d",
+          "file": "bush-window-v2/40f520acd84d.bin",
+          "bytes": 305760,
+          "sha256": "feb6ae2d918904c07280d49ef559987162c95cdeacb03c52de12b8dab9bf9c90",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e725d485",
+          "file": "bush-window-v2/e868e725d485.bin",
+          "bytes": 582400,
+          "sha256": "5205d87e3c2febdad09ccfd2342c8dc6385a994052e0114c69acbcc5c5814c61",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e71f85a5",
+          "file": "bush-window-v2/e868e71f85a5.bin",
+          "bytes": 305760,
+          "sha256": "6efa9a3e24166d076f45f3950a9d85b784fb3b55d757b86871097dda95dd82ec",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 364,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a239df9",
+          "file": "bush-window-v2/a8032a239df9.bin",
+          "bytes": 305760,
+          "sha256": "9901fb13633a906b6a0591fed82b288e3c2f4733134a1709af0b35edc9abf0b0",
+          "metadata": {
+            "name": "Bush and Window Chase V2",
+            "unique_id": "A568D5B7-73EA-4256-94D3-1ADD14E09971",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 364,
+            "fps": 10
+          }
+        }
+      ]
+    },
+    {
+      "slug": "window-chase",
+      "name": "Window Chase V3",
+      "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+      "fps": 10,
+      "frames": 96,
+      "seconds": 9.6,
+      "notes": "17 panes forward and back; garden dark; 0.3 seconds per pane.",
+      "jobs": [
+        {
+          "mac": "e831cd7153b1",
+          "file": "window-chase/e831cd7153b1.bin",
+          "bytes": 153600,
+          "sha256": "0c5cc90b079d0d9c1ded1376357d23a9782a704a83e01731f50ccd162e246492",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e831cd7018e9",
+          "file": "window-chase/e831cd7018e9.bin",
+          "bytes": 153600,
+          "sha256": "0c5cc90b079d0d9c1ded1376357d23a9782a704a83e01731f50ccd162e246492",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e722e3ed",
+          "file": "window-chase/e868e722e3ed.bin",
+          "bytes": 153600,
+          "sha256": "0c5cc90b079d0d9c1ded1376357d23a9782a704a83e01731f50ccd162e246492",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a24ddb5",
+          "file": "window-chase/a8032a24ddb5.bin",
+          "bytes": 80640,
+          "sha256": "2f331f27a9002f53880fe915f6deed8e3986512741f6a55588c064665c150acd",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "244cabefd0ad",
+          "file": "window-chase/244cabefd0ad.bin",
+          "bytes": 153600,
+          "sha256": "0c5cc90b079d0d9c1ded1376357d23a9782a704a83e01731f50ccd162e246492",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3c0f0d",
+          "file": "window-chase/98f4ab3c0f0d.bin",
+          "bytes": 153600,
+          "sha256": "0c5cc90b079d0d9c1ded1376357d23a9782a704a83e01731f50ccd162e246492",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "90380c69f3ed",
+          "file": "window-chase/90380c69f3ed.bin",
+          "bytes": 230400,
+          "sha256": "2a589ae1f2fa2a6328223ff195a29c9244bec633dca49139f6f231e1d79c0eb2",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3bb06d",
+          "file": "window-chase/98f4ab3bb06d.bin",
+          "bytes": 72960,
+          "sha256": "5388095a0cd0b3e9575a3f8f9308385a5ca03854b2627c00a637b5fdad478f93",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "f008d1ebbc8d",
+          "file": "window-chase/f008d1ebbc8d.bin",
+          "bytes": 80640,
+          "sha256": "211838d9eab16fdde889e694915a8606b7ec7d83d46e291da8dccb3b2703bfe0",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "943cc6189ff1",
+          "file": "window-chase/943cc6189ff1.bin",
+          "bytes": 172800,
+          "sha256": "53853188f83a941e2f45ec1383293ae935106c5721918079000dcb2254fc550b",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e8db840e0e55",
+          "file": "window-chase/e8db840e0e55.bin",
+          "bytes": 80640,
+          "sha256": "1cf4983ae0c78ba2808eba98a713daf72bf70ce7b554b3c6f06fee1c391a989d",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "40f520acd84d",
+          "file": "window-chase/40f520acd84d.bin",
+          "bytes": 80640,
+          "sha256": "7575a29dd8d55bb62f67e5a4ffe93fc1e12e6b32af37956d9200ca6cfb5368d5",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e725d485",
+          "file": "window-chase/e868e725d485.bin",
+          "bytes": 153600,
+          "sha256": "0c5cc90b079d0d9c1ded1376357d23a9782a704a83e01731f50ccd162e246492",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e71f85a5",
+          "file": "window-chase/e868e71f85a5.bin",
+          "bytes": 80640,
+          "sha256": "3bf12460cdfafc782b90099368b964beb19a8dfcd63dcec109780645e051c40c",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 96,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a239df9",
+          "file": "window-chase/a8032a239df9.bin",
+          "bytes": 80640,
+          "sha256": "e03b8332416395ba4e1f4c699fb88e390fd435fc2c7bd8c731beaa6742c7d548",
+          "metadata": {
+            "name": "Window Chase V3",
+            "unique_id": "450E63D8-3EF3-4143-BF16-DA830C116EB1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 96,
+            "fps": 10
+          }
+        }
+      ]
+    },
+    {
+      "slug": "house-garden",
+      "name": "House and Garden Chase V3",
+      "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+      "fps": 10,
+      "frames": 75,
+      "seconds": 7.5,
+      "notes": "25 logical objects; crisp steps along same route.",
+      "jobs": [
+        {
+          "mac": "e831cd7153b1",
+          "file": "house-garden/e831cd7153b1.bin",
+          "bytes": 120000,
+          "sha256": "083bbf72a103804ab092115853c6140f19a989d1c6295147ea61e455b77d80bf",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e831cd7018e9",
+          "file": "house-garden/e831cd7018e9.bin",
+          "bytes": 120000,
+          "sha256": "083bbf72a103804ab092115853c6140f19a989d1c6295147ea61e455b77d80bf",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e722e3ed",
+          "file": "house-garden/e868e722e3ed.bin",
+          "bytes": 120000,
+          "sha256": "530b023900027b64b1b4149cd9c77525d7d390e2bc93d8eed77cd98b3e883e14",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a24ddb5",
+          "file": "house-garden/a8032a24ddb5.bin",
+          "bytes": 63000,
+          "sha256": "95c8e00d60991f13baa313645a754f670c430ac71345176169e66ffe9f318f5d",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "244cabefd0ad",
+          "file": "house-garden/244cabefd0ad.bin",
+          "bytes": 120000,
+          "sha256": "a277952293112b5173bf637e4a6ff6cecb5c2d63716edc5c885bb7eabe64bb3a",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3c0f0d",
+          "file": "house-garden/98f4ab3c0f0d.bin",
+          "bytes": 120000,
+          "sha256": "a277952293112b5173bf637e4a6ff6cecb5c2d63716edc5c885bb7eabe64bb3a",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "90380c69f3ed",
+          "file": "house-garden/90380c69f3ed.bin",
+          "bytes": 180000,
+          "sha256": "4f2494d1f79036c152e959ef9bad0c089a8d96b80d274f1ee958b494970c40aa",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3bb06d",
+          "file": "house-garden/98f4ab3bb06d.bin",
+          "bytes": 57000,
+          "sha256": "12708f28d274989031b5049c7de070751afb80a2233e914b972ff6ad9dc6e440",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "f008d1ebbc8d",
+          "file": "house-garden/f008d1ebbc8d.bin",
+          "bytes": 63000,
+          "sha256": "e7a709a5f7b71d4b1114b2ed105f09289330eb05a80d7a1c6efe12a06a07ab75",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "943cc6189ff1",
+          "file": "house-garden/943cc6189ff1.bin",
+          "bytes": 135000,
+          "sha256": "7690d8330d0146716c472ac249345f30f60e7ed5c9a2d32c89c7affb76723bbc",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e8db840e0e55",
+          "file": "house-garden/e8db840e0e55.bin",
+          "bytes": 63000,
+          "sha256": "b9000f3383747ad1d8d17d05482ec5451f3973ab1f7fc12a87008f9004b56a0e",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "40f520acd84d",
+          "file": "house-garden/40f520acd84d.bin",
+          "bytes": 63000,
+          "sha256": "0077cbcae5ada761981f2425ab5427b8ec83c509aecaca21e303f0dc519d16a2",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e725d485",
+          "file": "house-garden/e868e725d485.bin",
+          "bytes": 120000,
+          "sha256": "b353c70084a4ef81cd083d97e271b5b2b111aefc1e902b0930421bc1bebba99e",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e71f85a5",
+          "file": "house-garden/e868e71f85a5.bin",
+          "bytes": 63000,
+          "sha256": "ca61172b4c994c12df446262f073bac74986fefda6e92b645b374856dd5892c2",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 75,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a239df9",
+          "file": "house-garden/a8032a239df9.bin",
+          "bytes": 63000,
+          "sha256": "11506f10737a8a9df5a4627a1520edd83e3755bc5c434c8bedf2e49818e23f93",
+          "metadata": {
+            "name": "House and Garden Chase V3",
+            "unique_id": "EA4D2144-D7CD-40F6-A3FA-07B63CB2004C",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 75,
+            "fps": 10
+          }
+        }
+      ]
+    },
+    {
+      "slug": "bush-startup",
+      "name": "Bush Startup V3",
+      "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+      "fps": 10,
+      "frames": 104,
+      "seconds": 10.4,
+      "notes": "Christmas score chapter 02, individual whole bushes, no tree or windows; timing quantised to 0.1s.",
+      "jobs": [
+        {
+          "mac": "e831cd7153b1",
+          "file": "bush-startup/e831cd7153b1.bin",
+          "bytes": 166400,
+          "sha256": "ce555d63dc1c5914721e3243f862b850b666cbf29f77007961667e0701c320f2",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e831cd7018e9",
+          "file": "bush-startup/e831cd7018e9.bin",
+          "bytes": 166400,
+          "sha256": "ce555d63dc1c5914721e3243f862b850b666cbf29f77007961667e0701c320f2",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e722e3ed",
+          "file": "bush-startup/e868e722e3ed.bin",
+          "bytes": 166400,
+          "sha256": "95ab09af442cf764ca41a0c03d0853f1a1a5ff27ab6ec9908ea69e30802ecfb8",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a24ddb5",
+          "file": "bush-startup/a8032a24ddb5.bin",
+          "bytes": 87360,
+          "sha256": "5eeebb387c653edf078936717fe73ab356c94e92787c20b36f9cbabf9f87ee82",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "244cabefd0ad",
+          "file": "bush-startup/244cabefd0ad.bin",
+          "bytes": 166400,
+          "sha256": "84f8a5abda5d53e300c66f5c5a4cac0d8380583b5e69ff71aac120b921446062",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3c0f0d",
+          "file": "bush-startup/98f4ab3c0f0d.bin",
+          "bytes": 166400,
+          "sha256": "84f8a5abda5d53e300c66f5c5a4cac0d8380583b5e69ff71aac120b921446062",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "90380c69f3ed",
+          "file": "bush-startup/90380c69f3ed.bin",
+          "bytes": 249600,
+          "sha256": "bb4e0ff853e28762fddaf51282cd464db35372d6f8edb31e55efe826c2da09f7",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3bb06d",
+          "file": "bush-startup/98f4ab3bb06d.bin",
+          "bytes": 79040,
+          "sha256": "eb0c9c0dfd91b725eb03805cb0ffc40e2ebff957e5da4ffec1718ecca322a278",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "f008d1ebbc8d",
+          "file": "bush-startup/f008d1ebbc8d.bin",
+          "bytes": 87360,
+          "sha256": "5eeebb387c653edf078936717fe73ab356c94e92787c20b36f9cbabf9f87ee82",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "943cc6189ff1",
+          "file": "bush-startup/943cc6189ff1.bin",
+          "bytes": 187200,
+          "sha256": "b1973a6f7a06562b5331a67cf7cbe7c0ae2b83c3ae9d27f3f27e78c644290f6c",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e8db840e0e55",
+          "file": "bush-startup/e8db840e0e55.bin",
+          "bytes": 87360,
+          "sha256": "5eeebb387c653edf078936717fe73ab356c94e92787c20b36f9cbabf9f87ee82",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "40f520acd84d",
+          "file": "bush-startup/40f520acd84d.bin",
+          "bytes": 87360,
+          "sha256": "5eeebb387c653edf078936717fe73ab356c94e92787c20b36f9cbabf9f87ee82",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e725d485",
+          "file": "bush-startup/e868e725d485.bin",
+          "bytes": 166400,
+          "sha256": "10b68fa75db9ea2ab8570e91b74c35bff375dbe35a723f622e92b5401a3a204e",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e71f85a5",
+          "file": "bush-startup/e868e71f85a5.bin",
+          "bytes": 87360,
+          "sha256": "5eeebb387c653edf078936717fe73ab356c94e92787c20b36f9cbabf9f87ee82",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 104,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a239df9",
+          "file": "bush-startup/a8032a239df9.bin",
+          "bytes": 87360,
+          "sha256": "5eeebb387c653edf078936717fe73ab356c94e92787c20b36f9cbabf9f87ee82",
+          "metadata": {
+            "name": "Bush Startup V3",
+            "unique_id": "FD895EE1-D0BD-4854-A12D-3389A1824BE9",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 104,
+            "fps": 10
+          }
+        }
+      ]
+    },
+    {
+      "slug": "window-startup",
+      "name": "Window Startup V3",
+      "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+      "fps": 10,
+      "frames": 129,
+      "seconds": 12.9,
+      "notes": "Christmas score chapter 03, individually selected panes; timing quantised to 0.1s.",
+      "jobs": [
+        {
+          "mac": "e831cd7153b1",
+          "file": "window-startup/e831cd7153b1.bin",
+          "bytes": 206400,
+          "sha256": "2f29884989f2320553e90bd63bcc2fe4f79853b30fffcc14515e1d2427bc5233",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e831cd7018e9",
+          "file": "window-startup/e831cd7018e9.bin",
+          "bytes": 206400,
+          "sha256": "2f29884989f2320553e90bd63bcc2fe4f79853b30fffcc14515e1d2427bc5233",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e722e3ed",
+          "file": "window-startup/e868e722e3ed.bin",
+          "bytes": 206400,
+          "sha256": "2f29884989f2320553e90bd63bcc2fe4f79853b30fffcc14515e1d2427bc5233",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a24ddb5",
+          "file": "window-startup/a8032a24ddb5.bin",
+          "bytes": 108360,
+          "sha256": "bbbd0baf35d39e0b76a36778a3b12a0743b960f37cc4bfd1abbfff88725c7a59",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "244cabefd0ad",
+          "file": "window-startup/244cabefd0ad.bin",
+          "bytes": 206400,
+          "sha256": "2f29884989f2320553e90bd63bcc2fe4f79853b30fffcc14515e1d2427bc5233",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3c0f0d",
+          "file": "window-startup/98f4ab3c0f0d.bin",
+          "bytes": 206400,
+          "sha256": "2f29884989f2320553e90bd63bcc2fe4f79853b30fffcc14515e1d2427bc5233",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "90380c69f3ed",
+          "file": "window-startup/90380c69f3ed.bin",
+          "bytes": 309600,
+          "sha256": "9e7af365a9d735697b5fd73298d6d6f5b7819ab5d6d46dee214f186454b755a1",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "98f4ab3bb06d",
+          "file": "window-startup/98f4ab3bb06d.bin",
+          "bytes": 98040,
+          "sha256": "3c88ec2ea20f54b3a30b4ce93739670ade83b411ed96d3d1a7c28adb625e69be",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "f008d1ebbc8d",
+          "file": "window-startup/f008d1ebbc8d.bin",
+          "bytes": 108360,
+          "sha256": "c07e5cabec928478459b6b4f32a6eeec31e882926637435dd5d03e0a59ac71aa",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "943cc6189ff1",
+          "file": "window-startup/943cc6189ff1.bin",
+          "bytes": 232200,
+          "sha256": "97da90a9a16cb85681d0f26ff15761cfe2652b5511b1459289b77603ce8566ed",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e8db840e0e55",
+          "file": "window-startup/e8db840e0e55.bin",
+          "bytes": 108360,
+          "sha256": "5527184b2ab53b3aa7cb48abd9c0ea4492d27e2e536a2d2ae1b1540f19ff0403",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "40f520acd84d",
+          "file": "window-startup/40f520acd84d.bin",
+          "bytes": 108360,
+          "sha256": "9c3d8aa32e661ac33069422798af565395595646e0c86d8a9a2771629b895eea",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e725d485",
+          "file": "window-startup/e868e725d485.bin",
+          "bytes": 206400,
+          "sha256": "2f29884989f2320553e90bd63bcc2fe4f79853b30fffcc14515e1d2427bc5233",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "e868e71f85a5",
+          "file": "window-startup/e868e71f85a5.bin",
+          "bytes": 108360,
+          "sha256": "7e19fa088c60227fbdacf95c735c609f915f20e144db1a193f518c02ab8ba0c3",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 129,
+            "fps": 10
+          }
+        },
+        {
+          "mac": "a8032a239df9",
+          "file": "window-startup/a8032a239df9.bin",
+          "bytes": 108360,
+          "sha256": "cdd0a6720992cd5d27d7654db1c255f424bed004a05944fe5f826725fc64820a",
+          "metadata": {
+            "name": "Window Startup V3",
+            "unique_id": "D98AB40A-0185-45ED-82C5-2E6424FB4DDB",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 129,
+            "fps": 10
+          }
+        }
+      ]
+    }
+  ],
+  "route": [
+    "front_left_bush",
+    "light_tree",
+    "front_right_left_bush",
+    "front_right_right_bush",
+    "mid_right",
+    "back_right_bush",
+    "back_left_bush",
+    "lounge_pane_1",
+    "lounge_pane_2",
+    "lounge_pane_3",
+    "bar_pane_1",
+    "bar_pane_2",
+    "bar_pane_3",
+    "bar_pane_4",
+    "icicles",
+    "office_right_pane_3",
+    "office_right_pane_2",
+    "office_right_pane_1",
+    "office_left_pane_3",
+    "office_left_pane_2",
+    "office_left_pane_1",
+    "landing_pane_2",
+    "landing_pane_1",
+    "master_bedroom_right",
+    "master_bedroom_left"
+  ],
+  "window_route": [
+    "lounge_pane_1",
+    "lounge_pane_2",
+    "lounge_pane_3",
+    "bar_pane_1",
+    "bar_pane_2",
+    "bar_pane_3",
+    "bar_pane_4",
+    "office_right_pane_3",
+    "office_right_pane_2",
+    "office_right_pane_1",
+    "office_left_pane_3",
+    "office_left_pane_2",
+    "office_left_pane_1",
+    "landing_pane_2",
+    "landing_pane_1",
+    "master_bedroom_right",
+    "master_bedroom_left"
+  ],
+  "geometry": "V3 corrected 2D coordinates; original 3D scene maps associated by cloud device MAC and part index",
+  "channel_order": "WRGB",
+  "total_frames_per_controller": 768,
+  "total_raw_bytes": 15052800
+}
