@@ -1,4 +1,5 @@
 import ast
+import importlib.util
 import base64
 import os
 import asyncio
@@ -8,6 +9,9 @@ import unittest
 from unittest.mock import AsyncMock, Mock
 
 source=Path(__file__).resolve().parents[1]/"custom_components/twinkly_area_state/light.py"
+spec=importlib.util.spec_from_file_location("shutdown_parallel",source.with_name("parallel.py"))
+parallel=importlib.util.module_from_spec(spec)
+spec.loader.exec_module(parallel)
 tree=ast.parse(source.read_text(encoding="utf-8"))
 nodes=[n for n in tree.body if getattr(n,"name",None) in ("Group","update_together")]
 ns={"asyncio":asyncio,"base64":base64,"os":os,"HomeAssistantError":RuntimeError,"_LOGGER":Mock(),"time":time,"WINDOW_CHASE":"Window Chase","HOUSE_CHASE":"House and Garden Chase","SLIDE_CHASE":"Bush and Window Chase V2","CHASE_EFFECTS":("Window Chase","House and Garden Chase","Bush and Window Chase V2")}
@@ -17,6 +21,7 @@ update=ns["update_together"]
 
 def group(two=False):
     g=Group.__new__(Group)
+    g._batch=parallel.ControllerBatch()
     g.members=[{"mac":"a","name":"A","role":"master" if two else "none"}]+([{"mac":"b","name":"B","role":"slave"}] if two else [])
     g.master=g.members[0]
     g.lock=asyncio.Lock()

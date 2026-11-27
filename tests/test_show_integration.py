@@ -34,6 +34,9 @@ def load_definitions(filename, namespace, names=None):
 spec = importlib.util.spec_from_file_location("integration_panes", ROOT / "panes.py")
 PANES = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(PANES)
+parallel_spec = importlib.util.spec_from_file_location('integration_parallel', ROOT / 'parallel.py')
+PARALLEL = importlib.util.module_from_spec(parallel_spec)
+parallel_spec.loader.exec_module(PARALLEL)
 
 
 class Features(IntFlag):
@@ -130,6 +133,7 @@ class Simulation:
 
     def make_group(self, movie_count):
         group = self.light.Group.__new__(self.light.Group)
+        group._batch = PARALLEL.ControllerBatch()
         definitions = [
             ("office left", 210, 3), ("office right", 210, 3),
             ("master bedroom", 210, 3), ("landing", 210, 3),
@@ -300,7 +304,7 @@ class FullShowIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sim.group.movie_current_path.await_count, 15)
         selections = [data for _, action, data in sim.events if action == "controller_post"]
         self.assertEqual(len(selections), 30)
-        self.assertEqual([selection[2]["id"] for selection in selections], list(range(40, 55)) + list(range(80, 95)))
+        self.assertEqual([selection[2]["id"] for selection in selections], list(range(41, 55)) + [40] + list(range(81, 95)) + [80])
         # First narrated bushes light both physical halves together, with windows dark.
         self.assertTrue(any(sim.frame_at(9.0093, "front left top")))
         self.assertTrue(any(sim.frame_at(9.0093, "front left bottom")))

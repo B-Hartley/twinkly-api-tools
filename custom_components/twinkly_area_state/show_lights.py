@@ -82,30 +82,28 @@ class ShowLights:
                 # No playback writes until every group has passed preflight.
                 await _complete([group.validate() for group in self.groups])
                 for group in self.groups:
-                    modes = await _complete([
-                        group.call(member, _MODE, token=group.tokens[member["mac"]])
-                        for member in group.members
-                    ])
+                    modes = await group.batch_members(
+                        lambda member: group.call(member, _MODE, token=group.tokens[member["mac"]]))
                     for mode in modes:
                         current = mode.get("mode")
                         if current == "rt" and group.active:
                             continue
                         if current not in ("off", "movie", "playlist", "color", "effect"):
                             raise HomeAssistantError("Stop external streaming before starting the Christmas show")
-                    group.previous = modes[0].get("mode", "off")
+                    group.previous = modes[group.members.index(group.master)].get("mode", "off")
                 for group in movie_groups:
                     await group.refresh_movies()
                     self._movies[group] = {label: ids.copy() for label, ids in group.movies.items()}
                     if not self._movies[group] and plan.get("requires_stored_movies", False):
                         raise HomeAssistantError("The finale needs at least one stored movie present on every Front controller")
                     if self._movies[group]:
-                        paths = await _complete([group.movie_current_path(member) for member in group.members])
+                        paths = await group.batch_members(group.movie_current_path)
                         self._paths[group] = dict(zip((m["mac"] for m in group.members), paths))
                 self._validate_scenes(plan)
                 duration = float(plan.get("soundtrack", {}).get("duration", sum(s["duration"] for s in plan["sections"])))
                 for group in self.groups:
-                    await _complete([
-                        group.login(member) for member in group.members
+                    await group.batch_members(group.login, [
+                        member for member in group.members
                         if group.expiry.get(member["mac"], 0) < time.monotonic() + duration + 15
                     ])
                 # From this point cancellation must turn off every group whose
@@ -351,12 +349,9 @@ class ShowLights:
             # drain: the prepared native mode immediately takes ownership next.
             await group.send()
         selection = self._movies[group][effect]
-        await _complete([
-            group.native_level(round(brightness * 100 / 255)),
-            *[group.call(member, self._paths[group][member["mac"]], method="POST",
-                         token=group.tokens[member["mac"]], payload={"id": selection[member["mac"]]})
-              for member in group.members],
-        ])
+        # Do not issue brightness and selection commands simultaneously to one device.
+        await group.native_level(round(brightness * 100 / 255))
+        await group.select_movie(self._paths[group], selection)
         await group.mode("movie")
         group.native_effect = effect
         group.native_brightness = brightness
