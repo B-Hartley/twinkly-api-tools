@@ -308,9 +308,36 @@ def upload_group_movie(members, worker, workers, pacing):
         raise RuntimeError('Master unreachable; no further movies attempted')
     return workers
 
+def inspect_group(members, timeout, workers, pacing):
+    """Independent read/auth sessions in bounded waves; return errors for the caller."""
+    def read(m):
+        try:
+            state,_=inspect(m,timeout)
+            return m,state,None
+        except Exception as exc:
+            return m,None,exc
+    remaining=list(members)
+    results=[]
+    if pacing.failure_count():
+        workers=1
+    while remaining:
+        batch=remaining[:workers]
+        del remaining[:workers]
+        before=pacing.failure_count()
+        if len(batch)==1:
+            observed=[read(batch[0])]
+        else:
+            with ThreadPoolExecutor(max_workers=len(batch)) as pool:
+                observed=list(pool.map(read,batch))
+        results.extend(observed)
+        if workers>1 and (pacing.failure_count()!=before or any(e is not None for _,_,e in observed)):
+            workers=1
+            print('Inspection fallback: remaining controllers sequential.',flush=True)
+    return results,workers
+
 def main():
     global PACING
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--resume',action='store_true');p.add_argument('--accept-existing',action='store_true',help='Trust matching legacy catalogue entries only when prior binary upload success is known');p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');p.add_argument('--slow',action='store_true',help='Use original 2-second gap for every request');p.add_argument('--workers',type=int,choices=range(1,7),default=None,help='Parallel slave uploads (1-6, default 3; --slow defaults to 1)');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--resume',action='store_true');p.add_argument('--accept-existing',action='store_true',help='Trust matching legacy catalogue entries only when prior binary upload success is known');p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');p.add_argument('--slow',action='store_true',help='Use original 2-second gap for every request');p.add_argument('--workers',type=int,choices=range(1,7),default=None,help='Parallel controller checks and slave uploads (1-6, default 3; --slow defaults to 1)');a=p.parse_args()
     workers=a.workers if a.workers is not None else (1 if a.slow else 3)
     members,movies,jobs=read_bundle(a.movie);frames=sum(m['frames'] for m in movies)
     print(f'Validated {len(jobs)} raw files; {len(movies)} movies, {frames} frames per controller.')
@@ -320,9 +347,11 @@ def main():
     print(f'Upload concurrency: {workers} slave controllers; master always last and alone.',flush=True)
     if a.accept_existing and not a.resume: raise ValueError('--accept-existing requires --resume')
     records=read_journal(); snapshots={};issues=[]; pending={}
-    for m in members:
+    observed,workers=inspect_group(members,a.timeout,workers,PACING)
+    for m,state,error in observed:
         try:
-            state,_=inspect(m,a.timeout); snapshots[m['mac']]=state;cat=state['catalogue']; print(f"{m['name']:24s} free={cat['available_frames']:5d} slots={cat['max']-len(cat['movies']):2d} mode={state['mode']}")
+            if error is not None: raise error
+            snapshots[m['mac']]=state;cat=state['catalogue']; print(f"{m['name']:24s} free={cat['available_frames']:5d} slots={cat['max']-len(cat['movies']):2d} mode={state['mode']}")
             todo=pending_movies(m,cat,movies,jobs,records,a.resume,a.accept_existing)
             pending[m['mac']]={movie['slug'] for movie in todo}
             print(f"  {len(todo)} missing, {len(movies)-len(todo)} already present",flush=True)
@@ -333,16 +362,18 @@ def main():
     if not a.execute: print('Read-only preflight. No writes except authentication.');return
     if not any(pending.values()): print('All selected movie catalogues already match. No writes.');return
     if input('Type UPLOAD FRONT to attempt additive movie upload: ')!='UPLOAD FRONT':return
-    for m in members:
-        state,_=inspect(m,a.timeout)
+    observed,workers=inspect_group(members,a.timeout,workers,PACING)
+    for m,state,error in observed:
+        if error is not None: raise RuntimeError(f"{m['name']}: recheck failed: {error}") from error
         if state!=snapshots[m['mac']]:raise ValueError('Preflight changed; NO movie writes attempted')
     print('Beginning experimental uploads. Do not interrupt or use Twinkly/HA during upload.',flush=True)
     for movie in movies:
         print('Movie:',movie['name'],flush=True)
         workers=upload_group_movie(members,lambda m,stop: upload_member(m,movie,jobs,records,pending,snapshots,a.timeout,stop),workers,PACING)
     print('Final verification:',flush=True)
-    for m in members:
-        state,_=inspect(m,a.timeout)
+    observed,workers=inspect_group(members,a.timeout,workers,PACING)
+    for m,state,error in observed:
+        if error is not None: raise RuntimeError(f"{m['name']}: final verification failed: {error}") from error
         if state != snapshots[m['mac']] or any(not matching_entry(state['catalogue'],jobs[movie['slug'],m['mac']][0]) for movie in movies):
             raise ValueError(f"{m['name']}: final catalogue verification failed")
         print(f"  PASS {m['name']}",flush=True)
