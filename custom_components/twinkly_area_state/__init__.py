@@ -566,6 +566,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller_batch = ControllerBatch()
 
     def require_idle_capture():
+        maintenance.guard()
         ctx = hass.data[DOMAIN][entry.entry_id]
         show_task = getattr(ctx.get("show"), "task", None)
         if (show_task is not None and not show_task.done()) or any(g.active for g in ctx.get("virtual_groups", [])):
@@ -728,6 +729,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if (overwrite or allow_unverified) and call.data.get("confirmation") != "IMPORT":
             raise HomeAssistantError("Type IMPORT to confirm replacement or unverified import")
         async with lock:
+            maintenance.guard()
             try:
                 incoming = await hass.async_add_executor_job(
                     read_archives, hass.config.path("twinkly_3d_import"))
@@ -859,6 +861,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=vol.Schema({vol.Required("name"): STATE_NAME,
                            vol.Required("left"): str, vol.Required("right"): str}))
     async def resume_movie(call: ServiceCall):
+        maintenance.guard()
         for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
             await group.stop(movie=True)
 
@@ -866,11 +869,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cloud = CloudSession(hass, entry.entry_id)
 
     async def verify_cloud_session(call: ServiceCall):
+        maintenance.guard()
         await cloud.get("/v3/installations")
         async_create(hass, "Cloud authentication verified. Cached tokens will renew automatically when required.",
                      title="Twinkly cloud session", notification_id=f"{DOMAIN}_cloud_session")
 
     async def rescan_controllers(call: ServiceCall):
+        maintenance.guard()
         # Reload outside the capture lock: platform discovery acquires it.
         if not await hass.config_entries.async_reload(entry.entry_id):
             from homeassistant.exceptions import HomeAssistantError
@@ -900,6 +905,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ctx=hass.data[DOMAIN][entry.entry_id]
     show=Show(hass,ctx)
     ctx["show"]=show
+    from .maintenance import Maintenance
+    maintenance = Maintenance(hass, entry, ctx)
+    ctx["maintenance"] = maintenance
+    await maintenance.load()
     show_schema=vol.Schema({
         # Omitted Start fields must inherit the prepared session, not schema defaults.
         vol.Optional("variant"): vol.In(("original", "house_chase")),
@@ -918,7 +927,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(DOMAIN,"start_countdown_test",show.start_countdown,schema=show_schema)
     hass.services.async_register(DOMAIN,"stop_countdown_test",show.stop)
     hass.services.async_register(DOMAIN,"stop_christmas_show",show.stop)
-    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light", "sensor"])
+    platforms = ["button", "sensor", "switch"]
+    if not maintenance.enabled:
+        platforms.append("light")
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    maintenance.light_loaded = not maintenance.enabled
     return True
 
 
@@ -926,7 +939,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.data[DOMAIN][entry.entry_id]["show"].stop()
     for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
         await group.stop()
-    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light", "sensor"]):
+    maintenance = hass.data[DOMAIN][entry.entry_id]["maintenance"]
+    platforms = ["button", "sensor", "switch"] + (["light"] if maintenance.light_loaded else [])
+    if not await hass.config_entries.async_unload_platforms(entry, platforms):
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "replace_group_reference", "capture_3d_maps", "verify_archives",
