@@ -149,6 +149,8 @@ class Show:
         self.set_status("error")
 
     def guard(self):
+        if self.ctx.get("maintenance"):
+            self.ctx["maintenance"].guard()
         if self.ctx.get("mapping"):
             self.ctx["mapping"].guard()
 

@@ -27,6 +27,7 @@ class Group:
         self.members=members
         self.lock=lock
         self.query=query
+        self.maintenance=None
         self._batch=batch if batch is not None else ControllerBatch()
         self.session=async_get_clientsession(hass)
         self.tokens={}
@@ -59,7 +60,16 @@ class Group:
         self.master=next(m for m in members if m["role"] in ("master","none"))
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
 
+    def guard(self):
+        if getattr(self, "maintenance", None) is not None:
+            self.maintenance.guard()
+
+    def guard_wire(self):
+        if getattr(self, "maintenance", None) is not None:
+            self.maintenance.guard_wire()
+
     async def call(self,m,path,**kw):
+        self.guard_wire()
         r=await self.query(self.session,m["ip"],path,**kw)
         if not r["ok"]:
             if communication_error(r.get("error")):
@@ -253,6 +263,7 @@ class Group:
                 raise result
 
     async def send_member(self,m,now):
+        self.guard_wire()
         if time.monotonic()>=self.expiry.get(m["mac"],0):
             await self.login(m)
         on,brightness,rgbw=self.state[m["mac"]]
@@ -330,6 +341,7 @@ class Group:
             await self.call(m,MODE,method="POST",token=self.tokens[m["mac"]],payload={"mode":value})
 
     async def black_frames(self,duration):
+        self.guard_wire()
         if self.master["role"]=="none":
             return
         loop=asyncio.get_running_loop()
@@ -441,6 +453,7 @@ class Group:
 
     async def play_movie(self,effect,brightness):
         async with self.lock:
+            self.guard()
             await self.validate()
             await self.refresh_movies()
             if effect not in self.movies:
@@ -465,6 +478,7 @@ class Group:
 
     async def native_off(self):
         async with self.lock:
+            self.guard()
             if self.native_effect is None:
                 return
             await self.validate()
@@ -489,6 +503,7 @@ class Group:
     async def update_pane(self,m,index,on,kwargs):
         mac=m["mac"]
         async with self.lock:
+            self.guard()
             if mac not in self.pane_maps:
                 raise HomeAssistantError("Capture a valid pane map first")
             if not on and not self.active:
@@ -592,6 +607,8 @@ async def update_together(targets,on,kwargs,combined=False):
     if not targets:
         return
     async with targets[0][0].lock:
+        for group, _ in targets:
+            group.guard()
         targets=[(g,members) for g,members in targets if on or g.active or g.error]
         if not targets:
             return
@@ -978,6 +995,7 @@ async def async_setup_entry(hass,entry,async_add_entities):
             try:
                 members=[standalone_member(*items[0])] if uid.startswith("standalone:") else basic_group_members(items)
                 group=Group(hass,members,ctx["lock"],query,batch)
+                group.maintenance=ctx["maintenance"]
                 for m in members:
                     if m["ip"] in auth:
                         group.tokens[m["mac"]],group.expiry[m["mac"]]=auth[m["ip"]]
