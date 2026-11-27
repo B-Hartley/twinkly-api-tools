@@ -97,7 +97,8 @@ class ShowLights:
                     if not self._movies[group] and plan.get("requires_stored_movies", False):
                         raise HomeAssistantError("The finale needs at least one stored movie present on every Front controller")
                     required = plan.get("required_movies", [])
-                    missing = [name for name in required if "Movie: " + name not in self._movies[group]]
+                    resolver = getattr(group, "resolve_movie", lambda effect, movies: effect if effect in movies else None)
+                    missing = [name for name in required if resolver("Movie: " + name, self._movies[group]) is None]
                     ambiguous = [name for name in required
                                  if any(label.startswith("Movie: " + name + " (") for label in self._movies[group])]
                     if missing or ambiguous:
@@ -300,6 +301,10 @@ class ShowLights:
                     available = sorted(self._movies.get(group, {}))
                     effect = available[int(cue.get("movie_index", 0)) % len(available)] if available else None
                 available_effects = entity.effect_list or []
+                if on and isinstance(effect, str) and effect.startswith("Movie: "):
+                    group = bindings[0][0]
+                    resolver = getattr(group, "resolve_movie", lambda label, movies: label if label in movies else None)
+                    effect = resolver(effect, self._movies.get(group, {})) or effect
                 if on and effect is not None and effect not in available_effects:
                     effect = cue.get("fallback_effect") if cue.get("fallback_effect") in available_effects else None
                 data = {"brightness": brightness} if on else {}

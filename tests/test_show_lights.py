@@ -361,3 +361,12 @@ class MovieCatalogueRefreshTests(unittest.IsolatedAsyncioTestCase):
         group.call = read
         await Group.refresh_movies(group)
         self.assertEqual(set(group.movies), {"Movie: Christmas Spirit (one)", "Movie: Christmas Spirit (two)"})
+
+    async def test_general_name_resolution(self):
+        resolve = Group.resolve_movie
+        movies = {"Movie: 123456789012345": {"0": 3}}
+        self.assertEqual(resolve("Movie: 1234567890123456789", movies), "Movie: 123456789012345")
+        self.assertIsNone(resolve("Movie: 12345678901234", movies))
+        self.assertIsNone(resolve("Movie: 1234567890123456789", {"Movie: 123456789012345 (a)": {}, "Movie: 123456789012345 (b)": {}}))
+        self.assertEqual(resolve("Movie: éééééééééé", {"Movie: ééééééé": {}}), "Movie: ééééééé")
+        self.assertEqual(resolve("Movie: 1234567890123456789", {**movies, "Movie: 1234567890123456789": {}}), "Movie: 1234567890123456789")

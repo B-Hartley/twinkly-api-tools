@@ -464,14 +464,33 @@ class Group:
         await self.batch_members(select,[m for m in self.members if m is not self.master],stop_on_error=True)
         await self.batch_members(select,[self.master],stop_on_error=True)
 
+    @staticmethod
+    def resolve_movie(effect, movies):
+        """Resolve exact names first, then a unique 15-character/UTF-8 prefix."""
+        if effect in movies:
+            return effect
+        if not isinstance(effect, str) or not effect.startswith("Movie: "):
+            return None
+        name=effect[7:]
+        if any(label.startswith(effect+" (") for label in movies):
+            return None
+        prefixes={name[:15],name.encode("utf-8")[:15].decode("utf-8",errors="ignore")}-{name}
+        # Known full name retained for existing dashboards and show definitions.
+        if name=="Christmas Spiri":
+            prefixes.add("Christmas Spirit")
+        candidates={"Movie: "+prefix for prefix in prefixes}
+        if any(label.startswith(candidate+" (") for candidate in candidates for label in movies):
+            return None
+        matches=candidates.intersection(movies)
+        return next(iter(matches)) if len(matches)==1 else None
+
     async def play_movie(self,effect,brightness):
         async with self.lock:
             self.guard()
             await self.validate()
             await self.refresh_movies()
-            if effect == "Movie: Christmas Spiri":
-                effect = "Movie: Christmas Spirit"
-            if effect not in self.movies:
+            effect=self.resolve_movie(effect,self.movies)
+            if effect is None:
                 raise HomeAssistantError("Movie not present on every physical group member")
             paths=dict(zip((m["mac"] for m in self.members),await self.batch_members(self.movie_current_path)))
             if self.active or self.error:
