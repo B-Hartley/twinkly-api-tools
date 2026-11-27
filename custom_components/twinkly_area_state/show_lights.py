@@ -103,7 +103,10 @@ class ShowLights:
                     if missing or ambiguous:
                         details = []
                         if missing:
-                            details.append("missing: " + ", ".join(missing))
+                            coverage = getattr(group, "movie_coverage", {})
+                            details.append("missing: " + ", ".join(
+                                f"{name} ({coverage[name]}/{len(group.members)} controllers; UUID/name consistency required)"
+                                if name in coverage else name for name in missing))
                         if ambiguous:
                             details.append("ambiguous: " + ", ".join(ambiguous))
                         raise HomeAssistantError("Required Front movie catalogue — " + "; ".join(details))

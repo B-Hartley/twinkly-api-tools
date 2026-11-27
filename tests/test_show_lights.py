@@ -336,3 +336,28 @@ class ShowSceneTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.group.native_effect)
         self.group.mode.assert_not_awaited()
 
+
+
+class MovieCatalogueRefreshTests(unittest.IsolatedAsyncioTestCase):
+    async def test_truncated_name_and_uuid_local_ids(self):
+        group = make_group()
+        group.entities = []
+        async def read(member, path, **kwargs):
+            return {"movies": [{"unique_id": "shared", "id": int(member["mac"])+3,
+                                "name": "Christmas Spiri"}]}
+        group.call = read
+        await Group.refresh_movies(group)
+        self.assertEqual(group.movies, {"Movie: Christmas Spirit": {"0": 3, "1": 4}})
+        self.assertEqual(group.movie_coverage, {"Christmas Spirit": 2})
+
+    async def test_inconsistent_and_duplicate_movies_not_selectable_by_plain_name(self):
+        group = make_group()
+        group.entities = []
+        async def read(member, path, **kwargs):
+            return {"movies": [
+                {"unique_id": "one", "id": 1, "name": "Christmas Spiri"},
+                {"unique_id": "two", "id": 2, "name": "Christmas Spirit"},
+                {"unique_id": "bad", "id": 3, "name": "A" if member["mac"] == "0" else "B"}]}
+        group.call = read
+        await Group.refresh_movies(group)
+        self.assertEqual(set(group.movies), {"Movie: Christmas Spirit (one)", "Movie: Christmas Spirit (two)"})

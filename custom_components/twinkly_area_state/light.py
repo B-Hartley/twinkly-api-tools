@@ -411,12 +411,25 @@ class Group:
             return catalogue
         catalogues=await self.batch_members(read_catalogue)
         common=set.intersection(*(set(c) for c in catalogues))
-        self.movies={}
+        # Firmware stores at most 15 characters; use only the verified explicit alias.
+        def canonical(name):
+            return "Christmas Spirit" if name == "Christmas Spiri" else name
+        labels={}
+        counts={}
+        for c in catalogues:
+            for name in {canonical(item[1]) for item in c.values()}:
+                counts[name]=counts.get(name,0)+1
         for uid in sorted(common):
-            label="Movie: "+catalogues[0][uid][1]
-            if label in self.movies:
-                label+=" ("+uid+")"
-            self.movies[label]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+            names={canonical(c[uid][1]) for c in catalogues}
+            if len(names)==1:
+                labels.setdefault("Movie: "+names.pop(),[]).append(uid)
+        movies={}
+        for label,uids in labels.items():
+            for uid in uids:
+                key=label if len(uids)==1 else label+" ("+uid+")"
+                movies[key]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+        self.movies=movies
+        self.movie_coverage=counts
         self.notify_registered()
 
     def notify_registered(self):
@@ -456,6 +469,8 @@ class Group:
             self.guard()
             await self.validate()
             await self.refresh_movies()
+            if effect == "Movie: Christmas Spiri":
+                effect = "Movie: Christmas Spirit"
             if effect not in self.movies:
                 raise HomeAssistantError("Movie not present on every physical group member")
             paths=dict(zip((m["mac"] for m in self.members),await self.batch_members(self.movie_current_path)))
