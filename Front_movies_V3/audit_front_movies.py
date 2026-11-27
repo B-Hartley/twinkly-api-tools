@@ -10,6 +10,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--timeout', type=float, default=45)
     p.add_argument('--gap', type=float, default=2)
+    p.add_argument('--workers', type=int, choices=range(1,7), default=3)
     a = p.parse_args()
     if a.timeout <= 0 or a.gap < 0:
         p.error('Invalid timeout or gap')
@@ -23,10 +24,12 @@ def main():
     u.call = paced
     report = {'controllers': [], 'movies': {m['slug']: [] for m in movies}}
     path = Path(__file__).resolve().parent / ('private-movie-audit-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ') + '.json')
-    for m in members:
+    observed, _ = u.inspect_group(members, a.timeout, a.workers, u.PACING)
+    for m, state, error in observed:
         row = {'name': m['name'], 'mac': m['mac']}
         try:
-            state, _ = u.inspect(m, a.timeout)
+            if error is not None:
+                raise error
             row.update(state)
             cat = state['catalogue']
             print(f"{m['name']}: mode={state['mode']}, free={cat['available_frames']}, entries={len(cat['movies'])}", flush=True)
