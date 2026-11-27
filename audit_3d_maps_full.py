@@ -2,6 +2,7 @@
 """Read-only three-way audit of saved, LAN and cloud standalone 3D maps."""
 import argparse
 import os
+from controller_workers import add_workers, controller_reads
 from types import SimpleNamespace
 from audit_3d_maps import read
 from archive_3d_maps import read_reference
@@ -26,6 +27,7 @@ def main():
     p.add_argument("--root", default="3d-map-archive")
     p.add_argument("--timeout", type=float, default=20)
     p.add_argument("--names", nargs="+")
+    add_workers(p)
     args = p.parse_args()
     if not 0 < args.timeout <= 30:
         p.error("Invalid timeout")
@@ -42,10 +44,11 @@ def main():
         if {d["name"] for d in devices} != set(args.names):
             p.error("Unknown device name")
     passed = missing = different = blocked = 0
-    for device in devices:
+    for device, result, error in controller_reads(devices, lambda d: read(d, args.timeout), args.workers):
         print(f"\n=== {device['name']} ===")
         try:
-            key, count, group, local = read(device, args.timeout)
+            if error is not None: raise error
+            key, count, group, local = result
             print(f"  LEDs: {count}")
             if group.get("mode") != "none":
                 raise ValueError("Controller is grouped")

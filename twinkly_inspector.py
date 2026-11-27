@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 import urllib.error
 import urllib.request
+from controller_workers import add_workers, controller_reads
 
 ENDPOINTS = {
     "gestalt": "/xled/v1/gestalt",
@@ -155,7 +156,7 @@ def inspect(args):
     skipped = []
     report = ["Twinkly Area Group Inspector", f"Captured UTC: {now.isoformat()}",
               "WARNING: This snapshot does NOT prove Area Editor position/rotation/scale can be restored.", ""]
-    for d in devices:
+    def inspect_one(d):
         ip, name = d["ip"], d["name"]
         folder = base / "controllers" / ip.replace(".", "_")
         details = {"ip": ip, "name": name, "endpoints": {}, "errors": []}
@@ -164,11 +165,7 @@ def inspect(args):
             reason = probe.get("error", "Device unreachable")
             details.update({"status": "skipped", "skip_reason": reason, "authentication": "not_attempted"})
             details["errors"].append({"connection": reason})
-            manifest["controllers"].append(details)
-            skipped.append((name, ip, reason))
-            report.extend([f"{name} ({ip})", f"  SKIPPED: {reason}", ""])
-            print(f"SKIPPED {name} ({ip}): {reason}")
-            continue
+            return details, [f"{name} ({ip})", f"  SKIPPED: {reason}", ""]
         details["status"] = "inspected"
         token, auth_error = authenticate(ip, args.timeout)
         details["authentication"] = "verified" if token else "failed"
@@ -234,16 +231,24 @@ def inspect(args):
             "raw_movie_frames_reason": "No documented read-only movie-frame download API; the documented /movies/full endpoint is upload-only.",
             "fully_restorable_movie_backup": False,
         }
-        manifest["controllers"].append(details)
-        report.extend([f"{name} ({ip})",
+        lines = [f"{name} ({ip})",
                        f"  Device: {details['identity']}",
                        f"  Authentication: {details['authentication']}",
                        f"  Layout: {'OK' if layout.get('ok') else 'UNAVAILABLE'}; "
                        f"keys={details.get('layout_keys', [])}; "
                        f"coordinate_count={details.get('coordinate_count', 'unknown')}",
                        f"  Endpoints OK: {sum(e['ok'] for e in details['endpoints'].values())}/{len(ENDPOINTS)}",
-                       f"  Errors: {details['errors']}", ""])
-        print(f"{name} ({ip}): {sum(e['ok'] for e in details['endpoints'].values())}/{len(ENDPOINTS)} endpoints")
+                       f"  Errors: {details['errors']}", ""]
+        return details, lines
+    for d, result, error in controller_reads(devices, inspect_one, getattr(args, "workers", 3)):
+        if error is not None:
+            raise error
+        details, lines = result
+        manifest["controllers"].append(details)
+        report.extend(lines)
+        if details["status"] == "skipped":
+            skipped.append((d["name"], d["ip"], details["skip_reason"]))
+        print(lines[0])
     inspected = [c for c in manifest["controllers"] if c["status"] == "inspected"]
     complete = [c for c in inspected if c["endpoints"]["led_layout_full"]["ok"]]
     manifest["summary"] = {"configured": len(devices), "inspected": len(inspected),
@@ -296,6 +301,7 @@ def main():
     i.add_argument("--output", default="snapshots", help="Local snapshot root")
     i.add_argument("--group-name", help="Named state such as frontgroup or ungrouped")
     i.add_argument("--timeout", type=float, default=5, help="Per-request timeout (seconds)")
+    add_workers(i)
     c = sub.add_parser("compare", help="Compare endpoint hashes of two snapshots")
     c.add_argument("before")
     c.add_argument("after")

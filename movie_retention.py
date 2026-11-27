@@ -5,6 +5,7 @@ Never downloads animation frames, writes effects or changes playback.
 Compare stable movie IDs and metadata per physical MAC; report differences.
 """
 import copy
+from controller_workers import controller_reads
 import datetime as dt
 
 from twinkly_inspector import authenticate, request, scrub
@@ -54,7 +55,11 @@ def read_member(member, timeout):
 def capture(plan, output, phase, timeout, save_json):
     if len(plan["members"]) != 2:
         raise ValueError("Expected two controllers for movie retention comparison")
-    records = [read_member(member, timeout) for member in plan["members"]]
+    records = []
+    for member, result, error in controller_reads(plan["members"], lambda m: read_member(m, timeout)):
+        if error is not None:
+            raise error
+        records.append(result)
     save_json(output / ("movie-retention-" + phase + "-private.json"),
               {"phase": phase, "controllers": records})
     print("MOVIE CHECK", phase)
