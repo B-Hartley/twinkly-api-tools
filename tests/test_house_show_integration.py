@@ -24,9 +24,10 @@ class FakeContext:
 class HouseSimulation(Simulation):
     """Reuse the real scene/pixel harness and add capability-aware HA light I/O."""
 
-    def __init__(self, *, brightness=2, missing_movie=None):
+    def __init__(self, *, brightness=2, missing_movie=None, variant="house_chase"):
         super().__init__(brightness=brightness)
-        self.plan = json.loads((ROOT / "christmas_show_house_chase.json").read_text())
+        self.variant = variant
+        self.plan = json.loads((ROOT / self.controller.SHOW_VARIANTS[variant]).read_text())
         self.house_events = []
         self.house_initial = {}
         self.house_leaves = {}
@@ -153,7 +154,7 @@ class HouseSimulation(Simulation):
 
     async def prepare(self):
         await self.show.prepare(SimpleNamespace(data={
-            "variant": "house_chase", "audio_base": "https://example.test/local/christmas",
+            "variant": self.variant, "audio_base": "https://example.test/local/christmas",
             "brightness_pct": self.brightness, "house_brightness_pct": 100,
         }))
         await self.show.task

@@ -1,5 +1,9 @@
 # Santa's Christmas Magic — version 2
 
+This retained original is labelled **V1** in the programme dropdown. Its
+historical audio filename remains `christmas_show_v2.mp3`. For the separate
+212-second V3 show, see [V3 show and controls](CHRISTMAS_SHOW_V3.md).
+
 For separate Prepare/Go controls, the British Santa house-chase variant,
 the Landing countdown and phone/Zigbee-button examples, see
 [Prepare, then Go](CHRISTMAS_SHOW_PREPARE.md). This page documents the retained

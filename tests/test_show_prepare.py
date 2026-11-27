@@ -196,6 +196,52 @@ class PrepareTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.show.last_error)
         self.assertEqual(self.show._house_brightness, 100)
 
+    async def test_completion_stays_busy_until_audio_and_house_cleanup_finish(self):
+        await self.prepare()
+        audio_entered, audio_release = asyncio.Event(), asyncio.Event()
+        house_entered, house_release = asyncio.Event(), asyncio.Event()
+
+        async def hold_audio(domain, action, data):
+            if action == "media_stop":
+                audio_entered.set()
+                await audio_release.wait()
+
+        async def hold_house():
+            house_entered.set()
+            await house_release.wait()
+
+        self.service_hook = hold_audio
+        self.show.house_lights = SimpleNamespace(blackout=AsyncMock(), stop=hold_house)
+        await self.show.start_prepared(self.call())
+        await asyncio.wait_for(audio_entered.wait(), 1)
+        self.assertEqual(self.show.status, "stopping")
+        audio_release.set()
+        await asyncio.wait_for(house_entered.wait(), 1)
+        self.assertEqual(self.show.status, "stopping")
+        house_release.set()
+        await self.show.task
+        self.assertEqual(self.show.status, "finished")
+        self.assertEqual(self.states[SPEAKER].attributes["volume_level"], .27)
+
+    async def test_reprepare_is_busy_while_releasing_the_previous_session(self):
+        await self.prepare()
+        entered, release = asyncio.Event(), asyncio.Event()
+
+        async def hold_stop(domain, action, data):
+            if action == "media_stop":
+                entered.set()
+                await release.wait()
+
+        self.service_hook = hold_stop
+        request = asyncio.create_task(self.show.prepare(self.call(audio_base=BASE)))
+        self.tasks.append(request)
+        await asyncio.wait_for(entered.wait(), 1)
+        self.assertEqual(self.show.status, "preparing")
+        release.set()
+        await request
+        await self.show.task
+        self.assertEqual(self.show.status, "ready")
+
     async def test_wrong_programme_variant_or_settings_do_not_launch(self):
         await self.prepare(variant="house_chase", brightness_pct=12)
         actions_before = self.actions()
@@ -287,6 +333,27 @@ class PrepareTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.calls, [])
         self.lights.stop.assert_awaited_once()
 
+    async def test_prepare_failure_stays_busy_until_its_cleanup_finishes(self):
+        entered, release = asyncio.Event(), asyncio.Event()
+
+        async def hold_cleanup(domain, action, data):
+            if action == "media_seek":
+                raise RuntimeError("Seek failed")
+            if action == "media_stop":
+                entered.set()
+                await release.wait()
+
+        self.service_hook = hold_cleanup
+        with self.assertLogs("prepare_test_show", level="ERROR"):
+            await self.show.prepare(self.call(audio_base=BASE))
+            await asyncio.wait_for(entered.wait(), 1)
+            self.assertEqual(self.show.status, "stopping")
+            self.assertEqual(self.show.last_error, "Seek failed")
+            release.set()
+            await self.show.task
+        self.assertEqual(self.show.status, "error")
+        self.assertEqual(self.states[SPEAKER].attributes["volume_level"], .27)
+
     async def test_unconfirmed_seek_never_becomes_ready_or_unmutes_playback(self):
         async def stale_seek(domain, action, data):
             if action == "media_seek":
@@ -354,11 +421,18 @@ class PrepareTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("stop", self.show.last_error.lower())
         self.assertIsNotNone(self.show._pending_audio_cleanup)
         self.assertIsNone(self.show.prepared)
+        sensor_module = definitions(ROOT / "sensor.py", {
+            "SensorEntity": type("SensorEntity", (), {}), "DeviceInfo": dict,
+            "DOMAIN": "twinkly_area_state",
+        })
+        sensor = sensor_module.ChristmasShowStatus("test", self.show)
+        self.assertIs(sensor.extra_state_attributes["audio_cleanup_pending"], True)
         self.hass.services.async_call = self.service
         await self.show.stop()
         self.assertEqual(self.actions()[-2:], ["media_stop", "volume_set"])
         self.assertEqual(self.states[SPEAKER].attributes["volume_level"], .27)
         self.assertIsNone(self.show._pending_audio_cleanup)
+        self.assertIs(sensor.extra_state_attributes["audio_cleanup_pending"], False)
         self.assertEqual(self.show.status, "idle")
 
     async def test_replacement_arriving_during_stop_keeps_its_own_volume(self):
@@ -426,6 +500,26 @@ class PrepareTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.show.prepared)
         self.assertEqual(self.actions()[-2:], ["media_stop", "volume_set"])
         self.assertEqual(self.states[SPEAKER].attributes["volume_level"], .27)
+        self.lights.stop.assert_awaited_once()
+
+    async def test_expiry_stays_busy_until_audio_and_lights_are_released(self):
+        await self.prepare()
+        entered, release = asyncio.Event(), asyncio.Event()
+
+        async def hold_stop(domain, action, data):
+            if action == "media_stop":
+                entered.set()
+                await release.wait()
+
+        self.service_hook = hold_stop
+        self.now += self.module.PREPARED_TTL
+        watch = self.show._ready_task
+        self.watch_tick.set()
+        await asyncio.wait_for(entered.wait(), 1)
+        self.assertEqual(self.show.status, "stopping")
+        release.set()
+        await watch
+        self.assertEqual(self.show.status, "expired")
         self.lights.stop.assert_awaited_once()
 
     async def test_ready_expiry_cleanup_failure_never_leaves_false_ready_status(self):

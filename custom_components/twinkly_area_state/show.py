@@ -26,6 +26,7 @@ PREPARED_TTL = 15 * 60
 SHOW_VARIANTS = {
     "original": "christmas_show.json",
     "house_chase": "christmas_show_house_chase.json",
+    "elf_chase_v3": "christmas_show_elf_chase_v3.json",
 }
 DEFAULT_OPTIONS = {"audio": True, "audio_base": "", "brightness_pct": 2,
                    "house_brightness_pct": 100, "volume": 0.05, "offset_ms": 0}
@@ -146,7 +147,10 @@ class Show:
 
     def cleanup_error(self, message):
         self.last_error = (self.last_error + "; " + message) if self.last_error else message
-        self.set_status("error")
+        # Keep external rehearsal controls blocked until every cleanup await
+        # has finished. The cleanup owner publishes the final error afterwards.
+        if self.status not in ("preparing", "stopping"):
+            self.set_status("error")
 
     def guard(self):
         if self.ctx.get("maintenance"):
@@ -188,6 +192,10 @@ class Show:
         """Audio is requested explicitly; a failed soundtrack is not a silent show."""
         if not options.get("audio", True):
             return None
+        if plan["soundtrack"].get("available") is False:
+            raise HomeAssistantError(
+                "This programme's soundtrack has not been released; use V1, V2 or Countdown, "
+                "or choose audio: false for a silent lighting rehearsal")
         base = options.get("audio_base", "").strip()
         if not base:
             raise HomeAssistantError(
@@ -261,19 +269,26 @@ class Show:
         self.guard()
         if self.task and not self.task.done():
             raise HomeAssistantError("Christmas show already running")
-        await self._release_prepared()
-        if self._pending_audio_cleanup is not None:
-            if not await self.cleanup_audio(**self._pending_audio_cleanup):
-                raise HomeAssistantError("The previous soundtrack could not be released; stop it before preparing again")
-            self._pending_audio_cleanup = None
-        # A previous completed show may still own its stored-movie finale.
-        await self._stop_lights()
+        # Retiring a previous programme can await Sonos or controller I/O too.
+        # Advertise preparation before those awaits, not only after cleanup.
+        self.set_status("preparing")
+        try:
+            await self._release_prepared()
+            if self._pending_audio_cleanup is not None:
+                if not await self.cleanup_audio(**self._pending_audio_cleanup):
+                    raise HomeAssistantError("The previous soundtrack could not be released; stop it before preparing again")
+                self._pending_audio_cleanup = None
+            # A previous completed show may still own its stored-movie finale.
+            await self._stop_lights()
+        except BaseException as exc:
+            self.cleanup_error("Previous programme could not be released: " + str(exc))
+            self.set_status("error")
+            raise
         self.lights = ShowLights(self.hass, self.ctx, entities)
         self.house_lights = house
         self._house_brightness = options["house_brightness_pct"]
         self.kind, self.variant = kind, variant
         self.last_error = None
-        self.set_status("preparing")
         self.task = self.hass.async_create_background_task(
             self._prepare_run(plan, options) if prepare_only else self.run(plan, options),
             "Prepare Christmas soundtrack" if prepare_only else "Christmas soundtrack show")
@@ -318,6 +333,7 @@ class Show:
                 self.set_status("error" if self._pending_audio_cleanup else "idle")
             except BaseException as exc:
                 self.cleanup_error("Show cleanup did not finish: " + str(exc))
+                self.set_status("error")
                 raise
 
     def _check_paused(self, prepared):
@@ -352,6 +368,7 @@ class Show:
         cleanup = {"speaker": plan["speaker"], "url": None, "volume": None,
                    "volume_changed": False, "play_requested": False, "original_media": None}
         ready = False
+        cancelled = False
         try:
             _, duration = build_timeline(plan)
             url = self.audio_ready(plan, options)
@@ -396,13 +413,14 @@ class Show:
                 self._watch_prepared(prepared), "Christmas ready timeout")
             ready = True
         except asyncio.CancelledError:
+            cancelled = True
             raise
         except Exception as exc:
             self.last_error = str(exc)
-            self.set_status("error")
             _LOGGER.exception("Christmas preparation failed: %s", exc)
         finally:
             if not ready:
+                self.set_status("stopping")
                 self.prepared = None
                 await self.cleanup_audio(**cleanup)
                 try:
@@ -410,6 +428,8 @@ class Show:
                 except Exception as exc:
                     self.cleanup_error("Prepared lights could not be released: " + str(exc))
                     _LOGGER.exception("Prepared Christmas lights cleanup failed")
+                if not cancelled:
+                    self.set_status("error")
 
     async def _watch_prepared(self, prepared):
         while self.prepared is prepared:
@@ -428,13 +448,15 @@ class Show:
                     if self.prepared is not prepared:
                         return
                     self.last_error = error
-                    self.set_status("expired" if "expired" in error else "error")
+                    terminal_status = "expired" if "expired" in error else "error"
+                    self.set_status("stopping")
                     await self._release_prepared()
                     try:
                         await self._stop_lights()
                     except Exception as exc:
                         self.cleanup_error("Prepared lights could not be released: " + str(exc))
                         _LOGGER.exception("Expired Christmas lights cleanup failed")
+                    self.set_status("error" if self.last_error != error else terminal_status)
                 return
 
     async def _start_prepared(self, call, kind):
@@ -627,6 +649,7 @@ class Show:
         play_requested = False
         original_media = None
         completed = False
+        cancelled = False
         self._drift_since = None
         self._clock_correction = 0.0
         self._clock_checked_at = None
@@ -690,14 +713,14 @@ class Show:
                                     options.get("brightness_pct", 2), audio)
             await self.lights.finish(keep_movie=True)
             completed = True
-            self.set_status("finished")
         except asyncio.CancelledError:
+            cancelled = True
             raise
         except Exception as exc:
             self.last_error = str(exc)
-            self.set_status("error")
             _LOGGER.exception("Christmas show failed: %s", exc)
         finally:
+            self.set_status("stopping")
             # Stop the owned soundtrack promptly, even if a controller takes
             # time to acknowledge its off command during error/cancel cleanup.
             if await self.cleanup_audio(speaker, url, volume, volume_changed,
@@ -715,3 +738,5 @@ class Show:
                 except Exception as exc:
                     self.cleanup_error("House lights could not be restored: " + str(exc))
                     _LOGGER.exception("Christmas show house lights could not be restored")
+            if not cancelled:
+                self.set_status("finished" if completed and self.last_error is None else "error")
