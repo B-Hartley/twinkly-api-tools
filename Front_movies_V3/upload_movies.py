@@ -1,40 +1,89 @@
 #!/usr/bin/env python3
 """Private Front movie installer. Default is read-only, never deletes or changes maps/mode."""
 import http.client
+import threading
+from concurrent.futures import ThreadPoolExecutor
 import argparse, base64, hashlib, ipaddress, json, os, sys, time, urllib.request, urllib.error
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs): return None
 OPENER=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
+_WORKER_HTTP = threading.local()
+
+def opener():
+    if threading.current_thread() is threading.main_thread():
+        return OPENER
+    if not hasattr(_WORKER_HTTP, 'opener'):
+        _WORKER_HTTP.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+    return _WORKER_HTTP.opener
+
 class Pacing:
-    """Sequential requests; sticky per-controller fallback for this run."""
+    """Per-thread and per-controller gaps; sticky fallback for this run."""
     LEVELS = (0.25, 0.75, 2.0)
     WRITE_ENDPOINTS = frozenset(('movies/new', 'movies/full'))
     def __init__(self, slow=True):
         self.initial = 2 if slow else 0
         self.levels = {}
+        self.local = threading.local()
+        self.lock = threading.Lock()
+        self.by_ip = {}
+        self.failures = 0
         self.last_finished = None
         self.last_write = False
+
+    @property
+    def last_finished(self):
+        return getattr(self.local, 'last_finished', None)
+
+    @last_finished.setter
+    def last_finished(self, value):
+        self.local.last_finished = value
+
+    @property
+    def last_write(self):
+        return getattr(self.local, 'last_write', False)
+
+    @last_write.setter
+    def last_write(self, value):
+        self.local.last_write = value
+
+    def failure_count(self):
+        with self.lock:
+            return self.failures
 
     def gap(self, ip, endpoint):
         if self.last_write or endpoint in self.WRITE_ENDPOINTS:
             return 2.0
-        return self.LEVELS[self.levels.get(str(ip), self.initial)]
+        with self.lock:
+            return self.LEVELS[self.levels.get(str(ip), self.initial)]
 
     def wait(self, ip, endpoint):
-        if self.last_finished is not None:
-            time.sleep(max(0, self.gap(ip, endpoint) - (time.monotonic() - self.last_finished)))
+        now = time.monotonic()
+        gap = self.gap(ip, endpoint)
+        wait = 0 if self.last_finished is None else gap - (now - self.last_finished)
+        with self.lock:
+            previous = self.by_ip.get(str(ip))
+        if previous:
+            ended, was_write = previous
+            wait = max(wait, (2.0 if was_write else gap) - (now - ended))
+        if self.last_finished is not None or previous:
+            time.sleep(max(0, wait))
 
-    def finished(self, endpoint):
+    def finished(self, endpoint, ip=None):
         self.last_finished = time.monotonic()
         self.last_write = endpoint in self.WRITE_ENDPOINTS
+        if ip is not None:
+            with self.lock:
+                self.by_ip[str(ip)] = (self.last_finished, self.last_write)
 
     def backoff(self, ip):
         key = str(ip)
-        old = self.levels.get(key, self.initial)
-        new = min(old + 1, len(self.LEVELS) - 1)
-        self.levels[key] = new
+        with self.lock:
+            self.failures += 1
+            old = self.levels.get(key, self.initial)
+            new = min(old + 1, len(self.LEVELS) - 1)
+            self.levels[key] = new
         if new != old:
             print(f'  {ip}: pacing fallback {self.LEVELS[old]:g}s -> {self.LEVELS[new]:g}s (rest of run)', flush=True)
 
@@ -54,9 +103,9 @@ def call(ip,endpoint,timeout,token=None,payload=None):
     started=time.monotonic()
     print(f'{ip} {req.get_method()} /xled/v1/{endpoint} ({len(body or b"")} request bytes)',flush=True)
     try:
-        with OPENER.open(req,timeout=timeout) as response:
+        with opener().open(req,timeout=timeout) as response:
             raw=response.read(1024*1024+1)
-            print(f'  HTTP {response.status}, {len(raw)} bytes, {time.monotonic()-started:.2f}s',flush=True)
+            print(f'  {ip} {endpoint}: HTTP {response.status}, {len(raw)} bytes, {time.monotonic()-started:.2f}s',flush=True)
     except urllib.error.HTTPError as exc:
         PACING.backoff(ip)
         detail=exc.read(8192).decode('utf-8',errors='replace') if endpoint in ('movies/new','movies/full') else '(body omitted)'
@@ -65,7 +114,7 @@ def call(ip,endpoint,timeout,token=None,payload=None):
         PACING.backoff(ip)
         raise RuntimeError(f'{ip} {endpoint}: {type(exc).__name__}: {exc}') from exc
     finally:
-        PACING.finished(endpoint)
+        PACING.finished(endpoint,ip)
     if len(raw)>1024*1024: raise ValueError('Oversized API reply')
     try: d=json.loads(raw)
     except ValueError:
@@ -139,6 +188,7 @@ def matching_entry(cat, meta):
     return True
 
 JOURNAL = ROOT / 'private-movie-upload-journal.jsonl'
+JOURNAL_LOCK = threading.Lock()
 
 def journal_key(member, meta, data):
     return (member['group_uid'].lower(), member['mac'], meta['unique_id'].lower(),
@@ -153,11 +203,12 @@ def read_journal():
     return records
 
 def record_stage(records, key, stage):
-    with JOURNAL.open('a', encoding='utf-8') as f:
-        f.write(json.dumps({'key': key, 'stage': stage, 'time': time.time()})+'\n')
-        f.flush()
-        os.fsync(f.fileno())
-    records[key] = stage
+    with JOURNAL_LOCK:
+        with JOURNAL.open('a', encoding='utf-8') as f:
+            f.write(json.dumps({'key': key, 'stage': stage, 'time': time.time()})+'\n')
+            f.flush()
+            os.fsync(f.fileno())
+        records[key] = stage
 
 def pending_movies(member, cat, movies, jobs, records, resume, accept_existing):
     pending = []
@@ -177,14 +228,96 @@ def pending_movies(member, cat, movies, jobs, records, resume, accept_existing):
     capacity(cat,pending)
     return pending
 
+def upload_member(m, movie, jobs, records, pending, snapshots, timeout, stop):
+    k=m['mac']
+    try:
+        before,t=inspect(m,timeout)
+    except (OSError, http.client.HTTPException, RuntimeError) as exc:
+        print(f"  Deferred {m['name']}: {exc}",flush=True)
+        return 'deferred'
+    if before!=snapshots[k]:raise ValueError(f"{m['name']}: live state changed; stop")
+    meta,data=jobs[movie['slug'],k]; key=journal_key(m,meta,data)
+    if movie['slug'] not in pending[k]:
+        if not matching_entry(before['catalogue'],meta): raise ValueError('Previously present movie disappeared')
+        print('  skipped existing',m['name'],flush=True)
+        return 'done'
+    capacity(before['catalogue'],[movie])
+    if stop.is_set(): return 'cancelled'
+    print(f"  Uploading {m['name']}: {meta!r}; {len(data)} binary bytes",flush=True)
+    try:
+        record_stage(records,key,'attempt')
+        call(m['ip'],'movies/new',timeout,t,meta)
+        record_stage(records,key,'created')
+        call(m['ip'],'movies/full',timeout,t,data)
+        record_stage(records,key,'binary-ok')
+    except (OSError, ValueError, RuntimeError) as exc:
+        try:
+            observed,_=inspect(m,timeout)
+            entries=[x for x in observed['catalogue']['movies'] if str(x.get('unique_id','')).lower()==meta['unique_id'].lower() or x.get('name')==meta['name']]
+            print(f"  Failed upload catalogue readback for {m['name']}: {entries!r} (metadata only)",flush=True)
+        except Exception as read_error:
+            print(f'  Failed upload catalogue readback unavailable: {read_error}',flush=True)
+        raise RuntimeError(f"{m['name']}: upload failed; no automatic retry: {exc}") from exc
+    after,_=inspect(m,timeout);old=before['catalogue']['movies'];new=after['catalogue']['movies']
+    def matches(n):return all((str(n.get(k,'')).lower()==v.lower() if k=='unique_id' else n.get(k)==v) for k,v in meta.items())
+    if after['mode']!='off' or len(new)!=len(old)+1 or not all(x in new for x in old) or sum(matches(x) for x in new)!=1:raise ValueError(f"{m['name']}: catalogue readback failed")
+    record_stage(records,key,'verified')
+    snapshots[k]=after;print('  verified',m['name'],flush=True)
+    return 'done'
+
+def upload_group_movie(members, worker, workers, pacing):
+    """Bounded waves; drain active transactions before changing concurrency."""
+    slaves=[m for m in members if m['role']=='slave']
+    master=next(m for m in members if m['role']=='master')
+    stop=threading.Event()
+    deferred=[]
+    def guarded(m):
+        try:
+            return worker(m,stop)
+        except BaseException:
+            stop.set()
+            raise
+    def wave(batch):
+        if len(batch)==1:
+            return [guarded(batch[0])]
+        with ThreadPoolExecutor(max_workers=len(batch)) as pool:
+            futures=[pool.submit(guarded,m) for m in batch]
+            # Executor joins all running jobs even if one raises.
+            return [f.result() for f in futures]
+
+    if workers > 1 and pacing.failure_count():
+        workers=1
+        print('Earlier communication failures: using one worker.',flush=True)
+    while slaves:
+        batch=slaves[:workers]
+        del slaves[:workers]
+        before=pacing.failure_count()
+        results=wave(batch)
+        for m,result in zip(batch,results):
+            if result=='deferred':
+                deferred.append(m)
+            elif result!='done':
+                raise RuntimeError(f"{m['name']}: upload cancelled")
+        if workers>1 and (pacing.failure_count()!=before or deferred):
+            workers=1
+            print('Communication fallback: remaining controllers sequential.',flush=True)
+    for m in deferred:
+        if guarded(m)!='done':
+            raise RuntimeError(f"{m['name']}: still unreachable; master not uploaded")
+    if guarded(master)!='done':
+        raise RuntimeError('Master unreachable; no further movies attempted')
+    return workers
+
 def main():
     global PACING
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--resume',action='store_true');p.add_argument('--accept-existing',action='store_true',help='Trust matching legacy catalogue entries only when prior binary upload success is known');p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');p.add_argument('--slow',action='store_true',help='Use original 2-second gap for every request');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--movie',action='append',choices=['bush-window-v2','window-chase','house-garden','bush-startup','window-startup']);p.add_argument('--timeout',type=float,default=45);p.add_argument('--resume',action='store_true');p.add_argument('--accept-existing',action='store_true',help='Trust matching legacy catalogue entries only when prior binary upload success is known');p.add_argument('--execute',action='store_true');p.add_argument('--verify-files',action='store_true');p.add_argument('--slow',action='store_true',help='Use original 2-second gap for every request');p.add_argument('--workers',type=int,choices=range(1,7),default=None,help='Parallel slave uploads (1-6, default 3; --slow defaults to 1)');a=p.parse_args()
+    workers=a.workers if a.workers is not None else (1 if a.slow else 3)
     members,movies,jobs=read_bundle(a.movie);frames=sum(m['frames'] for m in movies)
     print(f'Validated {len(jobs)} raw files; {len(movies)} movies, {frames} frames per controller.')
     if a.verify_files:return
     PACING = Pacing(slow=a.slow)
     print('Pacing: '+('conservative 2s' if a.slow else 'adaptive 0.25s / 0.75s / 2s')+'; movie writes retain 2s gaps.',flush=True)
+    print(f'Upload concurrency: {workers} slave controllers; master always last and alone.',flush=True)
     if a.accept_existing and not a.resume: raise ValueError('--accept-existing requires --resume')
     records=read_journal(); snapshots={};issues=[]; pending={}
     for m in members:
@@ -206,48 +339,7 @@ def main():
     print('Beginning experimental uploads. Do not interrupt or use Twinkly/HA during upload.',flush=True)
     for movie in movies:
         print('Movie:',movie['name'],flush=True)
-        queue=sorted(members,key=lambda x:x['role']=='master')
-        deferred=set()
-        while queue:
-            m=queue.pop(0)
-            k=m['mac']
-            try:
-                before,t=inspect(m,a.timeout)
-            except (OSError, http.client.HTTPException, RuntimeError) as exc:
-                if m['role']=='master' or k in deferred:
-                    raise
-                deferred.add(k)
-                # Revisit before the master; never defer an ambiguous write.
-                queue.insert(len(queue)-1,m)
-                print(f"  Deferred {m['name']}: {exc}",flush=True)
-                continue
-            if before!=snapshots[k]:raise ValueError(f"{m['name']}: live state changed; stop")
-            meta,data=jobs[movie['slug'],k]; key=journal_key(m,meta,data)
-            if movie['slug'] not in pending[k]:
-                if not matching_entry(before['catalogue'],meta): raise ValueError('Previously present movie disappeared')
-                print('  skipped existing',m['name'],flush=True)
-                continue
-            capacity(before['catalogue'],[movie])
-            print(f"  Uploading {m['name']}: {meta!r}; {len(data)} binary bytes",flush=True)
-            try:
-                record_stage(records,key,'attempt')
-                call(m['ip'],'movies/new',a.timeout,t,meta)
-                record_stage(records,key,'created')
-                call(m['ip'],'movies/full',a.timeout,t,data)
-                record_stage(records,key,'binary-ok')
-            except (OSError, ValueError, RuntimeError) as exc:
-                try:
-                    observed,_=inspect(m,a.timeout)
-                    entries=[x for x in observed['catalogue']['movies'] if str(x.get('unique_id','')).lower()==meta['unique_id'].lower() or x.get('name')==meta['name']]
-                    print(f"  Failed upload catalogue readback for {m['name']}: {entries!r} (metadata only)",flush=True)
-                except Exception as read_error:
-                    print(f'  Failed upload catalogue readback unavailable: {read_error}',flush=True)
-                raise RuntimeError(f"{m['name']}: upload failed; no automatic retry: {exc}") from exc
-            after,_=inspect(m,a.timeout);old=before['catalogue']['movies'];new=after['catalogue']['movies']
-            def matches(n):return all((str(n.get(k,'')).lower()==v.lower() if k=='unique_id' else n.get(k)==v) for k,v in meta.items())
-            if after['mode']!='off' or len(new)!=len(old)+1 or not all(x in new for x in old) or sum(matches(x) for x in new)!=1:raise ValueError(f"{m['name']}: catalogue readback failed")
-            record_stage(records,key,'verified')
-            snapshots[k]=after;print('  verified',m['name'],flush=True)
+        workers=upload_group_movie(members,lambda m,stop: upload_member(m,movie,jobs,records,pending,snapshots,a.timeout,stop),workers,PACING)
     print('Final verification:',flush=True)
     for m in members:
         state,_=inspect(m,a.timeout)
