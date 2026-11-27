@@ -387,6 +387,34 @@ class HouseLightTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(self.states[leaf].state == "off" for leaf in lit_leaves))
         await self.lights.finish()
 
+    async def test_jyggy_wakes_on_prepare_and_flashes_once_on_drive_cue(self):
+        self.states["button.jyggy_wake"] = state()
+        self.states["button.jyggy_flash_lights"] = state()
+        buttons = []
+        async def service(domain, action, data, blocking, context=None):
+            if domain == "button":
+                buttons.append(data["entity_id"])
+            else:
+                await self.service(domain, action, data, blocking, context)
+        self.hass.services.async_call.side_effect = service
+        programme = plan({"house:drive": ["light.dim"]})
+        await self.lights.prepare(programme, dark=False)
+        await self.lights._car_task
+        self.assertEqual(buttons, ["button.jyggy_wake"])
+        await self.lights.blackout()
+        await self.lights.apply([{"targets": ["house:drive"], "off": True}])
+        await self.lights.apply([{"targets": ["house:drive"]}])
+        await self.lights._car_task
+        await self.lights.apply([{"targets": ["house:drive"], "off": True}])
+        await self.lights.apply([{"targets": ["house:drive"]}])
+        await self.lights.stop()
+        self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_flash_lights"])
+        await self.lights.prepare(programme, 5, dark=False)
+        await self.lights.blackout()
+        await self.lights.apply([{"targets": ["house:drive"]}], 5)
+        await self.lights.stop()
+        self.assertEqual(len(buttons), 2)
+
     async def test_no_house_targets_is_noop(self):
         await self.lights.prepare({"targets": ["front"], "sections": []})
         await self.lights.finish()
