@@ -61,11 +61,11 @@ class Group:
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
 
     def guard(self):
-        if self.maintenance is not None:
+        if getattr(self, "maintenance", None) is not None:
             self.maintenance.guard()
 
     def guard_wire(self):
-        if self.maintenance is not None:
+        if getattr(self, "maintenance", None) is not None:
             self.maintenance.guard_wire()
 
     async def call(self,m,path,**kw):
