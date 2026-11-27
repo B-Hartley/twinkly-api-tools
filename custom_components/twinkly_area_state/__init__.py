@@ -567,9 +567,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def require_idle_capture():
         ctx = hass.data[DOMAIN][entry.entry_id]
-        if any(g.active for g in ctx.get("virtual_groups", [])):
+        show_task = getattr(ctx.get("show"), "task", None)
+        if (show_task is not None and not show_task.done()) or any(g.active for g in ctx.get("virtual_groups", [])):
             from homeassistant.exceptions import HomeAssistantError
-            raise HomeAssistantError("Stop managed realtime lighting before controller capture")
+            raise HomeAssistantError("Stop the show and managed realtime lighting before controller capture")
 
     async def capture_all():
         require_idle_capture()
@@ -581,7 +582,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             item = pair[0]
             return (communication_error(item.get("reason")) or
                     any(communication_error(r.get("error")) for r in item.get("responses", {}).values()))
-        pairs = await controller_batch.run(devices, read, failed_result=failed)
+        try:
+            pairs = await controller_batch.run(devices, read, failed_result=failed)
+        finally:
+            # Capture establishes fresh device sessions. Old playback tokens
+            # may no longer be valid even if the capture failed midway.
+            for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
+                group.tokens.clear()
+                group.expiry.clear()
         return [p[0] for p in pairs], [p[1] for p in pairs]
 
     async def collect(name):
