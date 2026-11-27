@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 _COLOUR_MODES = frozenset(("hs", "xy", "rgb", "rgbw", "rgbww"))
 _DIMMABLE_MODES = _COLOUR_MODES | {"brightness", "color_temp", "white"}
 _TRANSITION = 32
+_CAR_FAREWELL_CUE = "v3_farewell"
 
 # These are Hue groups, not the similarly named Twinkly window entities. The
 # Hall stairs strip is a separate Hue group member in this installation.
@@ -56,6 +57,9 @@ class HouseLights:
         self._context = Context()
         self._lock = asyncio.Lock()
         self._car_task = None
+        self._car_initial_wake_task = None
+        self._car_farewell_wake_task = None
+        self._car_cues_seen = set()
         self._car_flashed = False
         self._car_enabled = False
 
@@ -123,6 +127,10 @@ class HouseLights:
             raise HomeAssistantError("House RGB colours must contain three integers between 0 and 255")
         if any(key in cue for key in ("effect", "stored_movie", "movie_index", "movie_name")):
             raise HomeAssistantError("House cues cannot select Twinkly effects or stored movies")
+        car_actions = [key for key in ("car_wake", "car_flash") if key in cue]
+        if car_actions and (len(car_actions) != 1 or cue[car_actions[0]] != _CAR_FAREWELL_CUE or
+                            targets != ["house:drive"] or cue.get("off") is not True):
+            raise HomeAssistantError("Explicit car cues require one named V3 farewell action on drive-off")
 
     def resolve(self, plan):
         """Read-only validation and expansion; house keys remain in the plan."""
@@ -154,7 +162,10 @@ class HouseLights:
         for section in plan.get("sections", []):
             for cue in section.get("cues", []):
                 targets = cue.get("targets", [])
-                if any(isinstance(key, str) and key.startswith("house:") for key in targets):
+                car_cue = any(key in cue for key in ("car_wake", "car_flash"))
+                if car_cue and plan.get("variant") != "elf_chase_v3":
+                    raise HomeAssistantError("Explicit farewell car cues are only supported by V3")
+                if car_cue or any(isinstance(key, str) and key.startswith("house:") for key in targets):
                     self._validate_cue(cue, set(rooms))
         self.rooms = rooms
         return rooms
@@ -183,16 +194,64 @@ class HouseLights:
                 raise result
 
     async def _car_button(self, entity):
+        async def dispatch():
+            # Check at dispatch, including timeout implementations which may
+            # schedule this coroutine separately from its parent.
+            if not self._car_enabled:
+                return False
+            await self.hass.services.async_call(
+                "button", "press", {"entity_id": entity}, blocking=True)
+            return True
+
         try:
-            await asyncio.wait_for(self.hass.services.async_call(
-                "button", "press", {"entity_id": entity}, blocking=True), timeout=30)
+            return await asyncio.wait_for(dispatch(), timeout=30)
         except Exception as exc:
             self._warn("Jyggy command failed: " + str(exc))
             return False
-        return True
+
+    def disarm_car(self):
+        """Synchronously prevent queued work before other cleanup can await."""
+        was_enabled, self._car_enabled = self._car_enabled, False
+        if was_enabled and self._car_task is not None:
+            # Repeated lifecycle cleanup calls must not interrupt the first
+            # cancellation while wait_for is awaiting its child to finish.
+            self._car_task.cancel()
 
     def _start_car_button(self, entity):
         self._car_task = asyncio.create_task(self._car_button(entity))
+        return self._car_task
+
+    @staticmethod
+    def _car_succeeded(task):
+        return bool(task is not None and task.done() and not task.cancelled() and task.result())
+
+    def _car_can_start(self, level):
+        return (self._car_enabled and level == 100 and
+                all(self.hass.states.get(entity) is not None for entity in
+                    ("button.jyggy_wake", "button.jyggy_flash_lights")) and
+                (self._car_task is None or
+                 (self._car_task.done() and not self._car_task.cancelled())))
+
+    def _car_explicit_cues(self, cues, level):
+        """Consume the one V3 refresh/flash pair without waiting or late retries."""
+        if self._plan.get("variant") != "elf_chase_v3":
+            return
+        for cue in cues:
+            for action in ("car_wake", "car_flash"):
+                if action not in cue:
+                    continue
+                key = (action, cue[action])
+                if key in self._car_cues_seen:
+                    continue
+                # A skipped/failed cue is consumed too: replay must not produce
+                # a late headlight burst after the narration has moved on.
+                self._car_cues_seen.add(key)
+                if not self._car_can_start(level):
+                    continue
+                if action == "car_wake":
+                    self._car_farewell_wake_task = self._start_car_button("button.jyggy_wake")
+                elif self._car_succeeded(self._car_farewell_wake_task):
+                    self._start_car_button("button.jyggy_flash_lights")
 
     async def prepare(self, plan, brightness_pct=100, dark=True):
         """Arm the room selection; dark=False leaves normal house use intact."""
@@ -204,11 +263,14 @@ class HouseLights:
             self._prepared = True
             self._active = False
             self._car_flashed = False
+            self._car_initial_wake_task = None
+            self._car_farewell_wake_task = None
+            self._car_cues_seen.clear()
             self._car_enabled = (level == 100 and "house:drive" in self.rooms and
                                  all(self.hass.states.get(e) is not None for e in
                                      ("button.jyggy_wake", "button.jyggy_flash_lights")))
             if self._car_enabled:
-                self._start_car_button("button.jyggy_wake")
+                self._car_initial_wake_task = self._start_car_button("button.jyggy_wake")
             if dark:
                 await self._blackout_locked()
 
@@ -306,13 +368,13 @@ class HouseLights:
                 # room off and the new room on, not rewrite every dark bulb.
                 operations = {entity_id: command for entity_id, command in operations.items()
                               if not self._already_applied(entity_id, command)}
-                if (self._car_enabled and not self._car_flashed and level == 100
-                        and self._car_task is not None and self._car_task.done()
-                        and not self._car_task.cancelled() and self._car_task.result()
+                if (not self._car_flashed and self._car_can_start(level)
+                        and self._car_succeeded(self._car_initial_wake_task)
                         and any(e in self.rooms.get("house:drive", ()) and cmd[0] == "turn_on"
                                 for e, cmd in operations.items())):
                     self._car_flashed = True
                     self._start_car_button("button.jyggy_flash_lights")
+                self._car_explicit_cues(cues, level)
                 await self._calls(operations)
                 self._last_commands.update(operations)
             except BaseException:
@@ -359,11 +421,13 @@ class HouseLights:
         self._prepared = False
         self._active = False
         self._plan = None
-        self._car_enabled = False
+        self.disarm_car()
         if self._car_task is not None:
-            self._car_task.cancel()
             await asyncio.gather(self._car_task, return_exceptions=True)
             self._car_task = None
+        self._car_initial_wake_task = None
+        self._car_farewell_wake_task = None
+        self._car_cues_seen.clear()
         operations = {}
         for entity_id in sorted(self._owned):
             snapshot = self._snapshots[entity_id]
@@ -393,6 +457,7 @@ class HouseLights:
     async def stop(self):
         """Restore once, finishing restoration even if the stop caller cancels."""
         async with self._lock:
+            self.disarm_car()
             cleanup = asyncio.create_task(self._restore_locked(raise_errors=True))
             try:
                 await asyncio.shield(cleanup)

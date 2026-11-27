@@ -300,6 +300,7 @@ class Show:
             await asyncio.gather(task, return_exceptions=True)
 
     async def _stop_lights(self):
+        self._disarm_car()
         operations = []
         if self.lights is not None:
             operations.append(self.lights.stop())
@@ -311,13 +312,22 @@ class Show:
                 raise result
 
     async def _release_prepared(self):
+        self._disarm_car()
         await self._cancel_ready_watch()
         prepared, self.prepared = self.prepared, None
         if prepared:
             await self.cleanup_audio(**prepared["audio_cleanup"])
 
+    def _disarm_car(self):
+        if self.house_lights is not None:
+            self.house_lights.disarm_car()
+
     async def stop(self, call=None):
+        # Do not leave a car command queued behind the lifecycle lock or any
+        # Sonos/watch cleanup. Awaited house restoration still follows below.
+        self._disarm_car()
         async with self._lifecycle_lock:
+            self._disarm_car()
             self.set_status("stopping")
             try:
                 if self.task and not self.task.done():
@@ -420,6 +430,7 @@ class Show:
             _LOGGER.exception("Christmas preparation failed: %s", exc)
         finally:
             if not ready:
+                self._disarm_car()
                 self.set_status("stopping")
                 self.prepared = None
                 await self.cleanup_audio(**cleanup)
@@ -720,6 +731,7 @@ class Show:
             self.last_error = str(exc)
             _LOGGER.exception("Christmas show failed: %s", exc)
         finally:
+            self._disarm_car()
             self.set_status("stopping")
             # Stop the owned soundtrack promptly, even if a controller takes
             # time to acknowledge its off command during error/cancel cleanup.

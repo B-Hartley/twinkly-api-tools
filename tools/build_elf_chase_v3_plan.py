@@ -105,6 +105,10 @@ def build():
         cue(156 + i, [LANDING], effect=f"Countdown {digit}", brightness=255)
     for i, name in enumerate(MOVIES):
         cue(161 + i * 6, [FRONT], effect="Movie: " + name, brightness=255)
+    # Refresh the car 30 seconds before Santa's farewell reminder. These
+    # named drive-off cues leave the stored movie and other lights untouched.
+    cue(174.4, ["house:drive"], off=True, car_wake="v3_farewell")
+    cue(204.4, ["house:drive"], off=True, car_flash="v3_farewell")
 
     chapters = [
         ("welcome", "A little Christmas magic", 0),
@@ -154,7 +158,9 @@ def build():
         "chase": {"seconds_per_room": 4, "elf_colour": GOLD, "fairy_colour": ICE,
                   "runs": RUNS, "hide_at": 134, "find_at": 142},
         "car": {"wake": "during Prepare", "headlights_at": 58,
-                "trigger": "first house:drive turn_on", "maximum_flashes": 1},
+                "trigger": "first house:drive turn_on", "maximum_flashes": 2,
+                "farewell": {"id": "v3_farewell", "wake_at": 174.4,
+                             "headlights_at": 204.4, "requires_refresh_wake": True}},
         "countdown": {"start": 156, "digits": [5, 4, 3, 2, 1], "interval": 1,
                       "target": LANDING},
         "finale": {"start": 161, "movies": MOVIES, "seconds_per_movie": 6,

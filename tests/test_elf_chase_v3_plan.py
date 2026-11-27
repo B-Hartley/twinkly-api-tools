@@ -28,6 +28,19 @@ class ElfChaseV3PlanTests(unittest.TestCase):
         self.assertEqual(door, [64])
         self.assertLess(drive[0], door[0])
 
+    def test_farewell_flash_has_one_explicit_refresh_wake_thirty_seconds_before(self):
+        explicit = [(round(at, 6), cue) for at, cue in self.events
+                    if "car_wake" in cue or "car_flash" in cue]
+        self.assertEqual(explicit, [
+            (174.4, {"at": 1.4, "targets": ["house:drive"], "off": True,
+                     "car_wake": "v3_farewell"}),
+            (204.4, {"at": 7.4, "targets": ["house:drive"], "off": True,
+                     "car_flash": "v3_farewell"}),
+        ])
+        self.assertAlmostEqual(explicit[1][0] - explicit[0][0], 30)
+        self.assertEqual(self.plan["car"]["maximum_flashes"], 2)
+        self.assertTrue(self.plan["car"]["farewell"]["requires_refresh_wake"])
+
     def test_gold_elf_has_four_seconds_in_each_room_and_pursuit_varies(self):
         gold = self.plan["chase"]["elf_colour"]
         ice = self.plan["chase"]["fairy_colour"]
@@ -70,7 +83,9 @@ class ElfChaseV3PlanTests(unittest.TestCase):
         movies = [(at, cue["effect"]) for at, cue in self.events if cue.get("effect", "").startswith("Movie: ")]
         self.assertEqual(movies, [(161 + i * 6, "Movie: " + name) for i, name in enumerate(self.plan["required_movies"])])
         self.assertTrue(self.plan["finale"]["keep_last_movie"])
-        self.assertFalse(any(at >= 161 and not cue.get("effect", "").startswith("Movie: ") for at, cue in self.events))
+        self.assertFalse(any(at >= 161 and not cue.get("effect", "").startswith("Movie: ")
+                             for at, cue in self.events
+                             if any(not target.startswith("house:") for target in cue["targets"])))
 
     def test_timing_is_complete_and_narration_slots_do_not_overlap(self):
         self.assertEqual(sum(section["duration"] for section in self.plan["sections"]), 212)

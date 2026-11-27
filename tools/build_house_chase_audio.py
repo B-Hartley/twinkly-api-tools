@@ -18,6 +18,7 @@ import numpy as np
 from build_christmas_soundtrack import SR, decode, trim_voice, write_wav
 
 ROOT = Path(__file__).resolve().parents[1]
+MEASURED_V2_SOURCE_SHA256 = "36a328555b75e05245cda9025b34e0690e55bfaa6f6e23f60fee54da43a7a5b2"
 
 
 def split_take(response, source, narration, out):
@@ -27,6 +28,7 @@ def split_take(response, source, narration, out):
         raise ValueError("Returned narration transcript does not match the agreed text")
     if any(len(char["text"]) != 1 for char in characters):
         raise ValueError("Unexpected character alignment format")
+    source_sha256 = hashlib.sha256(source.read_bytes()).hexdigest()
     audio = decode(source)
     total = len(audio) / SR
     cursor = 0
@@ -42,6 +44,19 @@ def split_take(response, source, narration, out):
                      if i + 1 < len(narration["narration"]) else total)
         start = max(0, first - .060)
         end = min(following - .045, last + .160, total)
+        boundary_repair = {}
+        if source_sha256 == MEASURED_V2_SOURCE_SHA256 and line["id"] == "05_icicles":
+            # This take's alignment ends "magic" at 20.807s, but audible speech
+            # continues beyond the old 20.967s cut. 21.300s is measured quiet
+            # before the next phrase. Never apply this boundary to another take.
+            if (line["text"] != "Icicles, a touch of winter magic."
+                    or abs(first - 19.015) > .001 or abs(last - 20.807) > .001):
+                raise ValueError("Measured Icicles repair requires the original phrase text and alignment")
+            repaired_end = 21.300
+            if not start < end < repaired_end <= min(total, following - .045):
+                raise ValueError("Measured Icicles repair exceeds the source or next phrase boundary")
+            boundary_repair["source_end_before_repair"] = end
+            end = repaired_end
         clip = audio[round(start * SR):round(end * SR)].copy()
         ramp = min(round(.003 * SR), len(clip) // 4)
         clip[:ramp] *= np.linspace(0, 1, ramp)[:, None]
@@ -58,6 +73,7 @@ def split_take(response, source, narration, out):
                  if first - .001 <= float(word["start_time"]) <= last]
         stems.append({**line, "path": str(path.resolve()),
                       "source_start": start, "source_end": end,
+                      **boundary_repair,
                       "source_audible_onset": audible_source,
                       "duration": len(clip) / SR,
                       "mixed_duration": mixed_duration,
@@ -70,7 +86,7 @@ def split_take(response, source, narration, out):
     manifest = {"voice": narration["voice"], "requested_model": "server default",
                 "returned_model": response.get("model"), "pitch": "unchanged", "speed": "unchanged",
                 "original_take_duration": total,
-                "original_take_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                "original_take_sha256": source_sha256,
                 "timing_coordinate_system": "absolute seconds in the 140-second show soundtrack",
                 "narration": stems}
     (out / "voice_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

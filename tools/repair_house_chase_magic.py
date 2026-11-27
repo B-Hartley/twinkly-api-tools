@@ -12,13 +12,14 @@ import hashlib
 import json
 from pathlib import Path
 
-import numpy as np
-
-from build_christmas_soundtrack import SR, decode, write_wav
-from build_house_chase_audio import mix, prepare_music, split_take
+from build_house_chase_audio import (
+    MEASURED_V2_SOURCE_SHA256 as EXPECTED_SOURCE,
+    mix,
+    prepare_music,
+    split_take,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_SOURCE = "36a328555b75e05245cda9025b34e0690e55bfaa6f6e23f60fee54da43a7a5b2"
 
 
 def main():
@@ -36,15 +37,7 @@ def main():
     response = json.loads(args.response.read_text())
     stems = split_take(response, args.voice, narration, out / "voice")
     entry = next(line for line in stems if line["id"] == "05_icicles")
-    old_cut, new_cut = entry["source_end"], 21.300
-    clip = decode(args.voice)[round(entry["source_start"] * SR):round(new_cut * SR)].copy()
-    ramp = round(.003 * SR)
-    clip[:ramp] *= np.linspace(0, 1, ramp)[:, None]
-    clip[-ramp:] *= np.linspace(1, 0, ramp)[:, None]
-    path = Path(entry["path"])
-    write_wav(path, clip)
-    entry.update(source_end=new_cut, duration=len(clip) / SR,
-                 sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+    old_cut, new_cut = entry["source_end_before_repair"], entry["source_end"]
     music = out / "show_music_prepared.wav"
     prepare_music(args.music, music, 140)
     credit = ("We Wish you a Merry Christmas — Kevin MacLeod (incompetech.com), CC BY 4.0. "
@@ -62,6 +55,7 @@ def main():
     manifest = {"change": "Restore the complete magic word ending in the Icicles phrase; no new speech generated",
                 "original_source_cut_seconds": old_cut, "revised_source_cut_seconds": new_cut,
                 "added_source_tail_seconds": new_cut - old_cut,
+                "phrase_mixed_duration_seconds": entry["mixed_duration"],
                 "music_and_other_phrases": "unchanged", "show_duration": 140, "phrase_onset": 40,
                 "original_source_sha256": EXPECTED_SOURCE,
                 "repaired_mp3_sha256": hashlib.sha256(delivered.read_bytes()).hexdigest(),

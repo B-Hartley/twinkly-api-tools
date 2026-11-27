@@ -21,6 +21,10 @@ Audio rehearsal plays only the soundtrack. An explicitly selected **silent
 lighting rehearsal** runs the choreography without Sonos and includes the
 house lights and car.
 
+Version **0.3.37** adds a second headlight flash during the farewell, with a
+fresh wake command 30 seconds earlier. It uses the same completed V3 MP3;
+the audio, show duration and movie schedule are unchanged.
+
 ## What changes for the audience
 
 The elf's golden light travels through the house. Ice-white fairy lights follow
@@ -47,25 +51,42 @@ timestamp-based cuts that truncated the end of “magic”.
 | 1:54–2:14 | Bedroom → landing → office; fairy lights start eight seconds later |
 | 2:14–2:30 | Hide, search and find; both lights meet in the bedroom at 2:22 |
 | 2:30–2:41 | Big-finale announcement and five-to-one Landing countdown |
-| 2:41–3:17 | Six existing stored movies, changing every six seconds with a spoken reaction |
-| 3:17–3:32 | Farewell while the final movie continues |
+| 2:41–3:17 | Six existing stored movies, changing every six seconds; refresh car wake at 2:54.4 |
+| 3:17–3:32 | Farewell while the final movie continues; second headlight flash at 3:24.4 |
 
 The final movie remains on until Stop / cancel. House lights and the speaker's
 preparation-time volume are restored at cleanup as before.
 
 ## Jyggy
 
-The existing Jyggy behavior is reused: preparation sends `button.jyggy_wake`
-in the background, and the first driveway turn-on sends one
-`button.jyggy_flash_lights` command after the wake call succeeds. For V3 this
-driveway cue is at 58 seconds. The car is never commanded to drive or unlock.
-The external car service has its own response delay; the scheduler's command
-time is not a promise of sample-accurate physical headlights.
+Preparation sends `button.jyggy_wake` in the background. The first driveway
+turn-on at **58.0 seconds** sends one `button.jyggy_flash_lights` command after
+that preparation wake succeeds, preserving the existing driveway behavior.
 
-Car participation requires the existing wake/flash entities and house brightness
-100%. A failed or still-pending wake is skipped. Audio-only rehearsal never
-prepares the house or car. Quiet and silent lighting rehearsals retain full
-house brightness, so V2/V3 lighting rehearsals still include Jyggy.
+V3 also sends a fresh wake command at **174.4 seconds**, then flashes again at
+**204.4 seconds**, on “car” in Santa's final “leave that car alone” reminder.
+The second flash requires this refresh wake to have completed successfully;
+the earlier preparation wake or first flash cannot authorize it. Both cues
+are explicit, separately identified V3 events attached to drive-off scenes.
+They do not change the final stored movie or relight the driveway.
+
+Each of the two explicit events is consumed once per prepared session,
+including when it is skipped. A failed or still-pending refresh wake skips
+the farewell flash without delaying the show or retrying after the line.
+Car calls retain a 30-second timeout and do not block lighting cues. Stop
+disables queued commands and cancels the pending car task. Commands already
+delivered to the car cannot be undone.
+
+Car participation requires both wake/flash entities and house brightness
+100%. Missing entities, reduced house brightness or another pending car
+command skip the corresponding cue. V1, V2 and Countdown do not acquire
+these extra V3 events. The car is never commanded to drive or unlock.
+External car response time means the scheduled command time is not a
+promise of sample-accurate physical headlights.
+
+Audio-only rehearsal never prepares the house or car. Quiet and silent
+lighting rehearsals retain full house brightness, so V2/V3 lighting
+rehearsals still include Jyggy.
 
 ## Shared controls and initial volume
 
@@ -114,8 +135,9 @@ Copy the completed V3 MP3 from the audio pack to:
 /config/www/christmas_lights_on/christmas_audio/christmas_show_elf_chase_v3.mp3
 ```
 
-Keep the other three MP3s. Install Twinkly Area Manager **0.3.36 or later** and
-restart Home Assistant, then install the current controls. If retaining the
+Keep the other three MP3s. Install Twinkly Area Manager **0.3.37 or later** for
+the refresh wake and farewell flash. Restart Home Assistant, then install the
+current controls. If retaining the
 0.3.35 control script, set `v3_audio_available: true` after installing the MP3
 and integration update, and remove its old soundtrack-pending dashboard note.
 Update only the script or package installation method you use. The integration
@@ -126,9 +148,12 @@ audio before preparing a full lighting performance.
 
 The offline simulation uses the real scheduler and scene code with fake
 Home Assistant, Sonos, car and light I/O. It checks the selected track, silent
-preparation, the full 212-second timeline, one car command at 58 seconds, six
-movie changes, programme guards and restoration. Existing V1/V2 tests remain
-part of the suite. Dashboard parsing and template routing are separate checks.
+preparation, the full 212-second timeline, flashes at 58 and 204.4 seconds,
+the refresh wake at 174.4 seconds, six movie changes, programme guards and
+restoration. Existing V1/V2 tests remain
+part of the suite. Car tests also cover duplicate event replay, failed or
+pending wakes, missing entities, reduced brightness, cancellation and a new
+prepared session. Dashboard parsing and template routing are separate checks.
 Full V3 simulations now use the released plan directly. A separate in-memory
 unavailable-soundtrack fixture retains the regression that audible Prepare and
 Start must fail before any device writes when a score is marked unavailable.

@@ -41,6 +41,19 @@ def plan(rooms=None, cues=None):
                 {"at": 0, "targets": list(rooms), "rgb": [255, 0, 0], "brightness": 255}]}]}
 
 
+CAR_DRIVE = {"targets": ["house:drive"]}
+CAR_OFF = {"targets": ["house:drive"], "off": True}
+CAR_REFRESH = {**CAR_OFF, "car_wake": "v3_farewell"}
+CAR_FAREWELL = {**CAR_OFF, "car_flash": "v3_farewell"}
+
+
+def car_plan():
+    return {**plan({"house:drive": ["light.dim"]},
+                   [{"at": i, **cue} for i, cue in enumerate(
+                       (CAR_DRIVE, CAR_REFRESH, CAR_FAREWELL))]),
+            "variant": "elf_chase_v3"}
+
+
 class HouseLightTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.states = {
@@ -72,6 +85,34 @@ class HouseLightTests(unittest.IsolatedAsyncioTestCase):
         await self.lights.prepare(programme or plan(), level)
         self.events.clear()
         self.hass.services.async_call.reset_mock()
+
+    def car_buttons(self, on_button=None):
+        self.states["button.jyggy_wake"] = state()
+        self.states["button.jyggy_flash_lights"] = state()
+        buttons = []
+
+        async def service(domain, action, data, blocking, context=None):
+            if domain == "button":
+                buttons.append(data["entity_id"])
+                if on_button:
+                    await on_button(data["entity_id"], buttons)
+            else:
+                await self.service(domain, action, data, blocking, context)
+
+        self.hass.services.async_call.side_effect = service
+        return buttons
+
+    async def arm_car(self, level=100):
+        await self.lights.prepare(car_plan(), level, dark=False)
+        if self.lights._car_task is not None:
+            await self.lights._car_task
+        await self.lights.blackout()
+
+    async def first_car_flash(self):
+        await self.lights.apply([CAR_DRIVE])
+        if self.lights._car_task is not None:
+            await self.lights._car_task
+        await self.lights.apply([CAR_OFF])
 
     async def test_resolution_is_read_only_and_expands_set_groups(self):
         rooms = self.lights.resolve(plan())
@@ -414,6 +455,158 @@ class HouseLightTests(unittest.IsolatedAsyncioTestCase):
         await self.lights.apply([{"targets": ["house:drive"]}], 5)
         await self.lights.stop()
         self.assertEqual(len(buttons), 2)
+
+    async def test_v3_refresh_and_farewell_are_each_once_per_session_without_light_writes(self):
+        buttons = self.car_buttons()
+        for _ in range(2):
+            await self.arm_car()
+            await self.first_car_flash()
+            self.events.clear()
+            await self.lights.apply([CAR_REFRESH, CAR_REFRESH])
+            await self.lights._car_task
+            await self.lights.apply([CAR_REFRESH])
+            await self.lights.apply([CAR_FAREWELL, CAR_FAREWELL])
+            await self.lights._car_task
+            await self.lights.apply([CAR_FAREWELL])
+            self.assertEqual(self.events, [])
+            # Repeated driveway scenes still cannot retrigger the first flash.
+            await self.lights.apply([CAR_DRIVE])
+            await self.lights.stop()
+        self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_flash_lights",
+                                  "button.jyggy_wake", "button.jyggy_flash_lights"] * 2)
+
+    async def test_farewell_needs_its_refresh_wake_not_the_successful_prepare_wake(self):
+        buttons = self.car_buttons()
+        await self.arm_car()
+        await self.first_car_flash()
+        await self.lights.apply([CAR_FAREWELL])
+        await self.lights.stop()
+        self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_flash_lights"])
+
+    async def test_failed_refresh_wake_skips_farewell_and_duplicates_do_not_retry(self):
+        async def fail_refresh(entity, buttons):
+            if entity == "button.jyggy_wake" and buttons.count(entity) == 2:
+                raise RuntimeError("refresh unavailable")
+
+        buttons = self.car_buttons(fail_refresh)
+        await self.arm_car()
+        await self.first_car_flash()
+        await self.lights.apply([CAR_REFRESH])
+        await self.lights._car_task
+        await self.lights.apply([CAR_REFRESH, CAR_FAREWELL, CAR_FAREWELL])
+        await self.lights.stop()
+        self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_flash_lights", "button.jyggy_wake"])
+        self.assertTrue(any("refresh unavailable" in warning for warning in self.lights.warnings))
+
+    async def test_pending_refresh_skips_farewell_without_late_replay_when_wake_finishes(self):
+        started, release = asyncio.Event(), asyncio.Event()
+
+        async def hold_refresh(entity, buttons):
+            if entity == "button.jyggy_wake" and buttons.count(entity) == 2:
+                started.set()
+                await release.wait()
+
+        buttons = self.car_buttons(hold_refresh)
+        await self.arm_car()
+        await self.first_car_flash()
+        await self.lights.apply([CAR_REFRESH])
+        await started.wait()
+        await self.lights.apply([CAR_FAREWELL])
+        release.set()
+        await self.lights._car_task
+        await self.lights.apply([CAR_FAREWELL])
+        await self.lights.stop()
+        self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_flash_lights", "button.jyggy_wake"])
+
+    async def test_failed_prepare_and_refresh_wakes_never_flash(self):
+        async def fail_wake(entity, buttons):
+            if entity == "button.jyggy_wake":
+                raise RuntimeError("car asleep")
+
+        buttons = self.car_buttons(fail_wake)
+        await self.arm_car()
+        await self.first_car_flash()
+        await self.lights.apply([CAR_REFRESH])
+        await self.lights._car_task
+        await self.lights.apply([CAR_FAREWELL])
+        await self.lights.stop()
+        self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_wake"])
+
+    async def test_missing_buttons_and_reduced_house_levels_disable_both_flashes(self):
+        for missing in ("button.jyggy_wake", "button.jyggy_flash_lights", None):
+            with self.subTest(missing=missing):
+                buttons = self.car_buttons()
+                if missing:
+                    del self.states[missing]
+                level = 100 if missing else 5
+                await self.arm_car(level)
+                await self.lights.apply([CAR_DRIVE], level)
+                await self.lights.apply([CAR_REFRESH], level)
+                await self.lights.apply([CAR_FAREWELL], level)
+                await self.lights.stop()
+                self.assertEqual(buttons, [])
+
+    async def test_disappearing_buttons_or_lowered_level_skip_refresh_and_farewell(self):
+        for missing in ("button.jyggy_wake", "button.jyggy_flash_lights", None):
+            with self.subTest(missing=missing):
+                buttons = self.car_buttons()
+                await self.arm_car()
+                await self.first_car_flash()
+                if missing:
+                    del self.states[missing]
+                level = 100 if missing else 5
+                await self.lights.apply([CAR_REFRESH], level)
+                await self.lights.apply([CAR_FAREWELL], level)
+                await self.lights.stop()
+                self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_flash_lights"])
+
+    async def test_stop_cancels_queued_refresh_or_farewell_before_dispatch(self):
+        for cue in (CAR_REFRESH, CAR_FAREWELL):
+            with self.subTest(cue=cue):
+                buttons = self.car_buttons()
+                await self.arm_car()
+                await self.first_car_flash()
+                if cue is CAR_FAREWELL:
+                    await self.lights.apply([CAR_REFRESH])
+                    await self.lights._car_task
+                before = list(buttons)
+                await self.lights.apply([cue])
+                await self.lights.stop()
+                self.assertEqual(buttons, before)
+                self.assertIsNone(self.lights._car_task)
+                with self.assertRaisesRegex(RuntimeError, "at Go"):
+                    await self.lights.apply([CAR_FAREWELL])
+
+    async def test_stop_cancels_pending_refresh_and_never_flashes_later(self):
+        started, cancelled = asyncio.Event(), asyncio.Event()
+
+        async def pending_refresh(entity, buttons):
+            if entity == "button.jyggy_wake" and buttons.count(entity) == 2:
+                started.set()
+                try:
+                    await asyncio.Event().wait()
+                finally:
+                    cancelled.set()
+
+        buttons = self.car_buttons(pending_refresh)
+        await self.arm_car()
+        await self.first_car_flash()
+        await self.lights.apply([CAR_REFRESH])
+        await started.wait()
+        await self.lights.stop()
+        self.assertTrue(cancelled.is_set())
+        self.assertEqual(buttons, ["button.jyggy_wake", "button.jyggy_flash_lights", "button.jyggy_wake"])
+
+    async def test_explicit_car_cues_reject_other_variants_names_or_light_changes(self):
+        for variant, cue in [("house_chase", CAR_REFRESH),
+                             ("elf_chase_v3", {**CAR_REFRESH, "car_wake": "other"}),
+                             ("elf_chase_v3", {**CAR_FAREWELL, "off": False}),
+                             ("elf_chase_v3", {**CAR_REFRESH, "car_flash": "v3_farewell"})]:
+            with self.subTest(variant=variant, cue=cue):
+                programme = {**plan({"house:drive": ["light.dim"]}, [cue]), "variant": variant}
+                with self.assertRaisesRegex(RuntimeError, "car cues"):
+                    await self.lights.prepare(programme)
+                self.hass.services.async_call.assert_not_awaited()
 
     async def test_no_house_targets_is_noop(self):
         await self.lights.prepare({"targets": ["front"], "sections": []})
