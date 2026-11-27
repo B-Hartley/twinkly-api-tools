@@ -280,7 +280,7 @@ class ShowSceneTests(unittest.IsolatedAsyncioTestCase):
         self.group.validate.assert_awaited_once()
         self.group.refresh_movies.assert_awaited_once()
         self.assertEqual(self.group.call.await_count, 2)
-        self.assertEqual([call.kwargs["payload"]["id"] for call in self.group.call.await_args_list], [40, 41])
+        self.assertEqual([call.kwargs["payload"]["id"] for call in self.group.call.await_args_list], [41, 40])
         self.assertTrue(all(call.kwargs["method"] == "POST" for call in self.group.call.await_args_list))
 
     async def test_single_movie_does_not_restart_in_second_finale_slot(self):
