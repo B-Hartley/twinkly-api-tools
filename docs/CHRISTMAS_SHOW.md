@@ -1,5 +1,10 @@
 # Santa's Christmas Magic — version 2
 
+For separate Prepare/Go controls, the British Santa house-chase variant,
+the Landing countdown and phone/Zigbee-button examples, see
+[Prepare, then Go](CHRISTMAS_SHOW_PREPARE.md). This page documents the retained
+original programme.
+
 A 140-second Christmas show for the existing Front display, with a continuous
 musical score, Santa narration, 25 logical light zones and a stored-movie finale.
 Integration version **0.3.24** is paired with **christmas_show_v2.mp3**. The older

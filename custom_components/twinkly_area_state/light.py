@@ -27,6 +27,7 @@ class Group:
         self.members=members
         self.lock=lock
         self.query=query
+        self.maintenance=None
         self._batch=batch if batch is not None else ControllerBatch()
         self.session=async_get_clientsession(hass)
         self.tokens={}
@@ -59,7 +60,16 @@ class Group:
         self.master=next(m for m in members if m["role"] in ("master","none"))
         self.state={m["mac"]:(False,255,(255,255,255,0)) for m in members}
 
+    def guard(self):
+        if getattr(self, "maintenance", None) is not None:
+            self.maintenance.guard()
+
+    def guard_wire(self):
+        if getattr(self, "maintenance", None) is not None:
+            self.maintenance.guard_wire()
+
     async def call(self,m,path,**kw):
+        self.guard_wire()
         r=await self.query(self.session,m["ip"],path,**kw)
         if not r["ok"]:
             if communication_error(r.get("error")):
@@ -253,6 +263,7 @@ class Group:
                 raise result
 
     async def send_member(self,m,now):
+        self.guard_wire()
         if time.monotonic()>=self.expiry.get(m["mac"],0):
             await self.login(m)
         on,brightness,rgbw=self.state[m["mac"]]
@@ -330,6 +341,7 @@ class Group:
             await self.call(m,MODE,method="POST",token=self.tokens[m["mac"]],payload={"mode":value})
 
     async def black_frames(self,duration):
+        self.guard_wire()
         if self.master["role"]=="none":
             return
         loop=asyncio.get_running_loop()
@@ -399,12 +411,25 @@ class Group:
             return catalogue
         catalogues=await self.batch_members(read_catalogue)
         common=set.intersection(*(set(c) for c in catalogues))
-        self.movies={}
+        # Firmware stores at most 15 characters; use only the verified explicit alias.
+        def canonical(name):
+            return "Christmas Spirit" if name == "Christmas Spiri" else name
+        labels={}
+        counts={}
+        for c in catalogues:
+            for name in {canonical(item[1]) for item in c.values()}:
+                counts[name]=counts.get(name,0)+1
         for uid in sorted(common):
-            label="Movie: "+catalogues[0][uid][1]
-            if label in self.movies:
-                label+=" ("+uid+")"
-            self.movies[label]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+            names={canonical(c[uid][1]) for c in catalogues}
+            if len(names)==1:
+                labels.setdefault("Movie: "+names.pop(),[]).append(uid)
+        movies={}
+        for label,uids in labels.items():
+            for uid in uids:
+                key=label if len(uids)==1 else label+" ("+uid+")"
+                movies[key]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+        self.movies=movies
+        self.movie_coverage=counts
         self.notify_registered()
 
     def notify_registered(self):
@@ -439,11 +464,33 @@ class Group:
         await self.batch_members(select,[m for m in self.members if m is not self.master],stop_on_error=True)
         await self.batch_members(select,[self.master],stop_on_error=True)
 
+    @staticmethod
+    def resolve_movie(effect, movies):
+        """Resolve exact names first, then a unique 15-character/UTF-8 prefix."""
+        if effect in movies:
+            return effect
+        if not isinstance(effect, str) or not effect.startswith("Movie: "):
+            return None
+        name=effect[7:]
+        if any(label.startswith(effect+" (") for label in movies):
+            return None
+        prefixes={name[:15],name.encode("utf-8")[:15].decode("utf-8",errors="ignore")}-{name}
+        # Known full name retained for existing dashboards and show definitions.
+        if name=="Christmas Spiri":
+            prefixes.add("Christmas Spirit")
+        candidates={"Movie: "+prefix for prefix in prefixes}
+        if any(label.startswith(candidate+" (") for candidate in candidates for label in movies):
+            return None
+        matches=candidates.intersection(movies)
+        return next(iter(matches)) if len(matches)==1 else None
+
     async def play_movie(self,effect,brightness):
         async with self.lock:
+            self.guard()
             await self.validate()
             await self.refresh_movies()
-            if effect not in self.movies:
+            effect=self.resolve_movie(effect,self.movies)
+            if effect is None:
                 raise HomeAssistantError("Movie not present on every physical group member")
             paths=dict(zip((m["mac"] for m in self.members),await self.batch_members(self.movie_current_path)))
             if self.active or self.error:
@@ -465,6 +512,7 @@ class Group:
 
     async def native_off(self):
         async with self.lock:
+            self.guard()
             if self.native_effect is None:
                 return
             await self.validate()
@@ -489,6 +537,7 @@ class Group:
     async def update_pane(self,m,index,on,kwargs):
         mac=m["mac"]
         async with self.lock:
+            self.guard()
             if mac not in self.pane_maps:
                 raise HomeAssistantError("Capture a valid pane map first")
             if not on and not self.active:
@@ -592,6 +641,8 @@ async def update_together(targets,on,kwargs,combined=False):
     if not targets:
         return
     async with targets[0][0].lock:
+        for group, _ in targets:
+            group.guard()
         targets=[(g,members) for g,members in targets if on or g.active or g.error]
         if not targets:
             return
@@ -978,6 +1029,7 @@ async def async_setup_entry(hass,entry,async_add_entities):
             try:
                 members=[standalone_member(*items[0])] if uid.startswith("standalone:") else basic_group_members(items)
                 group=Group(hass,members,ctx["lock"],query,batch)
+                group.maintenance=ctx["maintenance"]
                 for m in members:
                     if m["ip"] in auth:
                         group.tokens[m["mac"]],group.expiry[m["mac"]]=auth[m["ip"]]

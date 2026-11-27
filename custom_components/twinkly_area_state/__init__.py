@@ -566,6 +566,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller_batch = ControllerBatch()
 
     def require_idle_capture():
+        maintenance.guard()
         ctx = hass.data[DOMAIN][entry.entry_id]
         show_task = getattr(ctx.get("show"), "task", None)
         if (show_task is not None and not show_task.done()) or any(g.active for g in ctx.get("virtual_groups", [])):
@@ -728,6 +729,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if (overwrite or allow_unverified) and call.data.get("confirmation") != "IMPORT":
             raise HomeAssistantError("Type IMPORT to confirm replacement or unverified import")
         async with lock:
+            maintenance.guard()
             try:
                 incoming = await hass.async_add_executor_job(
                     read_archives, hass.config.path("twinkly_3d_import"))
@@ -859,6 +861,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=vol.Schema({vol.Required("name"): STATE_NAME,
                            vol.Required("left"): str, vol.Required("right"): str}))
     async def resume_movie(call: ServiceCall):
+        maintenance.guard()
         for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
             await group.stop(movie=True)
 
@@ -866,11 +869,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cloud = CloudSession(hass, entry.entry_id)
 
     async def verify_cloud_session(call: ServiceCall):
+        maintenance.guard()
         await cloud.get("/v3/installations")
         async_create(hass, "Cloud authentication verified. Cached tokens will renew automatically when required.",
                      title="Twinkly cloud session", notification_id=f"{DOMAIN}_cloud_session")
 
     async def rescan_controllers(call: ServiceCall):
+        maintenance.guard()
         # Reload outside the capture lock: platform discovery acquires it.
         if not await hass.config_entries.async_reload(entry.entry_id):
             from homeassistant.exceptions import HomeAssistantError
@@ -881,6 +886,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                      title="Twinkly controller rescan",
                      notification_id=f"{DOMAIN}_rescan")
 
+    async def refresh_movies(call: ServiceCall):
+        from homeassistant.exceptions import HomeAssistantError
+        async with show._lifecycle_lock:
+            maintenance.guard()
+            if show.status in ("preparing", "ready", "starting", "running", "stopping"):
+                raise HomeAssistantError("Stop or cancel the programme before refreshing movies")
+            async with lock:
+                maintenance.guard()
+                groups = hass.data[DOMAIN][entry.entry_id].get("virtual_groups", [])
+                if not groups:
+                    raise HomeAssistantError("No discovered Twinkly groups")
+                if any(group.active for group in groups):
+                    raise HomeAssistantError("Stop streaming effects before refreshing movies")
+                reports = []
+                for group in groups:
+                    await group.validate()
+                    await group.refresh_movies()
+                    reports.append(f"{len(group.members)} controllers: " + (", ".join(sorted(group.movies)) or "no shared movies"))
+                async_create(hass, "\n\n".join(reports), title="Twinkly movie refresh", notification_id=f"{DOMAIN}_movies")
+
+    hass.services.async_register(DOMAIN, "refresh_movies", refresh_movies)
     hass.services.async_register(DOMAIN, "rescan_controllers", rescan_controllers)
     hass.services.async_register(DOMAIN, "verify_cloud_session", verify_cloud_session)
     hass.services.async_register(DOMAIN, "resume_movie", resume_movie)
@@ -900,18 +926,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ctx=hass.data[DOMAIN][entry.entry_id]
     show=Show(hass,ctx)
     ctx["show"]=show
+    from .maintenance import Maintenance
+    maintenance = Maintenance(hass, entry, ctx)
+    ctx["maintenance"] = maintenance
+    await maintenance.load()
     show_schema=vol.Schema({
-        vol.Optional("audio",default=True): bool,
-        vol.Optional("audio_base",default=""): str,
-        vol.Optional("brightness_pct",default=2): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
-        vol.Optional("volume",default=.05): vol.All(vol.Coerce(float),vol.Range(min=0,max=1)),
-        vol.Optional("offset_ms",default=0): vol.All(vol.Coerce(int),vol.Range(min=-2000,max=2000)),
+        # Omitted Start fields must inherit the prepared session, not schema defaults.
+        vol.Optional("variant"): vol.In(("original", "house_chase")),
+        vol.Optional("audio"): bool,
+        vol.Optional("audio_base"): str,
+        vol.Optional("brightness_pct"): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
+        vol.Optional("house_brightness_pct"): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
+        vol.Optional("volume"): vol.All(vol.Coerce(float),vol.Range(min=0,max=1)),
+        vol.Optional("offset_ms"): vol.All(vol.Coerce(int),vol.Range(min=-2000,max=2000)),
     })
+    hass.services.async_register(DOMAIN,"prepare_christmas_show",show.prepare,schema=show_schema)
+    hass.services.async_register(DOMAIN,"prepare_countdown",show.prepare_countdown,schema=show_schema)
+    hass.services.async_register(DOMAIN,"start_prepared_show",show.start_prepared,schema=vol.Schema({}))
     hass.services.async_register(DOMAIN,"start_christmas_show",show.start,schema=show_schema)
+    hass.services.async_register(DOMAIN,"start_countdown",show.start_countdown,schema=show_schema)
     hass.services.async_register(DOMAIN,"start_countdown_test",show.start_countdown,schema=show_schema)
     hass.services.async_register(DOMAIN,"stop_countdown_test",show.stop)
     hass.services.async_register(DOMAIN,"stop_christmas_show",show.stop)
-    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])
+    platforms = ["button", "sensor", "switch"]
+    if not maintenance.enabled:
+        platforms.append("light")
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    maintenance.light_loaded = not maintenance.enabled
     return True
 
 
@@ -919,12 +960,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.data[DOMAIN][entry.entry_id]["show"].stop()
     for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
         await group.stop()
-    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light"]):
+    maintenance = hass.data[DOMAIN][entry.entry_id]["maintenance"]
+    platforms = ["button", "sensor", "switch"] + (["light"] if maintenance.light_loaded else [])
+    if not await hass.config_entries.async_unload_platforms(entry, platforms):
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "replace_group_reference", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
-                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers"):
+                    "prepare_christmas_show", "prepare_countdown", "start_prepared_show", "start_countdown",
+                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers", "refresh_movies"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True

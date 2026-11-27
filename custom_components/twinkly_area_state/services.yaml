@@ -80,96 +80,268 @@ rescan_controllers:
   name: Rescan native Twinkly controllers
   description: Reload Area Manager to refresh controller inventory and virtual lights. Stops any active show.
 
-start_christmas_show:
-  name: Start Santa's Christmas Magic
-  description: Prepare the display, then run the 140-second soundtrack and synchronised light score. Requires the version 2 audio pack and at least one shared stored Front movie. Starts only when explicitly called.
+prepare_christmas_show:
+  name: Prepare Christmas show
+  description: Validate maps and named movies, warm Twinkly dark, then silently load Sonos and leave it paused at
+    zero. House, drive and door lights stay normal until Go. Wait for Christmas show status to become ready (expires
+    after 15 minutes).
   fields:
+    variant:
+      name: Show version
+      description: Original retains the existing show. House chase adds British Santa, Hue pursuit, staged crash,
+        Landing countdown and six named movies. Default original.
+      selector:
+        select:
+          options:
+          - value: original
+            label: Original — Santa’s Christmas Magic
+          - value: house_chase
+            label: New — Father Christmas and the Cheeky Elf
     audio:
       name: Play soundtrack
-      description: Disable only for an intentional silent lighting rehearsal.
-      default: true
+      description: Enable soundtrack (default true). Omitted Start options inherit the prepared programme.
       selector:
         boolean: {}
     audio_base:
       name: Soundtrack folder URL
-      description: The speaker-accessible folder containing christmas_show_v2.mp3.
+      description: Speaker-accessible folder containing the selected soundtrack. Original uses christmas_show_v2.mp3;
+        house chase uses christmas_show_house_chase_v1.mp3.
       example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
       selector:
         text: {}
     brightness_pct:
-      name: Show brightness
-      default: 2
+      name: Twinkly brightness
       selector:
         number:
           min: 0
           max: 100
           step: 1
-          unit_of_measurement: "%"
+          unit_of_measurement: '%'
+      description: 0–100%; default 2 for a dim Twinkly rehearsal. Independent of house brightness.
     volume:
       name: Speaker volume
-      default: 0.05
       selector:
         number:
           min: 0
           max: 1
           step: 0.01
+      description: 0–1; default 0.05. Set when preparing; a bare Start inherits it.
     offset_ms:
       name: Light timing adjustment
       description: Positive delays the lights; negative advances them. Adjust only after a local rehearsal.
-      default: 0
       selector:
         number:
           min: -2000
           max: 2000
           step: 50
           unit_of_measurement: ms
-
-stop_christmas_show:
-  name: Stop Santa's Christmas Magic
-  description: Stop the soundtrack and turn off this show's display, including a stored movie left running after the finale.
-
-start_countdown_test:
-  name: Test Landing countdown and audio
-  description: Standalone 10-second spoken countdown, using the whole mapped Landing window. All other Front lights are dark. Stops automatically; no stored movies or Christmas show changes.
-  fields:
-    audio:
-      name: Play spoken countdown
-      default: true
-      selector:
-        boolean: {}
-    audio_base:
-      name: Audio folder URL
-      description: Folder containing landing_countdown_test.mp3
-      selector:
-        text: {}
-    brightness_pct:
-      name: Digit brightness
-      default: 2
+    house_brightness_pct:
+      name: House, drive and door brightness
+      description: 0–100%; default 100 for maximum visibility through shutters. Applies only to the new variant.
+        Undimmable lamps are excluded below 100%.
       selector:
         number:
           min: 0
           max: 100
           step: 1
-          unit_of_measurement: "%"
+          unit_of_measurement: '%'
+start_christmas_show:
+  name: Start Christmas show
+  description: Resume the prepared show immediately with its saved settings. Without a prepared session, retain
+    the existing prepare-and-start behaviour. For a physical button use Start prepared programme.
+  fields:
+    variant:
+      name: Show version
+      description: Original retains the existing show. House chase adds British Santa, Hue pursuit, staged crash,
+        Landing countdown and six named movies. Default original.
+      selector:
+        select:
+          options:
+          - value: original
+            label: Original — Santa’s Christmas Magic
+          - value: house_chase
+            label: New — Father Christmas and the Cheeky Elf
+    audio:
+      name: Play soundtrack
+      description: Enable soundtrack (default true). Omitted Start options inherit the prepared programme.
+      selector:
+        boolean: {}
+    audio_base:
+      name: Soundtrack folder URL
+      description: Speaker-accessible folder containing the selected soundtrack. Original uses christmas_show_v2.mp3;
+        house chase uses christmas_show_house_chase_v1.mp3.
+      example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
+      selector:
+        text: {}
+    brightness_pct:
+      name: Twinkly brightness
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: '%'
+      description: 0–100%; default 2 for a dim Twinkly rehearsal. Independent of house brightness.
     volume:
       name: Speaker volume
-      default: 0.05
       selector:
         number:
           min: 0
           max: 1
           step: 0.01
+      description: 0–1; default 0.05. Set when preparing; a bare Start inherits it.
     offset_ms:
       name: Light timing adjustment
-      description: Positive delays digits; negative advances them.
-      default: 0
+      description: Positive delays the lights; negative advances them. Adjust only after a local rehearsal.
       selector:
         number:
           min: -2000
           max: 2000
           step: 50
           unit_of_measurement: ms
-
+    house_brightness_pct:
+      name: House, drive and door brightness
+      description: 0–100%; default 100 for maximum visibility through shutters. Applies only to the new variant.
+        Undimmable lamps are excluded below 100%.
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: '%'
+prepare_countdown:
+  name: Prepare Landing countdown
+  description: Warm Front dark and leave British spoken countdown paused on Sonos. Does not start it. Wait for status
+    ready.
+  fields:
+    audio:
+      name: Play soundtrack
+      description: Enable soundtrack (default true). Omitted Start options inherit the prepared programme.
+      selector:
+        boolean: {}
+    audio_base:
+      name: Soundtrack folder URL
+      description: Folder containing landing_countdown_british_v1.mp3.
+      example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
+      selector:
+        text: {}
+    brightness_pct:
+      name: Landing digit brightness
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: '%'
+      description: 0–100%; default 2 for a dim Twinkly rehearsal. Independent of house brightness.
+    volume:
+      name: Speaker volume
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+      description: 0–1; default 0.05. Set when preparing; a bare Start inherits it.
+    offset_ms:
+      name: Light timing adjustment
+      description: Positive delays the lights; negative advances them. Adjust only after a local rehearsal.
+      selector:
+        number:
+          min: -2000
+          max: 2000
+          step: 50
+          unit_of_measurement: ms
+start_countdown:
+  name: Start Landing countdown
+  description: Resume a prepared countdown. Without preparation, prepare and start the ten-second Landing number
+    test.
+  fields:
+    audio:
+      name: Play soundtrack
+      description: Enable soundtrack (default true). Omitted Start options inherit the prepared programme.
+      selector:
+        boolean: {}
+    audio_base:
+      name: Soundtrack folder URL
+      description: Folder containing landing_countdown_british_v1.mp3.
+      example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
+      selector:
+        text: {}
+    brightness_pct:
+      name: Landing digit brightness
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: '%'
+      description: 0–100%; default 2 for a dim Twinkly rehearsal. Independent of house brightness.
+    volume:
+      name: Speaker volume
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+      description: 0–1; default 0.05. Set when preparing; a bare Start inherits it.
+    offset_ms:
+      name: Light timing adjustment
+      description: Positive delays the lights; negative advances them. Adjust only after a local rehearsal.
+      selector:
+        number:
+          min: -2000
+          max: 2000
+          step: 50
+          unit_of_measurement: ms
+start_prepared_show:
+  name: Start prepared programme (Go)
+  description: Start whichever show or countdown is ready, using its saved settings. Refuses if nothing is ready.
+    Suitable for a Zigbee button; never loads a different track or silently starts preparation.
+stop_christmas_show:
+  name: Stop Christmas show or preparation
+  description: Cancel preparation or playback, release owned audio, stop the retained final movie and restore house
+    lights captured at Go.
+start_countdown_test:
+  name: Test Landing countdown (legacy action)
+  description: Compatibility alias for Start Landing countdown. Uses the new British countdown soundtrack.
+  fields:
+    audio:
+      name: Play soundtrack
+      description: Enable soundtrack (default true). Omitted Start options inherit the prepared programme.
+      selector:
+        boolean: {}
+    audio_base:
+      name: Soundtrack folder URL
+      description: Folder containing landing_countdown_british_v1.mp3.
+      example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
+      selector:
+        text: {}
+    brightness_pct:
+      name: Landing digit brightness
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: '%'
+      description: 0–100%; default 2 for a dim Twinkly rehearsal. Independent of house brightness.
+    volume:
+      name: Speaker volume
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+      description: 0–1; default 0.05. Set when preparing; a bare Start inherits it.
+    offset_ms:
+      name: Light timing adjustment
+      description: Positive delays the lights; negative advances them. Adjust only after a local rehearsal.
+      selector:
+        number:
+          min: -2000
+          max: 2000
+          step: 50
+          unit_of_measurement: ms
 stop_countdown_test:
   name: Stop countdown test
   description: Stop the shared show session, its audio and lights.
@@ -184,3 +356,7 @@ replace_group_reference:
       example: REPLACE GROUP REFERENCE
       selector:
         text: {}
+
+refresh_movies:
+  name: Refresh stored movies
+  description: Read shared movie catalogues and update effect lists without reloading or changing playback. Stop active programmes or streaming first.

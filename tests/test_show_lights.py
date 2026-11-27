@@ -336,3 +336,37 @@ class ShowSceneTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.group.native_effect)
         self.group.mode.assert_not_awaited()
 
+
+
+class MovieCatalogueRefreshTests(unittest.IsolatedAsyncioTestCase):
+    async def test_truncated_name_and_uuid_local_ids(self):
+        group = make_group()
+        group.entities = []
+        async def read(member, path, **kwargs):
+            return {"movies": [{"unique_id": "shared", "id": int(member["mac"])+3,
+                                "name": "Christmas Spiri"}]}
+        group.call = read
+        await Group.refresh_movies(group)
+        self.assertEqual(group.movies, {"Movie: Christmas Spirit": {"0": 3, "1": 4}})
+        self.assertEqual(group.movie_coverage, {"Christmas Spirit": 2})
+
+    async def test_inconsistent_and_duplicate_movies_not_selectable_by_plain_name(self):
+        group = make_group()
+        group.entities = []
+        async def read(member, path, **kwargs):
+            return {"movies": [
+                {"unique_id": "one", "id": 1, "name": "Christmas Spiri"},
+                {"unique_id": "two", "id": 2, "name": "Christmas Spirit"},
+                {"unique_id": "bad", "id": 3, "name": "A" if member["mac"] == "0" else "B"}]}
+        group.call = read
+        await Group.refresh_movies(group)
+        self.assertEqual(set(group.movies), {"Movie: Christmas Spirit (one)", "Movie: Christmas Spirit (two)"})
+
+    async def test_general_name_resolution(self):
+        resolve = Group.resolve_movie
+        movies = {"Movie: 123456789012345": {"0": 3}}
+        self.assertEqual(resolve("Movie: 1234567890123456789", movies), "Movie: 123456789012345")
+        self.assertIsNone(resolve("Movie: 12345678901234", movies))
+        self.assertIsNone(resolve("Movie: 1234567890123456789", {"Movie: 123456789012345 (a)": {}, "Movie: 123456789012345 (b)": {}}))
+        self.assertEqual(resolve("Movie: éééééééééé", {"Movie: ééééééé": {}}), "Movie: ééééééé")
+        self.assertEqual(resolve("Movie: 1234567890123456789", {**movies, "Movie: 1234567890123456789": {}}), "Movie: 1234567890123456789")

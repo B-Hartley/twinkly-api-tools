@@ -5,6 +5,7 @@ import datetime as dt
 from pathlib import Path
 from types import SimpleNamespace
 import sys
+from controller_workers import add_workers, controller_reads
 from archive_3d_maps import read_reference, reference_path, archive, verify_layout
 from cloud_group_preflight import mac, compare_points
 from archive_area_group import checked
@@ -32,6 +33,7 @@ def main():
     p.add_argument("--names",nargs="+")
     p.add_argument("--capture-missing",action="store_true")
     p.add_argument("--execute",action="store_true")
+    add_workers(p)
     a=p.parse_args()
     if not 0<a.timeout<=30 or (a.execute and not a.names):
         p.error("Valid timeout and explicit --names required for writes")
@@ -42,9 +44,10 @@ def main():
             p.error("Names must match configured light sets exactly")
     failures=0
     plans=[]
-    for m in devices:
+    for m, result, error in controller_reads(devices, lambda m: read(m,a.timeout), a.workers):
         try:
-            key,n,group,layout=read(m,a.timeout)
+            if error is not None: raise error
+            key,n,group,layout=result
             if group.get("mode")!="none":
                 raise ValueError("Still grouped; refusing standalone map operations")
             if not reference_path(a.root,key).exists():
