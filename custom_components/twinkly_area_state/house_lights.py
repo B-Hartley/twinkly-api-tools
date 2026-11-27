@@ -188,6 +188,8 @@ class HouseLights:
                 "button", "press", {"entity_id": entity}, blocking=True), timeout=30)
         except Exception as exc:
             self._warn("Jyggy command failed: " + str(exc))
+            return False
+        return True
 
     def _start_car_button(self, entity):
         self._car_task = asyncio.create_task(self._car_button(entity))
@@ -306,6 +308,7 @@ class HouseLights:
                               if not self._already_applied(entity_id, command)}
                 if (self._car_enabled and not self._car_flashed and level == 100
                         and self._car_task is not None and self._car_task.done()
+                        and not self._car_task.cancelled() and self._car_task.result()
                         and any(e in self.rooms.get("house:drive", ()) and cmd[0] == "turn_on"
                                 for e, cmd in operations.items())):
                     self._car_flashed = True
