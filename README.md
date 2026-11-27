@@ -1,5 +1,61 @@
 # Twinkly Area Manager + Home Assistant integration
 
+## Current tools — start here
+
+Use the maintained scripts below rather than historical versioned copies. Older
+experiments are recoverable from Git history and the `archive/pre-cleanup-20261127`
+branch. Never force-reset a working local checkout or delete private controller backups.
+
+| Task | Maintained entry point |
+|---|---|
+| Home Assistant | [HACS setup and actions](docs/HOME_ASSISTANT.md) |
+| Inspect controllers / compare snapshots | `twinkly_inspector.py` |
+| Capture, verify, group or ungroup Areas | `area_manager.py` |
+| Audit or restore standalone LAN 3D maps | `audit_3d_maps.py` |
+| Compare saved, LAN and cloud 3D maps | `audit_3d_maps_full.py` |
+| Correct an existing grouped 2D map | `update_grouped_2d_map.py` |
+| Diagnose one controller's grouped map | `check_grouped_map_write.py` |
+| Native movie upload, audit and removal | [Front movie tools](Front_movies_V3/README.txt) |
+| Christmas show | [Show setup and audio](docs/CHRISTMAS_SHOW.md) |
+| Protocol and experimental diagnostics | [Local API](docs/API_REFERENCE.md), [Cloud API](docs/CLOUD_API_REFERENCE.md), [Testing](docs/testing.md) |
+
+### Grouped 2D map corrections
+
+`Front_2D_corrected_v3.zip` is the single retained candidate bundle, including
+original evidence and the HA reference. The separate extracted `map_update/`
+copy is redundant. Keep this ZIP and your local 3D reference archives private.
+
+```powershell
+python .\update_grouped_2d_map.py --offline
+# Read-only preflight of LAN phase:
+python .\update_grouped_2d_map.py --lan-only
+# Explicitly confirmed LAN writes (only if required):
+python .\update_grouped_2d_map.py --lan-only --execute
+# Read-only cloud phase, only after every LAN map matches:
+python .\update_grouped_2d_map.py
+# Explicitly confirmed cloud PUT (no LAN writes):
+python .\update_grouped_2d_map.py --execute
+```
+
+These are separate guarded phases, not automatic rollback. Keep all controllers
+off with empty movie catalogues, and stop Home Assistant and app communications.
+Unknown maps, mismatched group identity or incomplete reads stop the operation.
+Do not run these commands simply to verify a group with installed movies.
+Use the ordinary inspection/audit tools instead.
+
+### Routine movie upload
+
+From `Front_movies_V3`:
+
+```powershell
+python .\upload_movies.py --verify-files
+python .\upload_movies.py --resume
+python .\upload_movies.py --resume --execute --workers 3
+```
+
+Use `--workers 1 --slow` for conservative operation. Keep the existing local
+upload journal; never clear a catalogue merely to resume a verified upload.
+
 Experimental tools to capture, verify, group and ungroup Twinkly Area groups, preserving original per-controller 3D mapping references and, on tested Office hardware, uploaded movie catalogues.
 
 **Proven live on Office Left and Office Right:** a cloud/LAN group → ungroup → regroup cycle, with the three uploaded movies still playable. This does not provide a backup of raw movie animation frames, and cloud mutations can be partially successful.

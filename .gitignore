@@ -34,3 +34,10 @@ effects-archive/
 
 # Locally observed MQTT broker certificates; confirm trust independently
 ledworks-observed-ca.pem
+
+# Local diagnostics and generated artifacts (never commit new private evidence)
+**/private-movie-*.json
+map_update/
+Front_2D_corrected*.zip
+!Front_2D_corrected_v3.zip
+christmas_audio/
