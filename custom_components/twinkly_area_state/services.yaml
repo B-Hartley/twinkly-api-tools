@@ -88,15 +88,17 @@ prepare_christmas_show:
   fields:
     variant:
       name: Show version
-      description: Original retains the existing show. House chase adds British Santa, Hue pursuit, staged crash,
-        Landing countdown and six named movies. Default original.
+      description: V1 and V2 retain their existing programmes. V3 adds the car escape, a slower elf and fairy-light
+        chase, richer Santa narration and a big finale. Default V1.
       selector:
         select:
           options:
           - value: original
-            label: Original — Santa’s Christmas Magic
+            label: V1 — Santa’s Christmas Magic
           - value: house_chase
-            label: New — Father Christmas and the Cheeky Elf
+            label: V2 — Father Christmas and the Cheeky Elf
+          - value: elf_chase_v3
+            label: V3 — The Elf, the Car and the Fairy Lights
     audio:
       name: Play soundtrack
       description: Enable soundtrack (default true). Omitted Start options inherit the prepared programme.
@@ -105,7 +107,7 @@ prepare_christmas_show:
     audio_base:
       name: Soundtrack folder URL
       description: Speaker-accessible folder containing the selected soundtrack. Original uses christmas_show_v2.mp3;
-        house chase uses christmas_show_house_chase_v1.mp3.
+        V2 uses christmas_show_house_chase_v1.mp3; V3 uses christmas_show_elf_chase_v3.mp3.
       example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
       selector:
         text: {}
@@ -137,7 +139,7 @@ prepare_christmas_show:
           unit_of_measurement: ms
     house_brightness_pct:
       name: House, drive and door brightness
-      description: 0–100%; default 100 for maximum visibility through shutters. Applies only to the new variant.
+      description: 0–100%; default 100 for maximum visibility through shutters. Applies to V2 and V3.
         Undimmable lamps are excluded below 100%.
       selector:
         number:
@@ -152,15 +154,17 @@ start_christmas_show:
   fields:
     variant:
       name: Show version
-      description: Original retains the existing show. House chase adds British Santa, Hue pursuit, staged crash,
-        Landing countdown and six named movies. Default original.
+      description: V1 and V2 retain their existing programmes. V3 adds the car escape, a slower elf and fairy-light
+        chase, richer Santa narration and a big finale. Default V1.
       selector:
         select:
           options:
           - value: original
-            label: Original — Santa’s Christmas Magic
+            label: V1 — Santa’s Christmas Magic
           - value: house_chase
-            label: New — Father Christmas and the Cheeky Elf
+            label: V2 — Father Christmas and the Cheeky Elf
+          - value: elf_chase_v3
+            label: V3 — The Elf, the Car and the Fairy Lights
     audio:
       name: Play soundtrack
       description: Enable soundtrack (default true). Omitted Start options inherit the prepared programme.
@@ -169,7 +173,7 @@ start_christmas_show:
     audio_base:
       name: Soundtrack folder URL
       description: Speaker-accessible folder containing the selected soundtrack. Original uses christmas_show_v2.mp3;
-        house chase uses christmas_show_house_chase_v1.mp3.
+        V2 uses christmas_show_house_chase_v1.mp3; V3 uses christmas_show_elf_chase_v3.mp3.
       example: https://home-assistant.example/local/christmas_lights_on/christmas_audio
       selector:
         text: {}
@@ -201,7 +205,7 @@ start_christmas_show:
           unit_of_measurement: ms
     house_brightness_pct:
       name: House, drive and door brightness
-      description: 0–100%; default 100 for maximum visibility through shutters. Applies only to the new variant.
+      description: 0–100%; default 100 for maximum visibility through shutters. Applies to V2 and V3.
         Undimmable lamps are excluded below 100%.
       selector:
         number:

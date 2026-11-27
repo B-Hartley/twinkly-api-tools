@@ -1,0 +1,2262 @@
+{
+  "schema_version": 2,
+  "name": "The Elf, the Car and the Fairy Lights",
+  "variant": "elf_chase_v3",
+  "speaker": "media_player.sonos_move",
+  "soundtrack": {
+    "file": "christmas_show_elf_chase_v3.mp3",
+    "duration": 212,
+    "title": "The Elf, the Car and the Fairy Lights",
+    "version": 3,
+    "available": false
+  },
+  "requires_stored_movies": true,
+  "required_movies": [
+    "Eclipse",
+    "UpDown",
+    "Bright Twinkle",
+    "Vertical Flag",
+    "Night Sky",
+    "Christmas Spirit"
+  ],
+  "voice": {
+    "provider": "HeyGen",
+    "name": "Arthur Blackwood",
+    "voice_id": "fe612bdf07a94d5fa7b80bf1282937d1",
+    "locale": "en-GB",
+    "catalogue_age": "old",
+    "catalogue_tags": [
+      "Deep"
+    ],
+    "synthetic": true,
+    "pitch_and_speed": "Natural; no pitch shifting or time stretching",
+    "production": "Independent complete theatrical phrases, preserving each generated word ending and a quiet tail"
+  },
+  "targets": [
+    "light.twinkly_office_left_pane_1",
+    "light.twinkly_office_left_pane_2",
+    "light.twinkly_office_left_pane_3",
+    "light.twinkly_office_right_pane_1",
+    "light.twinkly_office_right_pane_2",
+    "light.twinkly_office_right_pane_3",
+    "light.twinkly_master_bedroom_left",
+    "light.twinkly_master_bedroom_right",
+    "light.twinkly_landing_pane_1",
+    "light.twinkly_landing_pane_2",
+    "light.twinkly_lounge_pane_1",
+    "light.twinkly_lounge_pane_2",
+    "light.twinkly_lounge_pane_3",
+    "light.twinkly_bar_pane_1",
+    "light.twinkly_bar_pane_2",
+    "light.twinkly_bar_pane_3",
+    "light.twinkly_bar_pane_4",
+    "light.twinkly_front_left_bush",
+    "light.twinkly_back_left_bush",
+    "light.twinkly_back_right_bush",
+    "light.twinkly_mid_right",
+    "light.twinkly_front_right_left_bush",
+    "light.twinkly_front_right_right_bush",
+    "light.twinkly_light_tree",
+    "light.twinkly_icicles",
+    "light.twinkly_front",
+    "light.twinkly_landing",
+    "house:drive",
+    "house:front_door",
+    "house:lounge",
+    "house:hall",
+    "house:downstairs_loo",
+    "house:bar",
+    "house:office",
+    "house:landing",
+    "house:master_bedroom"
+  ],
+  "house_rooms": {
+    "house:drive": "light.drive_lights",
+    "house:front_door": "light.front_door_lights",
+    "house:lounge": "light.lounge",
+    "house:hall": [
+      "light.hall",
+      "light.hall_stairs_lightstrip"
+    ],
+    "house:downstairs_loo": "light.downstairs_toilet",
+    "house:bar": "light.bar",
+    "house:office": "light.office",
+    "house:landing": "light.landing",
+    "house:master_bedroom": "light.master_bedroom"
+  },
+  "zones": {
+    "bushes": [
+      "light.twinkly_front_left_bush",
+      "light.twinkly_front_right_left_bush",
+      "light.twinkly_front_right_right_bush",
+      "light.twinkly_mid_right",
+      "light.twinkly_back_right_bush",
+      "light.twinkly_back_left_bush"
+    ],
+    "windows": [
+      "light.twinkly_lounge_pane_1",
+      "light.twinkly_lounge_pane_2",
+      "light.twinkly_lounge_pane_3",
+      "light.twinkly_bar_pane_1",
+      "light.twinkly_bar_pane_2",
+      "light.twinkly_bar_pane_3",
+      "light.twinkly_bar_pane_4",
+      "light.twinkly_office_right_pane_3",
+      "light.twinkly_office_right_pane_2",
+      "light.twinkly_office_right_pane_1",
+      "light.twinkly_office_left_pane_3",
+      "light.twinkly_office_left_pane_2",
+      "light.twinkly_office_left_pane_1",
+      "light.twinkly_landing_pane_2",
+      "light.twinkly_landing_pane_1",
+      "light.twinkly_master_bedroom_right",
+      "light.twinkly_master_bedroom_left"
+    ],
+    "tree": [
+      "light.twinkly_light_tree"
+    ],
+    "icicles": [
+      "light.twinkly_icicles"
+    ],
+    "house": [
+      "house:drive",
+      "house:front_door",
+      "house:lounge",
+      "house:hall",
+      "house:downstairs_loo",
+      "house:bar",
+      "house:office",
+      "house:landing",
+      "house:master_bedroom"
+    ]
+  },
+  "routes": {
+    "house_chase": [
+      "house:drive",
+      "house:front_door",
+      "house:lounge",
+      "house:hall",
+      "house:downstairs_loo",
+      "house:bar",
+      "house:office",
+      "house:landing",
+      "house:master_bedroom"
+    ],
+    "fairy_pursuit": {
+      "house:drive": [
+        "light.twinkly_front_left_bush",
+        "light.twinkly_light_tree"
+      ],
+      "house:front_door": [
+        "light.twinkly_icicles"
+      ],
+      "house:lounge": [
+        "light.twinkly_lounge_pane_1",
+        "light.twinkly_lounge_pane_2",
+        "light.twinkly_lounge_pane_3"
+      ],
+      "house:hall": [
+        "light.twinkly_landing_pane_1",
+        "light.twinkly_landing_pane_2"
+      ],
+      "house:downstairs_loo": [
+        "light.twinkly_icicles"
+      ],
+      "house:bar": [
+        "light.twinkly_bar_pane_1",
+        "light.twinkly_bar_pane_2",
+        "light.twinkly_bar_pane_3",
+        "light.twinkly_bar_pane_4"
+      ],
+      "house:office": [
+        "light.twinkly_office_left_pane_1",
+        "light.twinkly_office_left_pane_2",
+        "light.twinkly_office_left_pane_3",
+        "light.twinkly_office_right_pane_1",
+        "light.twinkly_office_right_pane_2",
+        "light.twinkly_office_right_pane_3"
+      ],
+      "house:landing": [
+        "light.twinkly_landing_pane_1",
+        "light.twinkly_landing_pane_2"
+      ],
+      "house:master_bedroom": [
+        "light.twinkly_master_bedroom_left",
+        "light.twinkly_master_bedroom_right"
+      ]
+    }
+  },
+  "chase": {
+    "seconds_per_room": 4,
+    "elf_colour": [
+      255,
+      165,
+      35
+    ],
+    "fairy_colour": [
+      140,
+      210,
+      255
+    ],
+    "runs": [
+      {
+        "id": "two_rooms_ahead",
+        "elf_start": 64,
+        "fairy_start": 72,
+        "rooms": [
+          "house:front_door",
+          "house:lounge",
+          "house:hall",
+          "house:downstairs_loo"
+        ]
+      },
+      {
+        "id": "run_then_follow",
+        "elf_start": 90,
+        "fairy_start": 102,
+        "rooms": [
+          "house:bar",
+          "house:office",
+          "house:landing"
+        ]
+      },
+      {
+        "id": "double_back",
+        "elf_start": 114,
+        "fairy_start": 122,
+        "rooms": [
+          "house:master_bedroom",
+          "house:landing",
+          "house:office"
+        ]
+      }
+    ],
+    "hide_at": 134,
+    "find_at": 142
+  },
+  "car": {
+    "wake": "during Prepare",
+    "headlights_at": 58,
+    "trigger": "first house:drive turn_on",
+    "maximum_flashes": 1
+  },
+  "countdown": {
+    "start": 156,
+    "digits": [
+      5,
+      4,
+      3,
+      2,
+      1
+    ],
+    "interval": 1,
+    "target": "light.twinkly_landing"
+  },
+  "finale": {
+    "start": 161,
+    "movies": [
+      "Eclipse",
+      "UpDown",
+      "Bright Twinkle",
+      "Vertical Flag",
+      "Night Sky",
+      "Christmas Spirit"
+    ],
+    "seconds_per_movie": 6,
+    "keep_last_movie": true
+  },
+  "music": {
+    "title": "We Wish you a Merry Christmas",
+    "artist": "Kevin MacLeod",
+    "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100369",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "adaptation": "Extended with an instrumental chase repeat and crossfades"
+  },
+  "narration": [
+    {
+      "id": "01_welcome",
+      "at": 0.5,
+      "until": 8.7,
+      "text": "Ho, ho, ho! Good evening, everyone. Father Christmas here, with a little Christmas magic."
+    },
+    {
+      "id": "02_bushes",
+      "at": 9,
+      "until": 18.7,
+      "text": "Wake up, little bushes! One by one. Such lovely Christmas colours."
+    },
+    {
+      "id": "03_windows",
+      "at": 19,
+      "until": 35.7,
+      "text": "And now the windows. Every little pane gets its own moment to shine. Round we go, nice and gently."
+    },
+    {
+      "id": "04_tree",
+      "at": 36,
+      "until": 39.7,
+      "text": "Christmas tree, show us your sparkle!"
+    },
+    {
+      "id": "05_icicles",
+      "at": 40,
+      "until": 44.8,
+      "text": "And icicles, a little winter magic."
+    },
+    {
+      "id": "06_colours",
+      "at": 45,
+      "until": 51.7,
+      "text": "Ah, splendid! All the Christmas colours, together."
+    },
+    {
+      "id": "07_car",
+      "at": 52,
+      "until": 57.7,
+      "text": "Hang on! Is that cheeky elf trying to borrow the car?"
+    },
+    {
+      "id": "08_headlights",
+      "at": 58,
+      "until": 63.7,
+      "text": "Those headlights have spotted him! No driving tonight, little fellow."
+    },
+    {
+      "id": "09_escape",
+      "at": 64,
+      "until": 71.7,
+      "text": "He's through the front door! There he goes. One room, then another."
+    },
+    {
+      "id": "10_fairy_lights",
+      "at": 72,
+      "until": 79.7,
+      "text": "After him, fairy lights! He's two rooms ahead. Follow that golden glow!"
+    },
+    {
+      "id": "11_search",
+      "at": 84,
+      "until": 89.7,
+      "text": "Nearly! Oh, he's doubled back. What a mischievous elf."
+    },
+    {
+      "id": "12_elf_again",
+      "at": 90,
+      "until": 98.7,
+      "text": "There he goes again. Through the bar, into the office, and up to the landing."
+    },
+    {
+      "id": "13_follow_again",
+      "at": 102,
+      "until": 109.7,
+      "text": "Here come the fairy lights. Room by room. They're following his trail."
+    },
+    {
+      "id": "14_sneak",
+      "at": 114,
+      "until": 121.7,
+      "text": "Into the bedroom! Back to the landing. Oh, now he's sneaking into the office!"
+    },
+    {
+      "id": "15_chase",
+      "at": 122,
+      "until": 129.7,
+      "text": "Keep going, fairy lights. He's just two rooms ahead of you!"
+    },
+    {
+      "id": "16_hide",
+      "at": 134,
+      "until": 137.7,
+      "text": "Shh. Where has he hidden?"
+    },
+    {
+      "id": "17_find",
+      "at": 138,
+      "until": 141.7,
+      "text": "A little Christmas magic..."
+    },
+    {
+      "id": "18_caught",
+      "at": 142,
+      "until": 149.7,
+      "text": "There you are! Caught you! Ho, ho, ho! Well done, fairy lights."
+    },
+    {
+      "id": "19_finale_intro",
+      "at": 150,
+      "until": 155.7,
+      "text": "Now, the big finale! All together, count us in!"
+    },
+    {
+      "id": "20_five",
+      "at": 156,
+      "until": 156.94,
+      "text": "Five."
+    },
+    {
+      "id": "21_four",
+      "at": 157,
+      "until": 157.94,
+      "text": "Four."
+    },
+    {
+      "id": "22_three",
+      "at": 158,
+      "until": 158.94,
+      "text": "Three."
+    },
+    {
+      "id": "23_two",
+      "at": 159,
+      "until": 159.94,
+      "text": "Two."
+    },
+    {
+      "id": "24_one",
+      "at": 160,
+      "until": 160.94,
+      "text": "One!"
+    },
+    {
+      "id": "25_finale_wow",
+      "at": 161,
+      "until": 166.7,
+      "text": "Oh, wonderful!"
+    },
+    {
+      "id": "26_finale_look",
+      "at": 167,
+      "until": 172.7,
+      "text": "Ooh, look at that!"
+    },
+    {
+      "id": "27_finale_sparkle",
+      "at": 173,
+      "until": 178.7,
+      "text": "What a sparkle!"
+    },
+    {
+      "id": "28_finale_surprise",
+      "at": 179,
+      "until": 184.7,
+      "text": "Ah! Another surprise!"
+    },
+    {
+      "id": "29_finale_beautiful",
+      "at": 185,
+      "until": 190.7,
+      "text": "Oh, that's beautiful."
+    },
+    {
+      "id": "30_finale_cheer",
+      "at": 191,
+      "until": 196.7,
+      "text": "Ho, ho, ho! Marvellous!"
+    },
+    {
+      "id": "31_farewell",
+      "at": 197,
+      "until": 211.5,
+      "text": "From all of us at the North Pole, have a wonderful Christmas. Good night, everyone. And you, little elf... leave that car alone! Ho, ho, ho!"
+    }
+  ],
+  "sections": [
+    {
+      "id": "welcome",
+      "title": "A little Christmas magic",
+      "start": 0,
+      "duration": 9,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        }
+      ]
+    },
+    {
+      "id": "bushes",
+      "title": "Whole bushes, one by one",
+      "start": 9,
+      "duration": 10,
+      "cues": [
+        {
+          "at": 0.0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0.0,
+          "targets": [
+            "light.twinkly_front_left_bush"
+          ],
+          "rgb": [
+            255,
+            25,
+            10
+          ],
+          "brightness": 150
+        },
+        {
+          "at": 1.25,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 1.25,
+          "targets": [
+            "light.twinkly_front_right_left_bush"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 150
+        },
+        {
+          "at": 2.5,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 2.5,
+          "targets": [
+            "light.twinkly_front_right_right_bush"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 150
+        },
+        {
+          "at": 3.75,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 3.75,
+          "targets": [
+            "light.twinkly_mid_right"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 150
+        },
+        {
+          "at": 5.0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.0,
+          "targets": [
+            "light.twinkly_back_right_bush"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 150
+        },
+        {
+          "at": 6.25,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6.25,
+          "targets": [
+            "light.twinkly_back_left_bush"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 150
+        },
+        {
+          "at": 7.5,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.5,
+          "targets": [
+            "light.twinkly_back_left_bush"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 180
+        },
+        {
+          "at": 7.88,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.88,
+          "targets": [
+            "light.twinkly_back_right_bush"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 180
+        },
+        {
+          "at": 8.26,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8.26,
+          "targets": [
+            "light.twinkly_mid_right"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 180
+        },
+        {
+          "at": 8.64,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8.64,
+          "targets": [
+            "light.twinkly_front_right_right_bush"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 180
+        },
+        {
+          "at": 9.02,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 9.02,
+          "targets": [
+            "light.twinkly_front_right_left_bush"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 180
+        },
+        {
+          "at": 9.4,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 9.4,
+          "targets": [
+            "light.twinkly_front_left_bush"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 180
+        }
+      ]
+    },
+    {
+      "id": "windows",
+      "title": "Every individual window pane",
+      "start": 19,
+      "duration": 17,
+      "cues": [
+        {
+          "at": 0.0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0.0,
+          "targets": [
+            "light.twinkly_lounge_pane_1"
+          ],
+          "rgb": [
+            255,
+            25,
+            10
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 0.92,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0.92,
+          "targets": [
+            "light.twinkly_lounge_pane_2"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 1.84,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 1.84,
+          "targets": [
+            "light.twinkly_lounge_pane_3"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 2.76,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 2.76,
+          "targets": [
+            "light.twinkly_bar_pane_1"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 3.68,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 3.68,
+          "targets": [
+            "light.twinkly_bar_pane_2"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 4.6,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 4.6,
+          "targets": [
+            "light.twinkly_bar_pane_3"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 5.52,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 5.52,
+          "targets": [
+            "light.twinkly_bar_pane_4"
+          ],
+          "rgb": [
+            255,
+            25,
+            10
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 6.44,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 6.44,
+          "targets": [
+            "light.twinkly_office_right_pane_3"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 7.36,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 7.36,
+          "targets": [
+            "light.twinkly_office_right_pane_2"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 8.28,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8.28,
+          "targets": [
+            "light.twinkly_office_right_pane_1"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 9.2,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 9.2,
+          "targets": [
+            "light.twinkly_office_left_pane_3"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 10.12,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 10.12,
+          "targets": [
+            "light.twinkly_office_left_pane_2"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 11.04,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 11.04,
+          "targets": [
+            "light.twinkly_office_left_pane_1"
+          ],
+          "rgb": [
+            255,
+            25,
+            10
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 11.96,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 11.96,
+          "targets": [
+            "light.twinkly_landing_pane_2"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 12.88,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 12.88,
+          "targets": [
+            "light.twinkly_landing_pane_1"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 13.8,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 13.8,
+          "targets": [
+            "light.twinkly_master_bedroom_right"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 14.72,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 14.72,
+          "targets": [
+            "light.twinkly_master_bedroom_left"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 170
+        }
+      ]
+    },
+    {
+      "id": "tree",
+      "title": "Christmas tree",
+      "start": 36,
+      "duration": 4,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_light_tree"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 220
+        }
+      ]
+    },
+    {
+      "id": "icicles",
+      "title": "Winter magic",
+      "start": 40,
+      "duration": 5,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_icicles"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 210
+        }
+      ]
+    },
+    {
+      "id": "colours",
+      "title": "Christmas colours",
+      "start": 45,
+      "duration": 7,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_front_right_left_bush"
+          ],
+          "rgb": [
+            255,
+            25,
+            10
+          ],
+          "brightness": 180
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_back_left_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_front_right_right_bush"
+          ],
+          "rgb": [
+            10,
+            230,
+            50
+          ],
+          "brightness": 180
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_light_tree"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 210
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_icicles"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 170
+        },
+        {
+          "at": 0.0,
+          "targets": [
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_4"
+          ],
+          "effect": "Static rainbow",
+          "brightness": 210
+        },
+        {
+          "at": 1.5,
+          "targets": [
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_bar_pane_1"
+          ],
+          "effect": "Static rainbow",
+          "brightness": 210
+        },
+        {
+          "at": 3.0,
+          "targets": [
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_bar_pane_2"
+          ],
+          "effect": "Static rainbow",
+          "brightness": 210
+        },
+        {
+          "at": 4.5,
+          "targets": [
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_bar_pane_3"
+          ],
+          "effect": "Static rainbow",
+          "brightness": 210
+        }
+      ]
+    },
+    {
+      "id": "car",
+      "title": "The elf tries the car",
+      "start": 52,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_light_tree"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 80
+        }
+      ]
+    },
+    {
+      "id": "headlights",
+      "title": "The headlights spot him",
+      "start": 58,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:drive"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "first_escape",
+      "title": "Two rooms ahead",
+      "start": 64,
+      "duration": 26,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:front_door"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 4,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 4,
+          "targets": [
+            "house:lounge"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 8,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8,
+          "targets": [
+            "light.twinkly_icicles"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 8,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 8,
+          "targets": [
+            "house:hall"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 12,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 12,
+          "targets": [
+            "house:downstairs_loo"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 16,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 16,
+          "targets": [
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 16,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 20,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 20,
+          "targets": [
+            "light.twinkly_icicles"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 24,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        }
+      ]
+    },
+    {
+      "id": "second_escape",
+      "title": "Run, then follow",
+      "start": 90,
+      "duration": 24,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:bar"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 4,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 4,
+          "targets": [
+            "house:office"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 8,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 8,
+          "targets": [
+            "house:landing"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 12,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 16,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 16,
+          "targets": [
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 20,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 20,
+          "targets": [
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "double_back",
+      "title": "The elf doubles back",
+      "start": 114,
+      "duration": 20,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:master_bedroom"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 4,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 4,
+          "targets": [
+            "house:landing"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 8,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 8,
+          "targets": [
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 8,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 8,
+          "targets": [
+            "house:office"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 12,
+          "targets": [
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 12,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 16,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 16,
+          "targets": [
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "hide_and_seek",
+      "title": "Where is he hiding?",
+      "start": 134,
+      "duration": 8,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:master_bedroom"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 2,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 4,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 4,
+          "targets": [
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "found",
+      "title": "The fairy lights find the elf",
+      "start": 142,
+      "duration": 8,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "house:master_bedroom"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right"
+          ],
+          "rgb": [
+            140,
+            210,
+            255
+          ],
+          "brightness": 255
+        },
+        {
+          "at": 4,
+          "targets": [
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_icicles"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 220
+        }
+      ]
+    },
+    {
+      "id": "finale_setup",
+      "title": "The big finale",
+      "start": 150,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "house:drive",
+            "house:front_door",
+            "house:lounge",
+            "house:hall",
+            "house:downstairs_loo",
+            "house:bar",
+            "house:office",
+            "house:landing",
+            "house:master_bedroom"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_office_left_pane_1",
+            "light.twinkly_office_left_pane_2",
+            "light.twinkly_office_left_pane_3",
+            "light.twinkly_office_right_pane_1",
+            "light.twinkly_office_right_pane_2",
+            "light.twinkly_office_right_pane_3",
+            "light.twinkly_master_bedroom_left",
+            "light.twinkly_master_bedroom_right",
+            "light.twinkly_landing_pane_1",
+            "light.twinkly_landing_pane_2",
+            "light.twinkly_lounge_pane_1",
+            "light.twinkly_lounge_pane_2",
+            "light.twinkly_lounge_pane_3",
+            "light.twinkly_bar_pane_1",
+            "light.twinkly_bar_pane_2",
+            "light.twinkly_bar_pane_3",
+            "light.twinkly_bar_pane_4",
+            "light.twinkly_front_left_bush",
+            "light.twinkly_back_left_bush",
+            "light.twinkly_back_right_bush",
+            "light.twinkly_mid_right",
+            "light.twinkly_front_right_left_bush",
+            "light.twinkly_front_right_right_bush",
+            "light.twinkly_light_tree",
+            "light.twinkly_icicles"
+          ],
+          "rgb": [
+            255,
+            165,
+            35
+          ],
+          "brightness": 240
+        }
+      ]
+    },
+    {
+      "id": "countdown",
+      "title": "Count us in",
+      "start": 156,
+      "duration": 5,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "off": true
+        },
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 5",
+          "brightness": 255
+        },
+        {
+          "at": 1,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 4",
+          "brightness": 255
+        },
+        {
+          "at": 2,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 3",
+          "brightness": 255
+        },
+        {
+          "at": 3,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 2",
+          "brightness": 255
+        },
+        {
+          "at": 4,
+          "targets": [
+            "light.twinkly_landing"
+          ],
+          "effect": "Countdown 1",
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "finale_1",
+      "title": "Finale surprise 1",
+      "start": 161,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "effect": "Movie: Eclipse",
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "finale_2",
+      "title": "Finale surprise 2",
+      "start": 167,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "effect": "Movie: UpDown",
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "finale_3",
+      "title": "Finale surprise 3",
+      "start": 173,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "effect": "Movie: Bright Twinkle",
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "finale_4",
+      "title": "Finale surprise 4",
+      "start": 179,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "effect": "Movie: Vertical Flag",
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "finale_5",
+      "title": "Finale surprise 5",
+      "start": 185,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "effect": "Movie: Night Sky",
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "finale_6",
+      "title": "Finale surprise 6",
+      "start": 191,
+      "duration": 6,
+      "cues": [
+        {
+          "at": 0,
+          "targets": [
+            "light.twinkly_front"
+          ],
+          "effect": "Movie: Christmas Spirit",
+          "brightness": 255
+        }
+      ]
+    },
+    {
+      "id": "farewell",
+      "title": "A Christmas farewell",
+      "start": 197,
+      "duration": 15,
+      "cues": []
+    }
+  ]
+}

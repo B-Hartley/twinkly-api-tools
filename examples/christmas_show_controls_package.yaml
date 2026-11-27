@@ -1,0 +1,183 @@
+# Install as a Home Assistant package. Do not also install the standalone script.
+# Sonos volume is read live; installing this package does not change it.
+# V3 audio stays disabled until its completed MP3 is installed; see the install guide.
+input_select:
+  christmas_show_programme:
+    name: Christmas programme
+    icon: mdi:playlist-play
+    options:
+      - V1
+      - V2
+      - V3
+      - Countdown
+script:
+  christmas_programme_control:
+    alias: Christmas programme control
+    description: Prepare the selected show at the current Sonos volume, or rehearse its audio without
+      operating lights or Jyggy.
+    mode: single
+    max_exceeded: silent
+    fields:
+      command:
+        name: Action
+        required: true
+        selector:
+          select:
+            options:
+              - prepare
+              - audio_rehearsal
+              - stop_audio
+      preset:
+        name: Preparation preset
+        default: performance
+        selector:
+          select:
+            options:
+              - performance
+              - quiet
+              - silent
+    sequence:
+      - if:
+          - condition: template
+            value_template: '{{ command | default('''') not in [''prepare'', ''audio_rehearsal'', ''stop_audio'']
+              }}'
+        then:
+          - stop: Choose prepare, audio_rehearsal or stop_audio.
+            error: true
+      - if:
+          - condition: template
+            value_template: '{{ states(''sensor.twinkly_christmas_show_status'') not in [''idle'', ''finished'',
+              ''expired'', ''error''] }}'
+        then:
+          - stop: A programme is active or its status is unavailable. Cancel it before using rehearsal
+              or preparation controls.
+            error: true
+      - if:
+          - condition: template
+            value_template: '{{ command in [''audio_rehearsal'', ''stop_audio''] and state_attr(''sensor.twinkly_christmas_show_status'',
+              ''audio_cleanup_pending'') == true }}'
+        then:
+          - stop: Show audio cleanup needs attention. Use Stop / cancel programme before rehearsing audio.
+            error: true
+      - variables:
+          selected_label: '{{ states(''input_select.christmas_show_programme'') }}'
+          selected_preset: '{{ preset | default(''performance'') }}'
+          programme_map:
+            V1: original
+            V2: house_chase
+            V3: elf_chase_v3
+            Countdown: countdown
+          soundtrack_map:
+            V1: christmas_show_v2.mp3
+            V2: christmas_show_house_chase_v1.mp3
+            V3: christmas_show_elf_chase_v3.mp3
+            Countdown: landing_countdown_british_v1.mp3
+          audio_base: https://home-assistant.example/local/christmas_lights_on/christmas_audio
+          v3_audio_available: false
+      - choose:
+          - conditions: '{{ command == ''stop_audio'' }}'
+            sequence:
+              - if:
+                  - condition: template
+                    value_template: '{{ state_attr(''media_player.sonos_move'', ''media_content_id'')
+                      not in [audio_base ~ ''/'' ~ soundtrack_map[''V1''], audio_base ~ ''/'' ~ soundtrack_map[''V2''],
+                      audio_base ~ ''/'' ~ soundtrack_map[''V3''], audio_base ~ ''/'' ~ soundtrack_map[''Countdown'']]
+                      }}'
+                then:
+                  - stop: Sonos is not playing a Christmas rehearsal soundtrack; its current audio was
+                      left alone.
+              - action: media_player.media_stop
+                target:
+                  entity_id: media_player.sonos_move
+              - stop: Audio stopped.
+      - if:
+          - condition: template
+            value_template: '{{ selected_label not in programme_map }}'
+        then:
+          - stop: Choose V1, V2, V3 or Countdown in the Christmas programme dropdown.
+            error: true
+      - if:
+          - condition: template
+            value_template: '{{ selected_preset not in [''performance'', ''quiet'', ''silent''] }}'
+        then:
+          - stop: Choose the performance, quiet or silent preparation preset.
+            error: true
+      - variables:
+          selected_programme: '{{ programme_map[selected_label] }}'
+          use_audio: '{{ command == ''audio_rehearsal'' or selected_preset != ''silent'' }}'
+          show_volume: '{{ state_attr(''media_player.sonos_move'', ''volume_level'') | float(0.05) }}'
+      - if:
+          - condition: template
+            value_template: '{{ selected_programme == ''elf_chase_v3'' and use_audio and not v3_audio_available
+              }}'
+        then:
+          - stop: V3 soundtrack is not available yet. Use V1, V2 or Countdown, or choose V3 silent lighting
+              rehearsal. Enable v3_audio_available only after the complete V3 MP3 has been installed.
+            error: true
+      - if:
+          - condition: template
+            value_template: '{{ use_audio }}'
+        then:
+          - if:
+              - condition: template
+                value_template: '{{ states(''media_player.sonos_move'') not in [''idle'', ''paused'',
+                  ''standby'', ''off''] }}'
+            then:
+              - stop: Stop the audio rehearsal or pause Sonos before starting another soundtrack. Sonos
+                  must be available.
+                error: true
+          - if:
+              - condition: template
+                value_template: '{{ state_attr(''media_player.sonos_move'', ''is_volume_muted'') == true
+                  }}'
+            then:
+              - stop: Unmute Sonos Move before using an audio programme.
+                error: true
+          - if:
+              - condition: template
+                value_template: '{{ (state_attr(''media_player.sonos_move'', ''group_members'') or [])
+                  | count > 1 }}'
+            then:
+              - stop: Ungroup Sonos Move before using an audio programme.
+                error: true
+      - choose:
+          - conditions: '{{ command == ''audio_rehearsal'' }}'
+            sequence:
+              - action: media_player.play_media
+                target:
+                  entity_id: media_player.sonos_move
+                data:
+                  media_content_id: '{{ audio_base ~ ''/'' ~ soundtrack_map[selected_label] }}'
+                  media_content_type: music
+              - stop: Audio-only rehearsal started at the current Sonos volume.
+      - if:
+          - condition: template
+            value_template: '{{ not is_state(''switch.twinkly_area_manager_maintenance_mode'', ''off'')
+              }}'
+        then:
+          - stop: Turn off the Twinkly maintenance kill switch before preparing lights.
+            error: true
+      - variables:
+          light_brightness: '{{ 100 if selected_preset == ''performance'' else (20 if selected_programme
+            == ''countdown'' else 2) }}'
+          prepared_volume: '{{ 0.05 if selected_preset == ''quiet'' else show_volume }}'
+      - choose:
+          - conditions: '{{ selected_programme == ''countdown'' }}'
+            sequence:
+              - action: twinkly_area_state.prepare_countdown
+                data:
+                  audio: '{{ use_audio }}'
+                  brightness_pct: '{{ light_brightness }}'
+                  offset_ms: 0
+                  audio_base: '{{ audio_base }}'
+                  volume: '{{ prepared_volume }}'
+        default:
+          - action: twinkly_area_state.prepare_christmas_show
+            data:
+              variant: '{{ selected_programme }}'
+              audio: '{{ use_audio }}'
+              brightness_pct: '{{ light_brightness }}'
+              house_brightness_pct: 100
+              offset_ms: 0
+              audio_base: '{{ audio_base }}'
+              volume: '{{ prepared_volume }}'

@@ -1,5 +1,9 @@
 # Prepare, then Go — Christmas shows
 
+For the separate **V3 · The Elf, the Car and the Fairy Lights** programme,
+the shared V1 / V2 / V3 / Countdown selector and live Sonos-volume controls,
+see [V3 show and controls](CHRISTMAS_SHOW_V3.md). V1 and V2 remain available.
+
 Version **0.3.32** adds separate preparation, a strict physical-button start,
 and **Father Christmas and the Cheeky Elf** (`variant: house_chase`). The
 original **Santa's Christmas Magic** remains `variant: original` and is still

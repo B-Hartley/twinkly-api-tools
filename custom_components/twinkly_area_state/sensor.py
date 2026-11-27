@@ -37,6 +37,7 @@ class ChristmasShowStatus(SensorEntity):
             "programme": self.show.kind,
             "variant": self.show.variant,
             "ready": self.show.status == "ready" and prepared is not None,
+            "audio_cleanup_pending": self.show._pending_audio_cleanup is not None,
             "soundtrack": prepared["plan"]["soundtrack"]["file"] if prepared else None,
             "ready_timeout_minutes": 15,
             "last_error": self.show.last_error,

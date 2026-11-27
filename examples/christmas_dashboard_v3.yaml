@@ -1,0 +1,310 @@
+# Generic minimal dashboard for the Christmas show integration.
+# V3 audio is disabled pending the completed soundtrack; silent lighting rehearsal remains available.
+title: Christmas Show
+views:
+  - title: Show Control
+    path: show-control
+    icon: mdi:movie-open-play
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Christmas show
+            heading_style: title
+            icon: mdi:pine-tree
+          - type: markdown
+            content: |-
+              {% set s = states('sensor.twinkly_christmas_show_status') %}
+              {% set p = state_attr('sensor.twinkly_christmas_show_status', 'programme') %}
+              {% set v = state_attr('sensor.twinkly_christmas_show_status', 'variant') %}
+              {% set titles = {'original': 'V1 · Santa’s Christmas Magic', 'house_chase': 'V2 · Father Christmas and the Cheeky Elf', 'elf_chase_v3': 'V3 · The Elf, the Car and the Fairy Lights'} %}
+              {% set title = 'Countdown' if p == 'countdown' else titles.get(v, 'Christmas show') %}
+              {% if s == 'ready' %}
+              **Ready for GO:** {{ title }}. Cancel before choosing another programme.
+              {% elif s in ['preparing', 'starting', 'running', 'stopping'] %}
+              **{{ s | title }}:** {{ title }}.
+              {% elif s in ['unknown', 'unavailable'] %}
+              The show integration is unavailable. Install the V3-capable integration and restart Home Assistant.
+              {% elif s == 'error' %}
+              **Show needs attention.** {{ state_attr('sensor.twinkly_christmas_show_status', 'last_error') or '' }} Use Stop / cancel to retry cleanup.
+              {% elif s == 'finished' %}
+              **Programme finished.** The final movie can remain on until Stop / cancel.
+              {% else %}
+              Choose a programme, prepare it, then wait for Ready and press GO.
+              {% endif %}
+              {% if state_attr('sensor.twinkly_christmas_show_status', 'audio_cleanup_pending') == true %}
+              Audio cleanup is pending. Use Stop / cancel before rehearsing audio.
+              {% endif %}
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: GO · start prepared programme
+            icon: mdi:play-circle
+            show_name: true
+            show_icon: true
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.start_prepared_show
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state: ready
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+          - type: button
+            name: Stop / cancel programme
+            icon: mdi:stop-circle-outline
+            show_name: true
+            show_icon: true
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.stop_christmas_show
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state:
+                  - preparing
+                  - ready
+                  - starting
+                  - running
+                  - finished
+                  - error
+      - type: grid
+        cards:
+          - type: heading
+            heading: Choose and prepare
+            heading_style: title
+            icon: mdi:playlist-play
+          - type: tile
+            entity: input_select.christmas_show_programme
+            name: Programme
+            features:
+              - type: select-options
+            tap_action:
+              action: none
+            icon_tap_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: markdown
+            content: '**V3 soundtrack pending.** V1, V2 and Countdown are available. V3 currently supports
+              **silent lighting rehearsal only**; full and audio rehearsals are blocked until the completed
+              MP3 is installed and V3 audio is enabled.'
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            content: |-
+              **V1:** original · **V2:** existing house chase · **V3:** the elf, car and fairy lights · **Countdown:** standalone test.
+
+              The same choice is used for preparation and audio rehearsal. GO uses the already prepared programme.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: Prepare selected programme
+            icon: mdi:movie-open-play
+            show_name: true
+            show_icon: true
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: prepare
+                preset: performance
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - idle
+                  - paused
+                  - standby
+                  - 'off'
+          - type: button
+            name: Prepare selected · quiet rehearsal
+            icon: mdi:volume-low
+            show_name: true
+            show_icon: true
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: prepare
+                preset: quiet
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - idle
+                  - paused
+                  - standby
+                  - 'off'
+          - type: button
+            name: Prepare selected · silent lighting rehearsal
+            icon: mdi:volume-off
+            show_name: true
+            show_icon: true
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: prepare
+                preset: silent
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+          - type: markdown
+            content: |-
+              **Performance:** 100% lighting, current Sonos volume. **Quiet rehearsal:** 2% fairy lights and 5% Sonos; Countdown uses 20% digit brightness. **Silent rehearsal:** the same dim lighting without audio.
+
+              V2 and V3 still use house lights at 100% and include the configured car wake and headlight flash. Use audio rehearsal for sound only.
+            grid_options:
+              columns: 12
+              rows: auto
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state:
+              - idle
+              - finished
+              - expired
+              - error
+      - type: grid
+        cards:
+          - type: heading
+            heading: Audio rehearsal & volume
+            heading_style: title
+            icon: mdi:speaker-wireless
+          - type: tile
+            entity: media_player.sonos_move
+            name: Show volume
+            features:
+              - type: media-player-volume-slider
+                show_mute_button: false
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: more-info
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state_not:
+                  - preparing
+                  - starting
+                  - stopping
+          - type: button
+            name: Audio rehearsal · selected programme
+            icon: mdi:play-circle
+            show_name: true
+            show_icon: true
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: audio_rehearsal
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state:
+                  - idle
+                  - finished
+                  - expired
+                  - error
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - idle
+                  - paused
+                  - standby
+                  - 'off'
+          - type: button
+            name: Stop audio rehearsal
+            icon: mdi:stop-circle
+            show_name: true
+            show_icon: true
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: stop_audio
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state:
+                  - idle
+                  - finished
+                  - expired
+                  - error
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - playing
+                  - paused
+          - type: markdown
+            content: |-
+              {% set volume = state_attr('media_player.sonos_move', 'volume_level') %}
+              **Current show volume:** {{ (volume * 100) | round(0) | int ~ '%' if volume is number else 'unavailable' }}.
+
+              Adjust the actual speaker volume while listening, stop rehearsal, then prepare. Performance preparation captures that volume. Audio rehearsal operates only the speaker and leaves the lights and car alone.
+
+              Stop audio rehearsal only stops one of the four configured Christmas soundtrack URLs. Unrelated media is left alone. Sonos must be ungrouped and unmuted for audio programmes.
+            grid_options:
+              columns: 12
+              rows: auto

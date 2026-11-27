@@ -922,7 +922,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "import_3d_maps": import_3d_maps,
                     "verify_archives": verify_archives},
     }
-    from .show import Show
+    from .show import Show, SHOW_VARIANTS
     ctx=hass.data[DOMAIN][entry.entry_id]
     show=Show(hass,ctx)
     ctx["show"]=show
@@ -932,7 +932,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await maintenance.load()
     show_schema=vol.Schema({
         # Omitted Start fields must inherit the prepared session, not schema defaults.
-        vol.Optional("variant"): vol.In(("original", "house_chase")),
+        vol.Optional("variant"): vol.In(SHOW_VARIANTS),
         vol.Optional("audio"): bool,
         vol.Optional("audio_base"): str,
         vol.Optional("brightness_pct"): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),

@@ -1,5 +1,9 @@
 # Twinkly Area Manager + Home Assistant integration
 
+Christmas show controls: [V1 / V2 / V3 and Countdown](docs/CHRISTMAS_SHOW_V3.md)
+provides the separate elf-and-fairy-lights chase, shared programme selection,
+audio-only rehearsal and preparation at the current Sonos volume.
+
 Experimental tools to capture, verify, group and ungroup Twinkly Area groups, preserving original per-controller 3D mapping references and, on tested Office hardware, uploaded movie catalogues.
 
 **Proven live on Office Left and Office Right:** a cloud/LAN group → ungroup → regroup cycle, with the three uploaded movies still playable. This does not provide a backup of raw movie animation frames, and cloud mutations can be partially successful.
