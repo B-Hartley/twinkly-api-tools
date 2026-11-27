@@ -13,6 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from .const import DOMAIN
+from .parallel import ControllerBatch, communication_error
 from .panes import DEFAULTS, pane_indices, pane_label, composite
 from .window_chase import WINDOW_CHASE, HOUSE_CHASE, SLIDE_CHASE, CHASE_EFFECTS, chase_zones, house_zones, chase_frame, slide_geometry, slide_frame
 from .realtime import packets, pixel_width, mapped_rainbow, spiral_geometry, spiral_frame, SPIRAL_EFFECTS, MOVING_SPIRALS, combined_bush_map
@@ -21,11 +22,12 @@ _LOGGER=logging.getLogger(__name__)
 MODE="/xled/v1/led/mode"
 
 class Group:
-    def __init__(self,hass,members,lock,query):
+    def __init__(self,hass,members,lock,query,batch=None):
         self.hass=hass
         self.members=members
         self.lock=lock
         self.query=query
+        self._batch=batch if batch is not None else ControllerBatch()
         self.session=async_get_clientsession(hass)
         self.tokens={}
         self.entities=[]
@@ -60,6 +62,8 @@ class Group:
     async def call(self,m,path,**kw):
         r=await self.query(self.session,m["ip"],path,**kw)
         if not r["ok"]:
+            if communication_error(r.get("error")):
+                self._batch.fallback()
             raise HomeAssistantError(f"{m['name']}: {path}: {r.get('error')}")
         return r["data"]
 
@@ -112,11 +116,12 @@ class Group:
     async def validate(self):
         await self.all_members(self.validate_member)
 
+    async def batch_members(self, callback, members=None, *, stop_on_error=False):
+        selected=self.members if members is None else members
+        return await self._batch.run(selected,callback,stop_on_error=stop_on_error)
+
     async def all_members(self, callback):
-        results=await asyncio.gather(*(callback(m) for m in self.members),return_exceptions=True)
-        for result in results:
-            if isinstance(result,BaseException):
-                raise result
+        await self.batch_members(callback)
 
     def load_maps(self, data):
         archives=data.get("_area_manager",{})
@@ -375,20 +380,24 @@ class Group:
 
     async def refresh_movies(self):
         """Read only; match group movies by UUID, never by local numeric ID."""
-        catalogues=[]
-        for m in self.members:
+        async def read_catalogue(m):
             mac=m["mac"]
-            if time.monotonic()>=self.expiry.get(mac,0):
+            await self.ensure_login(m)
+            try:
+                data=await self.call(m,"/xled/v1/movies",token=self.tokens[mac])
+            except HomeAssistantError as exc:
+                if not any(x in str(exc) for x in ("HTTP 401","HTTP 403","Device code 1101")):
+                    raise
                 await self.login(m)
-            token=self.tokens[mac]
-            data=await self.call(m,"/xled/v1/movies",token=token)
+                data=await self.call(m,"/xled/v1/movies",token=self.tokens[mac])
             catalogue={}
             for movie in data.get("movies",[]):
                 uid=movie.get("unique_id")
                 ident=movie.get("id")
                 if isinstance(uid,str) and uid and type(ident) is int and ident>=0:
                     catalogue[uid]=(ident,movie.get("name") or uid)
-            catalogues.append(catalogue)
+            return catalogue
+        catalogues=await self.batch_members(read_catalogue)
         common=set.intersection(*(set(c) for c in catalogues))
         self.movies={}
         for uid in sorted(common):
@@ -419,20 +428,29 @@ class Group:
                 token=self.tokens[m["mac"]],payload={"mode":"enabled","type":"A","value":value})
         await self.all_members(set_level)
 
+    async def select_movie(self,paths,selection):
+        """Select local IDs on slaves first; never replay an uncertain POST."""
+        if set(paths)!=set(selection) or set(selection)!={m["mac"] for m in self.members}:
+            raise HomeAssistantError("Incomplete movie selection")
+        async def select(m):
+            mac=m["mac"]
+            await self.call(m,paths[mac],method="POST",token=self.tokens[mac],
+                payload={"id":selection[mac]})
+        await self.batch_members(select,[m for m in self.members if m is not self.master],stop_on_error=True)
+        await self.batch_members(select,[self.master],stop_on_error=True)
+
     async def play_movie(self,effect,brightness):
         async with self.lock:
             await self.validate()
             await self.refresh_movies()
             if effect not in self.movies:
                 raise HomeAssistantError("Movie not present on every physical group member")
-            paths=await asyncio.gather(*(self.movie_current_path(m) for m in self.members))
+            paths=dict(zip((m["mac"] for m in self.members),await self.batch_members(self.movie_current_path)))
             if self.active or self.error:
                 await self.finish_idle()
             try:
                 await self.native_level(round(brightness*100/255))
-                for m,path in zip(self.members,paths):
-                    await self.call(m,path,method="POST",token=self.tokens[m["mac"]],
-                        payload={"id":self.movies[effect][m["mac"]]})
+                await self.select_movie(paths,self.movies[effect])
                 await self.mode("movie")
             except BaseException:
                 self.native_effect=None
@@ -929,7 +947,9 @@ async def async_setup_entry(hass,entry,async_add_entities):
     groups=[]
     async with ctx["lock"]:
         observations={}
-        for m in selected:
+        auth={}
+        batch=ctx["controller_batch"]
+        async def discover(m):
             try:
                 gestalt=await read(m,"/xled/v1/gestalt")
                 login=await read(m,"/xled/v1/login",method="POST",
@@ -938,6 +958,7 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 await read(m,"/xled/v1/verify",method="POST",token=token,
                     payload={"challenge-response":login["challenge-response"]})
                 group=(await read(m,"/xled/v1/application/group",token=token))["group"]
+                auth[m["ip"]]=(token,time.monotonic()+max(1,float(login.get("authentication_token_expires_in",14400))-30))
                 if group.get("mode") in ("master","slave"):
                     observations.setdefault(str(group.get("uid","")).lower(),[]).append((m,gestalt,group))
                 elif group.get("mode")=="none":
@@ -946,12 +967,18 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 else:
                     _LOGGER.warning("%s: unsupported group role %s",m["name"],group.get("mode"))
             except (ValueError,KeyError,TypeError, OSError) as exc:
+                if communication_error(exc):
+                    batch.fallback()
                 _LOGGER.warning("%s: virtual light discovery skipped: %s",m["name"],exc)
+        await batch.run(selected,discover)
         data=await ctx["store"].async_load() or {}
         for uid,items in observations.items():
             try:
                 members=[standalone_member(*items[0])] if uid.startswith("standalone:") else basic_group_members(items)
-                group=Group(hass,members,ctx["lock"],query)
+                group=Group(hass,members,ctx["lock"],query,batch)
+                for m in members:
+                    if m["ip"] in auth:
+                        group.tokens[m["mac"]],group.expiry[m["mac"]]=auth[m["ip"]]
                 group.load_maps(data)
                 group.entities=[VirtualLight(group,m) for m in members]
                 group.entities.extend(PaneLight(group,m,i) for m in members for i in range(DEFAULTS.get(" ".join(m["name"].casefold().split()),0)))
