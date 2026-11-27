@@ -55,6 +55,9 @@ class HouseLights:
         self._brightness_pct = 100.0
         self._context = Context()
         self._lock = asyncio.Lock()
+        self._car_task = None
+        self._car_flashed = False
+        self._car_enabled = False
 
     def _warn(self, text):
         if text not in self.warnings:
@@ -179,6 +182,18 @@ class HouseLights:
             if isinstance(result, BaseException):
                 raise result
 
+    async def _car_button(self, entity):
+        try:
+            await asyncio.wait_for(self.hass.services.async_call(
+                "button", "press", {"entity_id": entity}, blocking=True), timeout=30)
+        except Exception as exc:
+            self._warn("Jyggy command failed: " + str(exc))
+            return False
+        return True
+
+    def _start_car_button(self, entity):
+        self._car_task = asyncio.create_task(self._car_button(entity))
+
     async def prepare(self, plan, brightness_pct=100, dark=True):
         """Arm the room selection; dark=False leaves normal house use intact."""
         async with self._lock:
@@ -188,6 +203,12 @@ class HouseLights:
             self._plan = deepcopy(plan)
             self._prepared = True
             self._active = False
+            self._car_flashed = False
+            self._car_enabled = (level == 100 and "house:drive" in self.rooms and
+                                 all(self.hass.states.get(e) is not None for e in
+                                     ("button.jyggy_wake", "button.jyggy_flash_lights")))
+            if self._car_enabled:
+                self._start_car_button("button.jyggy_wake")
             if dark:
                 await self._blackout_locked()
 
@@ -285,6 +306,13 @@ class HouseLights:
                 # room off and the new room on, not rewrite every dark bulb.
                 operations = {entity_id: command for entity_id, command in operations.items()
                               if not self._already_applied(entity_id, command)}
+                if (self._car_enabled and not self._car_flashed and level == 100
+                        and self._car_task is not None and self._car_task.done()
+                        and not self._car_task.cancelled() and self._car_task.result()
+                        and any(e in self.rooms.get("house:drive", ()) and cmd[0] == "turn_on"
+                                for e, cmd in operations.items())):
+                    self._car_flashed = True
+                    self._start_car_button("button.jyggy_flash_lights")
                 await self._calls(operations)
                 self._last_commands.update(operations)
             except BaseException:
@@ -331,6 +359,11 @@ class HouseLights:
         self._prepared = False
         self._active = False
         self._plan = None
+        self._car_enabled = False
+        if self._car_task is not None:
+            self._car_task.cancel()
+            await asyncio.gather(self._car_task, return_exceptions=True)
+            self._car_task = None
         operations = {}
         for entity_id in sorted(self._owned):
             snapshot = self._snapshots[entity_id]
