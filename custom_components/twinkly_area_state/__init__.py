@@ -28,6 +28,7 @@ from homeassistant.components.persistent_notification import async_create
 from .const import DOMAIN, CONF_DEVICES_JSON
 from .config_flow import validate_devices, configured_twinkly_devices
 from .inventory import merge_controller_inventory
+from .parallel import ControllerBatch, communication_error
 
 _LOGGER = logging.getLogger(__name__)
 ENDPOINTS = {
@@ -562,16 +563,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     store = Store(hass, 1, f"{DOMAIN}.states")
     lock = asyncio.Lock()
     session = async_get_clientsession(hass)
+    controller_batch = ControllerBatch()
+
+    def require_idle_capture():
+        ctx = hass.data[DOMAIN][entry.entry_id]
+        if any(g.active for g in ctx.get("virtual_groups", [])):
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError("Stop managed realtime lighting before controller capture")
+
+    async def capture_all():
+        require_idle_capture()
+        async def read(device):
+            raw = {}
+            result = await capture(session, device, layout_dump=raw)
+            return result, raw
+        def failed(pair):
+            item = pair[0]
+            return (communication_error(item.get("reason")) or
+                    any(communication_error(r.get("error")) for r in item.get("responses", {}).values()))
+        pairs = await controller_batch.run(devices, read, failed_result=failed)
+        return [p[0] for p in pairs], [p[1] for p in pairs]
 
     async def collect(name):
-        # Capture sequentially: the device's local API tokens can be affected by
-        # other active clients; avoid overlapping session setup unnecessarily.
-        result = []
-        layout_dumps = []
-        for device in devices:
-            raw = {}
-            result.append(await capture(session, device, layout_dump=raw))
-            layout_dumps.append(raw)
+        result, layout_dumps = await capture_all()
         state = {"name": name, "captured_utc": datetime.now(timezone.utc).isoformat(),
                  "devices": result}
         if name in ("capture-groups-local", "capture-3d-local"):
@@ -594,9 +608,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with lock:
             directory = hass.config.path("twinkly_area_diagnostics")
             completed = []
-            for device in devices:
-                raw = {}
-                result = await capture(session, device, layout_dump=raw)
+            results, dumps = await capture_all()
+            for device, result, raw in zip(devices, results, dumps):
                 basename = await hass.async_add_executor_job(
                     _write_layout_diagnostic, directory, device, raw, result)
                 completed.append(device["name"] + " (" + basename + ")")
@@ -867,6 +880,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "devices": devices,
         "cloud": cloud,
         "lock": lock,
+        "controller_batch": controller_batch,
         "store": store,
         "actions": {"capture_layout_diagnostics": capture_layout_diagnostics,
                     "capture_groups": capture_groups,
