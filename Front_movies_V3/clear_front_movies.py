@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Clear native movie/playlist storage on the verified Front group only.
-Place beside upload_movies.py and manifest.json. Default is read-only."""
+Place beside upload_movies.py and manifest.json. Default scope is local and cloud; default operation is read-only."""
 import argparse
 import json
 import ipaddress
@@ -9,6 +9,7 @@ from pathlib import Path
 import urllib.request
 import sys
 import upload_movies as u
+from cloud_movie_cleanup import inspect_cloud
 
 
 def delete_movies(member, token, timeout):
@@ -54,9 +55,18 @@ def main():
     p.add_argument('--execute',action='store_true')
     p.add_argument('--timeout',type=float,default=30)
     p.add_argument('--workers',type=int,choices=range(1,7),default=3)
+    scope=p.add_mutually_exclusive_group()
+    scope.add_argument('--local-only',action='store_true')
+    scope.add_argument('--cloud-only',action='store_true')
     a=p.parse_args()
     if a.timeout <= 0: p.error('Invalid timeout')
     members,movies,_=u.read_bundle(None)
+    if not a.local_only:
+        inspect_cloud(members,a.timeout)
+        if a.execute:
+            raise ValueError('Cloud deletion blocked: compiled-effect ownership schema not yet verified. No local or cloud deletions attempted.')
+    if a.cloud_only:
+        return
     before=snapshot(members,a.timeout,a.workers)
     needed=sum(m['frames'] for m in movies)
     for m in members:
@@ -67,7 +77,7 @@ def main():
     print('All 15 identities, roles, offsets and group UUID verified.')
     print('DELETE removes all stored movies and playlists; original movie bytes cannot be restored from metadata.')
     if not a.execute:
-        print('READ ONLY: no movies deleted. Use --execute to request clearing all 15 controllers.')
+        print('READ ONLY: no movies deleted. Use --local-only --execute for confirmed local deletion; cloud execution requires verified ownership.')
         return
     if input('Type CLEAR ALL FRONT MOVIES to permanently clear these catalogues: ')!='CLEAR ALL FRONT MOVIES':
         print('Cancelled; no movies deleted.'); return
