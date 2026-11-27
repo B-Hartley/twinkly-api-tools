@@ -1,0 +1,8 @@
+{
+  "devices": [
+    {
+      "name": "Example controller (replace before use)",
+      "ip": "192.168.1.100"
+    }
+  ]
+}

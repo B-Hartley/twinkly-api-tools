@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Reconcile existing Twinkly Area scene, cloud coordinates and LAN 2D layouts.
+"""Update the existing Twinkly Area in two guarded phases: LAN only, then cloud only.
 
 Offline or read-only live preflight by default. No group, installation, movie,
 mode or standalone 3D writes. Experimental live upload, explicitly confirmed.
+Resume only from exact original or corrected maps. Unknown layouts stop the run.
 Run from twinkly-api-tools root. Keep bundle and generated backups private.
 """
 import argparse
@@ -10,6 +11,10 @@ import base64
 import copy
 import datetime as dt
 import gzip
+import http.client
+import time
+import urllib.error
+import urllib.request
 import json
 import math
 from pathlib import Path
@@ -23,6 +28,98 @@ PUT_KEYS=('name','uuid','ledCount','devices','ledProfile','fps','capacity','meta
 
 def require(ok,message):
     if not ok: raise ValueError(message)
+
+def fixed_json(value):
+    """Encode floats without exponent notation for the LAN firmware parser."""
+    if type(value) is float:
+        require(math.isfinite(value), 'Nonfinite JSON number')
+        return format(value, '.6f')
+    if isinstance(value, dict):
+        return '{'+','.join(json.dumps(k)+':'+fixed_json(v) for k,v in value.items())+'}'
+    if isinstance(value, list):
+        return '['+','.join(fixed_json(v) for v in value)+']'
+    return json.dumps(value, separators=(',',':'), allow_nan=False)
+
+class PacedHTTP:
+    """One synchronous request at a time, with a quiet period after each response.
+
+    No automatic retries, including authentication and writes. Log only safe
+    request metadata, never authentication tokens, response bodies or payloads.
+    """
+    def __init__(self, delay, timeout, log, opener=None, clock=time.monotonic, sleep=time.sleep):
+        self.delay=delay; self.timeout=timeout; self.log=log
+        self.clock=clock; self.sleep=sleep; self.last_end=None; self.tokens={}; self.evidence_dir=None
+        if opener is None:
+            class NoRedirect(urllib.request.HTTPRedirectHandler):
+                def redirect_request(self,*args,**kwargs):
+                    raise RuntimeError('Unexpected LAN redirect refused')
+            opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect()).open
+        self.opener=opener
+
+    def pace(self):
+        if self.last_end is not None:
+            remaining=self.delay-(self.clock()-self.last_end)
+            if remaining>0: self.sleep(remaining)
+
+    def external(self,label,operation):
+        self.pace(); self.log('BEGIN '+label); start=self.clock()
+        try:
+            result=operation()
+        except Exception as exc:
+            self.log(f'FAIL {label} after {self.clock()-start:.2f}s: {type(exc).__name__}')
+            raise
+        else:
+            self.log(f'OK {label} in {self.clock()-start:.2f}s'); return result
+        finally:
+            self.last_end=self.clock()
+
+    def request(self,m,path,method='GET',payload=None,token=None):
+        headers={'Accept':'application/json','Connection':'close'}
+        if token: headers['X-Auth-Token']=token
+        body=None
+        if payload is not None:
+            body=(fixed_json(payload) if path=='/xled/v1/led/layout/full' else json.dumps(payload,separators=(',',':'),allow_nan=False)).encode('utf-8')
+            headers['Content-Type']='application/json'
+        if method=='POST' and path=='/xled/v1/led/layout/full' and self.evidence_dir is not None:
+            (self.evidence_dir/(mac(m['mac'])+'-write-payload-private.json')).write_bytes(body)
+        label=f"{m['name']} ({m['ip']}) {method} {path}"
+        def fetch():
+            req=urllib.request.Request('http://'+m['ip']+path,data=body,headers=headers,method=method)
+            with self.opener(req,timeout=self.timeout) as response:
+                raw=response.read(8*1024*1024+1)
+                require(len(raw)<=8*1024*1024,'Response too large')
+                # Some controllers incorrectly terminate a body at a fixed size.
+                # Never accept an incomplete or invalid JSON response.
+                expected=response.headers.get('Content-Length')
+                if expected is not None and response.headers.get('Transfer-Encoding') is None:
+                    require(len(raw)==int(expected),'Incomplete response body')
+                if method=='POST' and path=='/xled/v1/led/layout/full' and self.evidence_dir is not None:
+                    (self.evidence_dir/(mac(m['mac'])+'-write-response-private.bin')).write_bytes(raw)
+                result=json.loads(raw)
+                require(isinstance(result,dict),'Expected JSON object')
+                self.log(f'  HTTP {response.status}, received {len(raw)} bytes, API code {result.get("code")}')
+                require(result.get('code') in (None,1000),'Controller rejected request')
+                if method=='POST' and path=='/xled/v1/led/layout/full':
+                    require(result.get('code')==1000,'Layout write response ambiguous')
+                return result
+        return self.external(label,fetch)
+
+    def auth(self,m):
+        import os
+        ip=m['ip']; cached=self.tokens.get(ip)
+        if cached and self.clock()<cached[1]: return cached[0]
+        start=self.clock()
+        data=self.request(m,'/xled/v1/login','POST',{'challenge':base64.b64encode(os.urandom(32)).decode('ascii')})
+        token=data.get('authentication_token'); challenge=data.get('challenge-response')
+        require(isinstance(token,str) and token and isinstance(challenge,str) and challenge,'Authentication response incomplete')
+        self.request(m,'/xled/v1/verify','POST',{'challenge-response':challenge},token)
+        expiry=data.get('authentication_token_expires_in',60)
+        if type(expiry) not in (int,float) or not math.isfinite(expiry) or expiry<=0: expiry=60
+        self.tokens[ip]=(token,start+max(0,min(expiry-10,600)))
+        return token
+
+    def get(self,m,path,authenticated=True):
+        return self.request(m,path,token=self.auth(m) if authenticated else None)
 
 def mac(s): return str(s).replace(':','').replace('-','').lower()
 def decode(layout): return json.loads(gzip.decompress(base64.b64decode(layout['coords'],validate=True)))
@@ -96,82 +193,187 @@ def prepare(bundle):
     print(f'{len(members)} controllers, {size} LEDs, aspect {ar:.5f}; group roles/offsets and LED order unchanged.')
     return corrected
 
+def layout_matches(a,b):
+    return (all(a.get(k)==b.get(k) for k in ('source','synthesized','uuid'))
+            and len(a.get('coordinates',[]))==len(b.get('coordinates',[]))
+            and delta(a['coordinates'],b['coordinates'])<=TOL)
+
+def classify_layout(l,original,target):
+    if layout_matches(l,target): return 'CORRECTED'
+    if layout_matches(l,original): return 'ORIGINAL'
+    raise ValueError('Unknown layout: neither original nor corrected; refusing writes')
+
+def write_and_verify(transport,m,t,verify_member,record,out):
+    payload={k:copy.deepcopy(v) for k,v in t['layout'].items() if k!='code'}
+    wire=json.loads(fixed_json(payload))
+    require(delta(wire['coordinates'],payload['coordinates'])<=.00000051,'Decimal encoding error')
+    record('ATTEMPT LAN layout '+m['name'])
+    failure=None
+    try:
+        transport.request(m,'/xled/v1/led/layout/full','POST',payload,transport.auth(m))
+    except Exception as exc:
+        failure=exc
+        record('WARNING write response rejected or ambiguous; verifying actual stored map, NO retry: '+type(exc).__name__+' '+str(exc))
+    try:
+        result=verify_member(m,t['layout'])
+        save(out/(mac(m['mac'])+'-verified-layout-private.json'),result['layout'])
+    except Exception as exc:
+        if failure: raise RuntimeError(m['name']+': write response failed and target could not be verified; stop') from exc
+        raise
+    record('VERIFIED LAN layout '+m['name']+(' despite write response error' if failure else ''))
+    return result
+
 def save(path,obj): path.write_text(json.dumps(obj,indent=2,allow_nan=False)+'\n',encoding='utf-8')
+
+def cloud_write_payload(obj,targetlayout,corrected):
+    payload={k:copy.deepcopy(obj[k]) for k in PUT_KEYS}
+    for slot in payload['devices']:
+        slot.pop('type',None)
+        for key in ('id','created','updated'):
+            slot['device'].pop(key,None)
+    for key in ('id','objectId','created','updated'):
+        payload['layout'].pop(key,None)
+    payload['layout']['coords']=targetlayout['coords']
+    payload['layout']['aspectXY']=targetlayout['aspectXY']
+    payload['meta']=json.dumps(corrected,separators=(',',':'),allow_nan=False)
+    return payload
 
 def live(a,bundle,corrected):
     from cloud_group_live import get_cloud_token
     from cloud_audit import cloud_get,objects_from
-    from repair_uuid_case import original as repair
     from cloud_layout_update import put_object
-    from cloud_group_cycle import local_write,LAYOUT_API
-    from audit_3d_maps import read
-    from archive_area_group import checked
-    from twinkly_inspector import authenticate
+    from archive_3d_maps import read_reference
+    from twinkly_inspector import get_devices
+    from types import SimpleNamespace
     old,oldlan,targetlayout,targetlan=bundle
-    a.group=old['name'];a.object_id=str(old['id']);token=get_cloud_token(login=a.login,timeout=a.timeout)
-    def mode_movies(m):
-        tok,_=authenticate(m['ip'],a.timeout); require(tok,'Local authentication failed')
-        require(checked(m['ip'],'/xled/v1/led/mode',a.timeout,tok)['mode']=='off',m['name']+': must be off')
-        require(checked(m['ip'],'/xled/v1/movies',a.timeout,tok)['movies']==[],m['name']+': movie catalogue must be empty')
+    a.group=old['name'];a.object_id=str(old['id'])
+    stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    out=Path(a.output)/('area-map-'+stamp);out.mkdir(parents=True,exist_ok=False)
+    journal=out/'journal.txt'
+    def record(line):
+        line=dt.datetime.now(dt.timezone.utc).isoformat(timespec='milliseconds')+' '+line
+        with journal.open('a',encoding='utf-8') as f: f.write(line+'\n');f.flush()
+        print(line,flush=True)
+    print('Private diagnostic journal:',journal,flush=True)
+    record(f'LAN request gap {a.delay}s; LAN timeout {a.timeout}s; no automatic retries')
+    transport=PacedHTTP(a.delay,a.timeout,record)
+    transport.evidence_dir=out
+    cloud_timeout=min(a.timeout,30)
+    token=transport.external('cloud session authentication',lambda:get_cloud_token(login=a.login,timeout=cloud_timeout))
+    configured={m['ip']:m for m in get_devices(SimpleNamespace(config=a.config,ips=None))}
+    members=oldlan['members']
+    for m in members:
+        require(m['ip'] in configured and configured[m['ip']]['name']==m['name'],'Configured controller differs: '+m['name'])
+        read_reference(a.root,mac(m['mac']),m['count'])
     def current_cloud():
-        raw=cloud_get(SELECTOR,token,a.timeout); objects=objects_from(raw)
+        raw=transport.external('GET cloud Area inventory',lambda:cloud_get(SELECTOR,token,cloud_timeout));objects=objects_from(raw)
         require(not isinstance(raw,dict) or (not raw.get('next_page') and (not isinstance(raw.get('count'),int) or raw['count']==len(objects))),'Incomplete cloud inventory')
-        matches=[o for o in objects if str(o.get('id'))==a.object_id]; require(len(matches)==1,'Cloud Area missing')
-        return matches[0]
+        matches=[o for o in objects if str(o.get('id'))==a.object_id];require(len(matches)==1,'Cloud Area missing')
+        obj=matches[0]; wanted={x[0] for x in slots(old)}
+        for other in objects:
+            if other is obj: continue
+            require(not any(mac((s.get('device') or {}).get('mac')) in wanted for s in (other.get('devices') or [])),'Member also belongs to another cloud object')
+        return obj
     def check_cloud(o,expected,meta):
         require(obj_identity(o)==obj_identity(old),'Cloud membership/identity changed')
         require(o['layout']['source']=='2d' and delta(decode(o['layout']),expected)<=TOL,'Cloud geometry mismatch')
         require(abs(o['layout']['aspectXY']-(targetlayout['aspectXY'] if meta==corrected else old['layout']['aspectXY']))<1e-4,'Cloud aspect mismatch')
-        m=json.loads(o['meta']); points,ar=scene_points(m)
+        actual=json.loads(o['meta']);points,ar=scene_points(actual)
+        scene_members=[(mac(e['objectId']),len(e['layout']['coordinates'])) for e in actual['scene']['layouts']]
+        require(scene_members==[(x[0],x[1]) for x in slots(o)],'Cloud scene membership/order changed')
         require(delta(points,expected)<=TOL and abs(ar-o['layout']['aspectXY'])<1e-4,'Cloud scene mismatch')
-    missing,evidence,obj=repair.collect(a,token)
-    require(not missing,'Group roles/UUID spelling inconsistent')
-    require(obj_identity(obj)==obj_identity(old),'Cloud object differs from bundle')
-    check_cloud(obj,decode(old['layout']),json.loads(old['meta']))
-    for m,b in zip(evidence['members'],oldlan['members']):
-        require(member_identity(m)==member_identity(b) and delta(m['layout']['coordinates'],b['layout']['coordinates'])<=TOL,'Live member differs from original bundle: '+m['name'])
-        mode_movies(m)
-    require(len(evidence['members'])==len(oldlan['members']),'Member count changed')
-    payload={k:copy.deepcopy(obj[k]) for k in PUT_KEYS};payload['layout']['coords']=targetlayout['coords'];payload['layout']['aspectXY']=targetlayout['aspectXY'];payload['meta']=json.dumps(corrected,separators=(',',':'),allow_nan=False)
-    stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'); out=Path(a.output)/('area-map-'+stamp);out.mkdir(parents=True,exist_ok=False)
+        require(actual==meta,'Cloud editor metadata changed')
+    def verify_member(m,expected=None,check_movies=True):
+        g=transport.get(m,'/xled/v1/gestalt',False)
+        r=transport.get(m,'/xled/v1/application/group')['group']
+        require(mac(g['mac'])==mac(m['mac']) and g['number_of_led']==m['count'] and role({'role':r})==role(m),'Controller identity/role changed: '+m['name'])
+        result=copy.deepcopy(m);result['role']=r
+        if check_movies:
+            require(transport.get(m,'/xled/v1/led/mode')['mode']=='off',m['name']+': must be off')
+            require(transport.get(m,'/xled/v1/movies')['movies']==[],m['name']+': movie catalogue must be empty')
+        if expected is not None:
+            l=transport.get(m,'/xled/v1/led/layout/full')
+            result['layout']=l
+            if expected is not True:
+                require(layout_matches(l,expected),'Layout mismatch: '+m['name'])
+        record('PASS '+m['name']+(' identity, group and geometry' if expected is not None else ' identity and group')+(', off and empty movies' if check_movies else ''))
+        return result
+    def proposed(obj):
+        return cloud_write_payload(obj,targetlayout,corrected)
+    oldmeta=json.loads(old['meta']);oldpoints=decode(old['layout']);targetpoints=decode(targetlayout)
+    def cloud_state(obj):
+        if json.loads(obj['meta'])==corrected:
+            check_cloud(obj,targetpoints,corrected);return 'CORRECTED'
+        check_cloud(obj,oldpoints,oldmeta);return 'ORIGINAL'
+    pairs=list(zip(members,targetlan['members']))
+    def read_states():
+        evidence={'members':[]}; states={}
+        for m,t in pairs:
+            actual=verify_member(m,True)
+            save(out/(mac(m['mac'])+'-latest-layout-private.json'),actual['layout'])
+            try: state=classify_layout(actual['layout'],m['layout'],t['layout'])
+            except ValueError as exc: raise ValueError(m['name']+': '+str(exc)) from exc
+            states[m['name']]=state; evidence['members'].append(actual)
+            record(state+' '+m['name'])
+        return states,evidence
+    obj=current_cloud(); initial_cloud=cloud_state(obj)
+    states,evidence=read_states()
+    require(initial_cloud=='ORIGINAL' or all(x=='CORRECTED' for x in states.values()),'Cloud already corrected but LAN is mixed; manual inspection required')
+    if not a.lan_only:
+        require(all(x=='CORRECTED' for x in states.values()),'Cloud-only repair requires every LAN map already corrected; use --lan-only for the separate LAN phase')
+    evidence.update(cloud_id=obj['id'],cloud_points=decode(obj['layout']))
+    payload=proposed(obj)
     save(out/'cloud-before-private.json',obj);save(out/'lan-before-private.json',evidence);save(out/'cloud-proposed-put-private.json',payload);save(out/'lan-target-private.json',targetlan)
-    print('Private preflight / recovery evidence:',out)
+    record(f"PASS: cloud {initial_cloud}; {sum(v=='CORRECTED' for v in states.values())} corrected, {sum(v=='ORIGINAL' for v in states.values())} original; all roles/off/empty verified")
     if not a.execute:
-        print('PASS READ ONLY: no map, cloud, movie or group writes.');return
-    require(input('Type UPDATE EXISTING AREA '+a.object_id+' to upload the maps: ').strip()=='UPDATE EXISTING AREA '+a.object_id,'Cancelled')
-    check_cloud(current_cloud(),decode(old['layout']),json.loads(old['meta']))
-    # No writes before all live identities, roles, maps and modes have passed again.
-    def verify_member(m,expected):
-        key,n,r,l=read(m,a.timeout)
-        require(mac(key)==mac(m['mac']) and n==m['count'] and role({'role':r})==role(m),'Controller identity/role changed: '+m['name'])
-        require(l['source']=='2d' and l['synthesized']==expected['synthesized'] and delta(l['coordinates'],expected['coordinates'])<=TOL,'Layout mismatch: '+m['name'])
-    for m in evidence['members']: verify_member(m,m['layout']);mode_movies(m)
-    journal=out/'journal.txt'
-    def record(line):
-        with journal.open('a',encoding='utf-8') as f: f.write(line+'\n');f.flush()
-        print(line,flush=True)
-    pairs=list(zip(evidence['members'],targetlan['members']))
-    for m,t in pairs[1:]+pairs[:1]:
-        verify_member(m,m['layout']);mode_movies(m)
-        record('ATTEMPT LAN layout '+m['name'])
-        target=t['layout'];local_write(m,LAYOUT_API,{k:copy.deepcopy(v) for k,v in target.items() if k!='code'},a.timeout)
-        verify_member(m,target);record('VERIFIED LAN layout '+m['name'])
-    for m,t in pairs: verify_member(m,t['layout']);mode_movies(m)
-    check_cloud(current_cloud(),decode(old['layout']),json.loads(old['meta']))
-    record('ATTEMPT cloud existing object PUT '+a.object_id)
-    put_object(a.object_id,payload,token,a.timeout)
-    after=current_cloud();check_cloud(after,decode(targetlayout),corrected);save(out/'cloud-after-private.json',after)
-    missing,final,after=repair.collect(a,token);require(not missing,'Final roles differ');check_cloud(after,decode(targetlayout),corrected)
-    for m,t in zip(final['members'],targetlan['members']): verify_member(m,t['layout']);mode_movies(m)
+        record('PASS READ ONLY: no map, cloud, movie or group writes.');return
+    phrase=('UPDATE LAN AREA ' if a.lan_only else 'UPDATE EXISTING AREA ')+a.object_id
+    require(input('Type '+phrase+' to upload the maps: ').strip()==phrase,'Cancelled')
+    record('READ ONLY: rechecking cloud and all controller maps after confirmation')
+    fresh=current_cloud();require(cloud_state(fresh)==initial_cloud,'Cloud state changed after confirmation')
+    latest,latest_evidence=read_states()
+    require(latest==states,'Controller layout state changed after confirmation')
+    for old_read,new_read in zip(evidence['members'],latest_evidence['members']):
+        require(layout_matches(old_read['layout'],new_read['layout']),'Controller map changed after confirmation')
+    record('PASS: all post-confirmation read-only checks completed')
+    if a.lan_only:
+        record('LAN ONLY: no cloud writes permitted')
+        for m,t in sorted(pairs,key=lambda pair: role(pair[0])[0]=='master'):
+            if states[m['name']]=='CORRECTED':
+                record('SKIP already corrected '+m['name']);continue
+            # Recheck geometry as well as identity immediately before each write.
+            verify_member(m,m['layout'])
+            write_and_verify(transport,m,t,verify_member,record,out)
+        final={'cloud_id':fresh['id'],'cloud_points':decode(fresh['layout']),'members':[]}
+        for m,t in pairs: final['members'].append(verify_member(m,t['layout']))
+        after=current_cloud();require(cloud_state(after)==initial_cloud,'Cloud state changed during LAN updates')
+        save(out/'cloud-after-private.json',after);save(out/'lan-after-private.json',final)
+        record('PASS: all LAN layouts corrected; cloud unchanged. Run the separate cloud-only phase next.')
+        return
+    record('CLOUD ONLY: all LAN maps already corrected; no LAN writes permitted')
+    # Confirm every local map before touching the cloud, even skipped members.
+    for m,t in pairs: verify_member(m,t['layout'])
+    fresh=current_cloud();require(cloud_state(fresh)==initial_cloud,'Cloud state changed during LAN updates')
+    if initial_cloud=='ORIGINAL':
+        payload=proposed(fresh);save(out/'cloud-final-put-private.json',payload)
+        record('ATTEMPT cloud existing object PUT '+a.object_id)
+        try:
+            transport.external('PUT cloud Area '+a.object_id,lambda:put_object(a.object_id,payload,token,cloud_timeout))
+        except Exception as exc:
+            record('WARNING cloud PUT response failed; checking actual state, NO retry: '+type(exc).__name__)
+    else: record('SKIP already corrected cloud Area')
+    after=current_cloud();check_cloud(after,targetpoints,corrected);save(out/'cloud-after-private.json',after)
+    final={'cloud_id':after['id'],'cloud_points':decode(after['layout']),'members':[]}
+    for m,t in pairs: final['members'].append(verify_member(m,t['layout']))
     save(out/'lan-after-private.json',final);record('PASS: editor scene, cloud and every LAN layout agree; group unchanged.')
     print('Refresh Twinkly app and inspect Area Editor before installing movies. HA saved group reference still needs replacing.')
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--bundle',required=True);p.add_argument('--offline',action='store_true');p.add_argument('--execute',action='store_true');p.add_argument('--login',action='store_true');p.add_argument('--config',default='devices.json');p.add_argument('--root',default='3d-map-archive');p.add_argument('--output',default='cloud-preflight-backups');p.add_argument('--timeout',type=float,default=20);a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--bundle',default='Front_2D_corrected_v3.zip');p.add_argument('--lan-only',action='store_true',help='Update LAN maps only; default is cloud-only after all LAN maps match');p.add_argument('--offline',action='store_true');p.add_argument('--execute',action='store_true');p.add_argument('--login',action='store_true');p.add_argument('--config',default='devices.json');p.add_argument('--root',default='3d-map-archive');p.add_argument('--output',default='cloud-preflight-backups');p.add_argument('--timeout',type=float,default=45,help='LAN socket timeout in seconds');p.add_argument('--delay',type=float,default=2,help='Minimum quiet period between HTTP requests in seconds');a=p.parse_args()
     try:
-        require(0<a.timeout<=30 and not(a.offline and a.execute),'Invalid mode or timeout');bundle=read_bundle(a.bundle);corrected=prepare(bundle)
+        require(0<a.timeout<=120 and 0<=a.delay<=30 and not(a.offline and a.execute),'Invalid mode, timeout or request delay');bundle=read_bundle(a.bundle);corrected=prepare(bundle)
         if a.offline: print('PASS OFFLINE: no network requests.');return 0
         live(a,bundle,corrected);return 0
     except Exception as e:
-        print('STOP:',type(e).__name__,str(e),file=sys.stderr);print('If a write was attempted, partial changes are possible. Inspect private journal and backups; no automatic retry or rollback.',file=sys.stderr);return 2
+        print('STOP:',type(e).__name__,str(e),file=sys.stderr);print('Inspect the journal for ATTEMPT LAN layout or ATTEMPT cloud entries. If present, partial changes are possible; no automatic retry or rollback.',file=sys.stderr);return 2
 if __name__=='__main__': sys.exit(main())
