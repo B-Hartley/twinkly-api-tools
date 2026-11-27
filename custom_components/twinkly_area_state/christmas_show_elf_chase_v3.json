@@ -248,7 +248,13 @@
     "wake": "during Prepare",
     "headlights_at": 58,
     "trigger": "first house:drive turn_on",
-    "maximum_flashes": 1
+    "maximum_flashes": 2,
+    "farewell": {
+      "id": "v3_farewell",
+      "wake_at": 174.4,
+      "headlights_at": 204.4,
+      "requires_refresh_wake": true
+    }
   },
   "countdown": {
     "start": 156,
@@ -2210,6 +2216,14 @@
           ],
           "effect": "Movie: Bright Twinkle",
           "brightness": 255
+        },
+        {
+          "at": 1.4,
+          "targets": [
+            "house:drive"
+          ],
+          "off": true,
+          "car_wake": "v3_farewell"
         }
       ]
     },
@@ -2266,7 +2280,16 @@
       "title": "A Christmas farewell",
       "start": 197,
       "duration": 15,
-      "cues": []
+      "cues": [
+        {
+          "at": 7.4,
+          "targets": [
+            "house:drive"
+          ],
+          "off": true,
+          "car_flash": "v3_farewell"
+        }
+      ]
     }
   ]
 }

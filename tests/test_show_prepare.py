@@ -211,10 +211,11 @@ class PrepareTests(unittest.IsolatedAsyncioTestCase):
             await house_release.wait()
 
         self.service_hook = hold_audio
-        self.show.house_lights = SimpleNamespace(blackout=AsyncMock(), stop=hold_house)
+        self.show.house_lights = SimpleNamespace(blackout=AsyncMock(), stop=hold_house, disarm_car=Mock())
         await self.show.start_prepared(self.call())
         await asyncio.wait_for(audio_entered.wait(), 1)
         self.assertEqual(self.show.status, "stopping")
+        self.show.house_lights.disarm_car.assert_called()
         audio_release.set()
         await asyncio.wait_for(house_entered.wait(), 1)
         self.assertEqual(self.show.status, "stopping")
@@ -560,7 +561,7 @@ class PrepareTests(unittest.IsolatedAsyncioTestCase):
 
         house = SimpleNamespace(resolve=Mock(), prepare=AsyncMock(),
                                 blackout=AsyncMock(side_effect=blackout),
-                                apply=AsyncMock(), stop=AsyncMock())
+                                apply=AsyncMock(), stop=AsyncMock(), disarm_car=Mock())
         self.namespace["HouseLights"].return_value = house
         await self.prepare(variant="house_chase", brightness_pct=2, house_brightness_pct=100)
         house.blackout.assert_not_awaited()
@@ -608,7 +609,7 @@ class PrepareTests(unittest.IsolatedAsyncioTestCase):
                 playing.set()
 
         self.show.house_lights = SimpleNamespace(
-            blackout=AsyncMock(side_effect=slow_blackout), stop=AsyncMock())
+            blackout=AsyncMock(side_effect=slow_blackout), stop=AsyncMock(), disarm_car=Mock())
         self.service_hook = on_service
         await self.show.start_prepared(self.call())
         await asyncio.wait_for(self.show.task, 1)
