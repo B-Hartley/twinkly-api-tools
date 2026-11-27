@@ -3,8 +3,10 @@
 
 Requires numpy and ffmpeg. This tool is offline: it makes no speech requests
 and cannot play Sonos or operate lights. Each narration ID needs a WAV in
---voice-dir and its original HeyGen response JSON in --responses. No final
-soundtrack is written unless every phrase exists, matches its text, and fits.
+--voice-dir and its original response JSON in --responses. Native Fal/ElevenLabs
+character-alignment chunks and legacy HeyGen timing responses are accepted.
+Fal's exact submission belongs in a sibling requests directory for provenance.
+No final soundtrack is written unless every phrase exists, matches, and fits.
 Use --music-only to prepare the instrumental source while speech is pending.
 """
 import argparse
@@ -21,15 +23,24 @@ from build_christmas_soundtrack import SR, decode, loudness, run
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "custom_components/twinkly_area_state/christmas_show_elf_chase_v3.json"
-CREDIT = (
+MUSIC_CREDIT = (
     "We Wish you a Merry Christmas — Kevin MacLeod (incompetech.com), CC BY 4.0. "
     "Adapted with an instrumental repeat, crossfade, original bell accents, "
-    "Santa narration, ducking and mastering. AI-generated voice: HeyGen Arthur Blackwood."
+    "narration-led ducking and mastering."
 )
 
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def recipe_digest(request):
+    """Hash the reproducible recipe, excluding account/submission receipts."""
+    if request is None:
+        return None
+    recipe = {"endpoint_id": request.get("endpoint_id"), "input": request.get("input")}
+    payload = json.dumps(recipe, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def write_float_wav(path, samples):
@@ -73,6 +84,85 @@ def normalized_words(text):
     return "".join(re.findall(r"[a-z0-9]+", text.lower()))
 
 
+def normalize_response(response, request=None):
+    """Read actual provider alignment without inventing or redistributing time.
+
+    Fal returns several character-array chunks. Their timestamps already share
+    the phrase's clock, so adding an offset to each chunk would corrupt them.
+    Words are regrouped from those exact character boundaries. Trailing
+    punctuation can extend beyond the PCM duration; only spoken characters
+    determine the speech deadline in preflight.
+    """
+    if "original_characters" in response or "original_words" in response:
+        return response
+    result = response.get("result", response)
+    chunks = result.get("timestamps")
+    if not isinstance(chunks, list) or not chunks:
+        raise ValueError("Response contains no supported speech alignment")
+    characters = []
+    previous_start = previous_end = -1.0
+    for index, chunk in enumerate(chunks):
+        if not isinstance(chunk, dict):
+            raise ValueError(f"Fal alignment chunk {index} is not an object")
+        arrays = [chunk.get(key) for key in (
+            "characters", "character_start_times_seconds", "character_end_times_seconds")]
+        if not all(isinstance(array, list) for array in arrays):
+            raise ValueError(f"Fal alignment chunk {index} has missing character/timing arrays")
+        if len({len(array) for array in arrays}) != 1:
+            raise ValueError(f"Fal alignment chunk {index} has mismatched array lengths")
+        for char, start, end in zip(*arrays):
+            if not isinstance(char, str) or len(char) != 1:
+                raise ValueError("Fal alignment must address single characters")
+            if any(isinstance(value, bool) or not isinstance(value, (int, float))
+                   or not math.isfinite(value) for value in (start, end)):
+                raise ValueError("Fal alignment times must be finite numbers")
+            if start < 0 or end < start or start + 1e-6 < previous_start or end + 1e-6 < previous_end:
+                raise ValueError("Fal alignment must progress on one absolute phrase clock")
+            characters.append({"text": char, "start_time": float(start), "end_time": float(end)})
+            previous_start, previous_end = start, end
+    if not characters:
+        raise ValueError("Fal alignment has no characters")
+    transcript = "".join(char["text"] for char in characters)
+    words = [{"text": match.group(), "start_time": characters[match.start()]["start_time"],
+              "end_time": characters[match.end() - 1]["end_time"]}
+             for match in re.finditer(r"[A-Za-z0-9]+(?:['’][A-Za-z0-9]+)*", transcript)]
+    request = request or response.get("recipe")
+    provenance = None
+    if request is not None:
+        inputs = request.get("input", {})
+        if inputs.get("text") != transcript:
+            raise ValueError("Fal character transcript differs from the submitted text")
+        if not request.get("endpoint_id") or not inputs.get("voice"):
+            raise ValueError("Fal submission is missing its model or voice identity")
+        provenance = {
+            "provider": "ElevenLabs", "delivery_platform": "fal.ai",
+            "model": request["endpoint_id"], "voice_id": inputs["voice"],
+            "settings": {key: value for key, value in inputs.items() if key not in ("text", "voice")},
+        }
+    return {
+        "original_characters": characters, "original_words": words,
+        "alignment_source": "Fal/ElevenLabs native character timestamps; chunks use absolute phrase seconds",
+        "source_provenance": provenance,
+    }
+
+
+def validate_voice_identity(plan, response):
+    """Do not accidentally mix the earlier audition voices into the release."""
+    expected = plan.get("voice", {})
+    if expected.get("model", "").startswith("elevenlabs/tts/"):
+        provenance = response.get("source_provenance") or {}
+        if (provenance.get("model") != expected["model"]
+                or provenance.get("voice_id") != expected.get("voice_id")):
+            raise ValueError("Speech model/voice does not match the selected V3 voice; check the original submission")
+
+
+def soundtrack_credit(voice):
+    credit = f" AI-generated voice: {voice.get('name', 'unspecified voice')} — {voice.get('provider', 'unspecified provider')}."
+    if voice.get("delivery_platform"):
+        credit += f" Delivered via {voice['delivery_platform']}."
+    return MUSIC_CREDIT + credit
+
+
 def preflight(plan, voice_dir, responses):
     missing = []
     for line in plan["narration"]:
@@ -85,7 +175,11 @@ def preflight(plan, voice_dir, responses):
     for line in plan["narration"]:
         source = voice_dir / (line["id"] + ".wav")
         response_path = responses / (line["id"] + ".json")
-        response = json.loads(response_path.read_text())
+        raw_response = json.loads(response_path.read_text())
+        request_path = responses.parent / "requests" / response_path.name
+        request = json.loads(request_path.read_text()) if request_path.is_file() else None
+        response = normalize_response(raw_response, request)
+        validate_voice_identity(plan, response)
         characters = response.get("original_characters")
         if characters is not None:
             returned = "".join(char["text"] for char in characters)
@@ -118,6 +212,9 @@ def preflight(plan, voice_dir, responses):
             "source_file": source.name,
             "source_sha256": digest(source),
             "response_sha256": digest(response_path),
+            "request_recipe_sha256": recipe_digest(request),
+            "source_provenance": response.get("source_provenance"),
+            "alignment_source": response.get("alignment_source", "provider word/character timestamps"),
             "source_duration": len(original) / SR,
             "removed_leading_seconds": lead,
             "removed_trailing_seconds": 0,
@@ -204,7 +301,7 @@ def prepare_music(source, output, duration):
         "source_before_join_ends_at": 124.75, "source_after_join_starts_at": 52,
         "source_pitch": "unchanged", "source_speed": "unchanged",
         "prepared_sample_format": "32-bit float; peaks retained until mastering",
-        "prepared_sha256": digest(output), "credit": CREDIT,
+        "prepared_sha256": digest(output), "credit": MUSIC_CREDIT,
     }
     output.with_suffix(".json").write_text(json.dumps(manifest, indent=2) + "\n")
     return music, manifest
@@ -214,6 +311,7 @@ def build(plan, music_source, voice_dir, responses, output):
     prepared = preflight(plan, voice_dir, responses)
     output.mkdir(parents=True, exist_ok=True)
     duration = plan["soundtrack"]["duration"]
+    credit = soundtrack_credit(plan["voice"])
     track, music_manifest = prepare_music(music_source, output / "v3_instrumental_source.wav", duration)
     track *= 10 ** (-3.5 / 20)
     voices = np.zeros_like(track)
@@ -254,7 +352,7 @@ def build(plan, music_source, voice_dir, responses, output):
     mp3 = output / plan["soundtrack"]["file"]
     run("ffmpeg", "-v", "error", "-y", "-i", str(master), "-codec:a", "libmp3lame",
         "-b:a", "320k", "-ar", str(SR), "-metadata", "title=" + plan["name"],
-        "-metadata", "comment=" + CREDIT, str(mp3))
+        "-metadata", "comment=" + credit, str(mp3))
     qc = loudness(mp3)
     if float(qc["input_tp"]) > -1.5:
         raise ValueError("Encoded MP3 exceeds the -1.5 dBTP delivery ceiling")

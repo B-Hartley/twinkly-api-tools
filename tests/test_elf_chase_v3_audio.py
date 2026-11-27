@@ -93,6 +93,62 @@ class ElfChaseV3AudioTests(unittest.TestCase):
             decoded = self.audio.decode(path)
             np.testing.assert_array_equal(decoded, samples)
 
+    def fal_alignment(self):
+        return {"timestamps": [
+            {"characters": list("Hi, "),
+             "character_start_times_seconds": [0, .1, .2, .3],
+             "character_end_times_seconds": [.1, .2, .3, .4]},
+            {"characters": list("Santa."),
+             "character_start_times_seconds": [1, 1.1, 1.2, 1.3, 1.4, 1.5],
+             "character_end_times_seconds": [1.1, 1.2, 1.3, 1.4, 1.5, 1.75]},
+        ]}
+
+    def test_fal_chunks_keep_absolute_times_and_exclude_punctuation_from_word_ends(self):
+        result = self.audio.normalize_response(self.fal_alignment())
+        self.assertEqual("".join(char["text"] for char in result["original_characters"]), "Hi, Santa.")
+        self.assertEqual(result["original_words"], [
+            {"text": "Hi", "start_time": 0, "end_time": .2},
+            {"text": "Santa", "start_time": 1, "end_time": 1.5},
+        ])
+        self.assertEqual(result["original_characters"][-1]["end_time"], 1.75)
+
+    def test_fal_alignment_rejects_missing_or_mismatched_arrays(self):
+        response = self.fal_alignment()
+        del response["timestamps"][0]["character_end_times_seconds"]
+        with self.assertRaisesRegex(ValueError, "missing"):
+            self.audio.normalize_response(response)
+        response = self.fal_alignment()
+        response["timestamps"][0]["character_start_times_seconds"].pop()
+        with self.assertRaisesRegex(ValueError, "mismatched"):
+            self.audio.normalize_response(response)
+
+    def test_fal_alignment_rejects_reset_chunk_clocks_and_nonfinite_times(self):
+        response = self.fal_alignment()
+        response["timestamps"][1]["character_start_times_seconds"][0] = 0
+        with self.assertRaisesRegex(ValueError, "absolute phrase clock"):
+            self.audio.normalize_response(response)
+        response = self.fal_alignment()
+        response["timestamps"][0]["character_end_times_seconds"][0] = float("nan")
+        with self.assertRaisesRegex(ValueError, "finite"):
+            self.audio.normalize_response(response)
+
+    def test_fal_submission_text_and_selected_voice_must_match(self):
+        request = {"endpoint_id": "elevenlabs/tts/eleven-v4",
+                   "input": {"text": "Hi, Santa.", "voice": "selected", "timestamps": True}}
+        result = self.audio.normalize_response(self.fal_alignment(), request)
+        plan = {"voice": {"model": request["endpoint_id"], "voice_id": "selected"}}
+        self.audio.validate_voice_identity(plan, result)
+        plan["voice"]["voice_id"] = "another-voice"
+        with self.assertRaisesRegex(ValueError, "selected V3 voice"):
+            self.audio.validate_voice_identity(plan, result)
+        request["input"]["text"] = "Different words."
+        with self.assertRaisesRegex(ValueError, "submitted text"):
+            self.audio.normalize_response(self.fal_alignment(), request)
+
+    def test_legacy_heygen_word_alignment_remains_supported(self):
+        response = {"original_words": [{"text": "Magic", "start_time": .2, "end_time": .8}]}
+        self.assertEqual(self.audio.normalize_response(response), response)
+
 
 if __name__ == "__main__":
     unittest.main()

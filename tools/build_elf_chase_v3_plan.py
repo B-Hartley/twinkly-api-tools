@@ -142,7 +142,7 @@ def build():
         "speaker": "media_player.sonos_move",
         "soundtrack": {"file": "christmas_show_elf_chase_v3.mp3", "duration": DURATION,
                        "title": "The Elf, the Car and the Fairy Lights", "version": 3,
-                       "available": False},
+                       "available": True},
         "requires_stored_movies": True,
         "required_movies": MOVIES,
         "voice": narration["voice"],

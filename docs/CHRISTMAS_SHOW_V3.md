@@ -6,20 +6,20 @@ filenames. The shared dashboard selects V1, V2, V3 or the standalone countdown.
 
 ## Production status
 
-The choreography, runtime and shared controls have passed offline tests.
-The V3 soundtrack is **not yet released**; no complete V3 MP3 is supplied.
+Version **0.3.36** enables the completed **212-second V3 soundtrack**. All 31
+narration phrases use the same Nathaniel voice to portray Father Christmas,
+checked against their submitted text and native timing, and mixed with the
+music. The choreography, runtime and shared controls have passed offline tests.
 V1, V2 and Countdown remain available with their existing audio files.
 
-This release marks V3's soundtrack unavailable. The integration refuses an
-audible V3 Prepare or Start before changing the lights, speaker or car. The
-control script also blocks V3 audio rehearsal and audible preparation with
-`v3_audio_available: false`. An explicitly selected **silent lighting rehearsal**
-can still run the V3 choreography; it includes the house lights and car.
+Install `christmas_show_elf_chase_v3.mp3` before using audible V3. The current
+control script enables V3 with `v3_audio_available: true`. An older 0.3.35
+installation deliberately disabled V3 while its soundtrack was incomplete;
+update both the integration and those controls when upgrading.
 
-Audible V3 requires the completed, checked soundtrack and a future matching
-integration release that enables it. Copying a preview or changing only the
-script flag cannot make this release prepare audible V3. Do not bypass the
-runtime availability flag.
+Audio rehearsal plays only the soundtrack. An explicitly selected **silent
+lighting rehearsal** runs the choreography without Sonos and includes the
+house lights and car.
 
 ## What changes for the audience
 
@@ -32,10 +32,11 @@ pane mappings, not a new physical map of the house.
 
 The narration calls them **fairy lights**. The car moment comes before the elf
 enters the house, and the finale uses delighted reactions instead of speaking
-the stored movies' technical names. The selected voice is a naturally deep,
-older British Santa-style voice. V3 is authored as complete independent
-phrases, with preserved word endings and space between them; it does not reuse
-the old timestamp-based cuts that truncated the end of “magic”.
+the stored movies' technical names. The voice is ElevenLabs' **Nathaniel – Deep,
+Rich and Mature**, a deep British narrator generated with Eleven v4 through
+fal.ai. V3 uses complete independent phrases at their generated pitch and speed,
+with preserved word endings and space between them; it does not reuse the old
+timestamp-based cuts that truncated the end of “magic”.
 
 | Time | Scene |
 | --- | --- |
@@ -97,8 +98,8 @@ programme. Wait for Ready and press Go or the existing physical GO button.
 The loaded programme is kept in the runtime's prepared session; changing a
 selector cannot change what an already-prepared Go starts.
 
-These audible controls currently apply to V1, V2 and Countdown. Selecting V3
-shows that its soundtrack is pending; its silent rehearsal remains available.
+The same audible controls apply to V1, V2, V3 and Countdown once their selected
+soundtrack is installed. V3's silent rehearsal also remains available.
 
 The script refuses audio controls while a show is preparing, ready, starting,
 running, stopping or unavailable. It also checks the speaker is available,
@@ -107,19 +108,19 @@ recognized show soundtrack, so it cannot stop unrelated music.
 
 ## Install the completed V3 soundtrack
 
-Once the complete audio pack and matching audio-enabled integration release
-are published, copy the final MP3 to:
+Copy the completed V3 MP3 from the audio pack to:
 
 ```text
 /config/www/christmas_lights_on/christmas_audio/christmas_show_elf_chase_v3.mp3
 ```
 
-Keep the other three MP3s. Install the matching integration update and restart
-Home Assistant. Version 0.3.35 keeps V3 audio disabled; it is not the completed
-audio release. Then enable `v3_audio_available` in the installed control script
-or use the updated controls supplied with that release. The integration update
-and dashboard installation do not start a show. Rehearse the finished audio
-before preparing a full lighting performance.
+Keep the other three MP3s. Install Twinkly Area Manager **0.3.36 or later** and
+restart Home Assistant, then install the current controls. If retaining the
+0.3.35 control script, set `v3_audio_available: true` after installing the MP3
+and integration update, and remove its old soundtrack-pending dashboard note.
+Update only the script or package installation method you use. The integration
+update and dashboard installation do not start a show. Rehearse the finished
+audio before preparing a full lighting performance.
 
 ## Validation and limits
 
@@ -128,9 +129,29 @@ Home Assistant, Sonos, car and light I/O. It checks the selected track, silent
 preparation, the full 212-second timeline, one car command at 58 seconds, six
 movie changes, programme guards and restoration. Existing V1/V2 tests remain
 part of the suite. Dashboard parsing and template routing are separate checks.
-The shipped V3 plan is tested to reject audible Prepare and Start without any
-device writes. Full audible V3 simulations explicitly enable only their fake
-in-memory fixture; those simulations are not evidence that a final MP3 exists.
+Full V3 simulations now use the released plan directly. A separate in-memory
+unavailable-soundtrack fixture retains the regression that audible Prepare and
+Start must fail before any device writes when a score is marked unavailable.
+
+The completed audio was checked independently of those device simulations.
+All 31 phrases match the selected voice/model/settings and native timing;
+independent speech recognition also checked their spoken content. Every source
+tail is retained, including the three “magic” endings, and the spoken countdown
+matches its five light cues. The master is **212.000 seconds**; the encoded MP3
+container reports **212.040 seconds**. Delivery is **48 kHz stereo, 320 kbps**.
+
+Peak headroom constrains the final mastering gain: the completed mix measures
+**−19.43 LUFS integrated**, **−2.02 dBTP true peak** and **6.0 LU loudness range**.
+Source hashes, per-phrase timing, retained endings and mastering measurements
+are recorded in `production_manifest_v3.json` supplied with the audio pack.
+Speech was not time-stretched or pitch-shifted to fit a slot. Floating-point
+intermediate audio preserves headroom before final mastering.
+
+The released `christmas_show_elf_chase_v3.mp3` has SHA-256:
+
+```text
+86c2dbd97f8bdff78431bcfd7413cd8cec61e9809c1f4428d7c3f558e587adcf
+```
 
 No test claims live Sonos buffering, car wake timing, sightlines through the
 windows or actual controller synchronization. Use audio rehearsal first when
@@ -144,3 +165,7 @@ under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by
 V3 extends the instrumental score with a chase repeat and crossfades, adds
 synthetic Santa narration and uses narration-led ducking and mastering. No
 endorsement is implied.
+
+Synthetic narration uses [Nathaniel – Deep, Rich and Mature](https://elevenlabs.io/app/voice-library?voiceId=7S3KNdLDL7aRgBVRQb1z),
+voice ID `7S3KNdLDL7aRgBVRQb1z`, through `elevenlabs/tts/eleven-v4` on fal.ai.
+The voice and model identities are recorded with every phrase in the audio manifest.

@@ -1,5 +1,5 @@
 # Generic minimal dashboard for the Christmas show integration.
-# V3 audio is disabled pending the completed soundtrack; silent lighting rehearsal remains available.
+# V3 audio requires the completed soundtrack and Twinkly Area Manager 0.3.36.
 title: Christmas Show
 views:
   - title: Show Control
@@ -103,13 +103,6 @@ views:
             grid_options:
               columns: 12
               rows: 2
-          - type: markdown
-            content: '**V3 soundtrack pending.** V1, V2 and Countdown are available. V3 currently supports
-              **silent lighting rehearsal only**; full and audio rehearsals are blocked until the completed
-              MP3 is installed and V3 audio is enabled.'
-            grid_options:
-              columns: 12
-              rows: auto
           - type: markdown
             content: |-
               **V1:** original · **V2:** existing house chase · **V3:** the elf, car and fairy lights · **Countdown:** standalone test.
