@@ -1,13 +1,18 @@
 {
   "voice": {
-    "provider": "HeyGen",
-    "name": "Arthur Blackwood",
-    "voice_id": "fe612bdf07a94d5fa7b80bf1282937d1",
+    "provider": "ElevenLabs",
+    "delivery_platform": "fal.ai",
+    "model": "elevenlabs/tts/eleven-v4",
+    "name": "Nathaniel - Deep, Rich and Mature",
+    "voice_id": "7S3KNdLDL7aRgBVRQb1z",
+    "catalogue_url": "https://elevenlabs.io/app/voice-library?voiceId=7S3KNdLDL7aRgBVRQb1z",
+    "catalogue_description_url": "https://elevenlabs.io/voice-library/narrator-voices",
     "locale": "en-GB",
-    "catalogue_age": "old",
-    "catalogue_tags": ["Deep"],
+    "catalogue_age": "mature",
+    "catalogue_description": "Deep Rich Mature British voice",
     "synthetic": true,
-    "pitch_and_speed": "Natural; no pitch shifting or time stretching",
+    "pitch_and_speed": "As generated; no pitch shifting or time stretching",
+    "settings": {"stability": 0.5, "similarity_boost": 0.75, "language_code": "en", "output_format": "pcm_44100", "timestamps": true, "enable_safety_checker": true},
     "production": "Independent complete theatrical phrases, preserving each generated word ending and a quiet tail"
   },
   "narration": [

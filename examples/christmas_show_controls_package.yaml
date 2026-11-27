@@ -1,6 +1,6 @@
 # Install as a Home Assistant package. Do not also install the standalone script.
 # Sonos volume is read live; installing this package does not change it.
-# V3 audio stays disabled until its completed MP3 is installed; see the install guide.
+# Install the complete V3 MP3 and Twinkly Area Manager 0.3.36 before using V3 audio.
 input_select:
   christmas_show_programme:
     name: Christmas programme
@@ -73,7 +73,7 @@ script:
             V3: christmas_show_elf_chase_v3.mp3
             Countdown: landing_countdown_british_v1.mp3
           audio_base: https://home-assistant.example/local/christmas_lights_on/christmas_audio
-          v3_audio_available: false
+          v3_audio_available: true
       - choose:
           - conditions: '{{ command == ''stop_audio'' }}'
             sequence:
@@ -111,7 +111,7 @@ script:
             value_template: '{{ selected_programme == ''elf_chase_v3'' and use_audio and not v3_audio_available
               }}'
         then:
-          - stop: V3 soundtrack is not available yet. Use V1, V2 or Countdown, or choose V3 silent lighting
+          - stop: V3 audio is disabled in this script. Use V1, V2 or Countdown, or choose V3 silent lighting
               rehearsal. Enable v3_audio_available only after the complete V3 MP3 has been installed.
             error: true
       - if:

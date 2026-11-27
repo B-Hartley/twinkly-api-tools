@@ -6,16 +6,16 @@ from test_house_show_integration import HouseSimulation, MOVIES
 
 
 class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
-    def make_sim(self, *, released_audio=False):
+    def make_sim(self, *, unavailable_audio=False):
         sim = HouseSimulation(variant="elf_chase_v3")
-        if released_audio:
-            # Exercise the future complete audio path without changing the
-            # shipped plan's production gate or pretending an MP3 exists.
-            def load_released_fixture(loader):
+        if unavailable_audio:
+            # Keep the fail-closed regression without disabling the released
+            # score on disk. Normal simulations use the shipped plan directly.
+            def load_unavailable_fixture(loader):
                 programme = loader()
-                programme["soundtrack"]["available"] = True
+                programme["soundtrack"]["available"] = False
                 return programme
-            sim.hass.async_add_executor_job.side_effect = load_released_fixture
+            sim.hass.async_add_executor_job.side_effect = load_unavailable_fixture
         sim.states["button.jyggy_wake"] = SimpleNamespace(state="unknown", attributes={})
         sim.states["button.jyggy_flash_lights"] = SimpleNamespace(state="unknown", attributes={})
         self.addAsyncCleanup(sim.close)
@@ -31,7 +31,8 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(after.attributes[key], before.attributes[key], (entity_id, key))
 
     async def test_v3_prepares_its_own_track_and_runs_full_chase_with_one_car_flash(self):
-        sim = self.make_sim(released_audio=True)
+        sim = self.make_sim()
+        self.assertIs(sim.plan["soundtrack"]["available"], True)
         await sim.prepare()
         self.assertEqual(sim.show.status, "ready", sim.show.last_error)
         self.assertEqual(sim.show.prepared["variant"], "elf_chase_v3")
@@ -72,7 +73,7 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sim.states[sim.speaker].attributes["volume_level"], 0.3)
 
     async def test_v3_ready_session_rejects_a_different_selected_version(self):
-        sim = self.make_sim(released_audio=True)
+        sim = self.make_sim()
         await sim.prepare()
         before = list(sim.events)
         for variant in ("original", "house_chase"):
@@ -84,11 +85,10 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sim.events, before)
         self.assertEqual(sim.house_events, [])
 
-    async def test_shipped_v3_audio_prepare_and_cold_start_refuse_before_any_device_writes(self):
+    async def test_unavailable_soundtrack_prepare_and_cold_start_refuse_before_any_device_writes(self):
         for action in ("prepare", "start"):
             with self.subTest(action=action):
-                sim = self.make_sim()
-                self.assertIs(sim.plan["soundtrack"]["available"], False)
+                sim = self.make_sim(unavailable_audio=True)
                 with self.assertRaisesRegex(RuntimeError, "soundtrack has not been released"):
                     await getattr(sim.show, action)(SimpleNamespace(data={
                         "variant": "elf_chase_v3", "audio": True,
