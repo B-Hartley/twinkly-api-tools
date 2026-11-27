@@ -1,0 +1,271 @@
+{
+  "controllers": [
+    {
+      "name": "BackR Bush Bottom",
+      "mac": "e831cd7153b1",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 2536,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "BackR Bush Top",
+      "mac": "e831cd7018e9",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 2536,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "BackL Bush",
+      "mac": "e868e722e3ed",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 2536,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Bar",
+      "mac": "a8032a24ddb5",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 4786,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Front Left Bottom",
+      "mac": "244cabefd0ad",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 2536,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Front Left Top",
+      "mac": "98f4ab3c0f0d",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 2536,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Front Right",
+      "mac": "90380c69f3ed",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 1691,
+        "max_capacity": 1691,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Icicles",
+      "mac": "98f4ab3bb06d",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 5285,
+        "max_capacity": 5285,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Landing",
+      "mac": "f008d1ebbc8d",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 4786,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Light Tree",
+      "mac": "943cc6189ff1",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 2245,
+        "max_capacity": 2245,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Lounge",
+      "mac": "e8db840e0e55",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 4786,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Master Bedroom",
+      "mac": "40f520acd84d",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 4786,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Mid Right",
+      "mac": "e868e725d485",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 2536,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Office Left",
+      "mac": "e868e71f85a5",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 4786,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Office Right",
+      "mac": "a8032a239df9",
+      "mode": "effect",
+      "catalogue": {
+        "movies": [],
+        "available_frames": 4786,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    }
+  ],
+  "movies": {
+    "bush-window-v2": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "window-chase": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "house-garden": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "bush-startup": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "window-startup": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ]
+  }
+}

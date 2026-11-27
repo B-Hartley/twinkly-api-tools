@@ -1,0 +1,890 @@
+{
+  "note": "Catalogue metadata only; not a restorable movie backup",
+  "controllers": [
+    {
+      "identity": {
+        "name": "BackR Bush Bottom",
+        "mac": "e831cd7153b1",
+        "ip": "192.168.21.86",
+        "count": 400,
+        "offset": 0,
+        "role": "master",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 2019,
+          "max_capacity": 2536,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "BackR Bush Top",
+        "mac": "e831cd7018e9",
+        "ip": "192.168.21.80",
+        "count": 400,
+        "offset": 400,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 2019,
+          "max_capacity": 2536,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "BackL Bush",
+        "mac": "e868e722e3ed",
+        "ip": "192.168.21.84",
+        "count": 400,
+        "offset": 800,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 2019,
+          "max_capacity": 2536,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Bar",
+        "mac": "a8032a24ddb5",
+        "ip": "192.168.21.104",
+        "count": 210,
+        "offset": 1200,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 4260,
+          "max_capacity": 4786,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Front Left Bottom",
+        "mac": "244cabefd0ad",
+        "ip": "192.168.21.87",
+        "count": 400,
+        "offset": 1410,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 2019,
+          "max_capacity": 2536,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Front Left Top",
+        "mac": "98f4ab3c0f0d",
+        "ip": "192.168.21.82",
+        "count": 400,
+        "offset": 1810,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 2019,
+          "max_capacity": 2536,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Front Right",
+        "mac": "90380c69f3ed",
+        "ip": "192.168.21.145",
+        "count": 600,
+        "offset": 2210,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 600,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 600,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 600,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 600,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 1179,
+          "max_capacity": 1691,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Icicles",
+        "mac": "98f4ab3bb06d",
+        "ip": "192.168.21.81",
+        "count": 190,
+        "offset": 2810,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 190,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 190,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 190,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 190,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 4752,
+          "max_capacity": 5285,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Landing",
+        "mac": "f008d1ebbc8d",
+        "ip": "192.168.21.92",
+        "count": 210,
+        "offset": 3000,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 4260,
+          "max_capacity": 4786,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Light Tree",
+        "mac": "943cc6189ff1",
+        "ip": "192.168.21.85",
+        "count": 450,
+        "offset": 3210,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 450,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 450,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 450,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 450,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 1730,
+          "max_capacity": 2245,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Lounge",
+        "mac": "e8db840e0e55",
+        "ip": "192.168.21.89",
+        "count": 210,
+        "offset": 3660,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 4260,
+          "max_capacity": 4786,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Master Bedroom",
+        "mac": "40f520acd84d",
+        "ip": "192.168.21.94",
+        "count": 210,
+        "offset": 3870,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 4260,
+          "max_capacity": 4786,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Mid Right",
+        "mac": "e868e725d485",
+        "ip": "192.168.21.83",
+        "count": 400,
+        "offset": 4080,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 400,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 2019,
+          "max_capacity": 2536,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Office Left",
+        "mac": "e868e71f85a5",
+        "ip": "192.168.21.90",
+        "count": 210,
+        "offset": 4480,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 4260,
+          "max_capacity": 4786,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    },
+    {
+      "identity": {
+        "name": "Office Right",
+        "mac": "a8032a239df9",
+        "ip": "192.168.21.93",
+        "count": 210,
+        "offset": 4690,
+        "role": "slave",
+        "width": 4,
+        "group_uid": "6A317CC0-F29B-42FD-885C-27C27DCC83F4"
+      },
+      "before": {
+        "mode": "off",
+        "catalogue": {
+          "movies": [
+            {
+              "id": 0,
+              "name": "Vertical Flag",
+              "unique_id": "44ED6602-DC06-4EC7-AE87-3ED783E0C77E",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 90,
+              "fps": 12
+            },
+            {
+              "id": 1,
+              "name": "Eclipse",
+              "unique_id": "046FF807-7395-44D7-A843-1B4314C3D1CD",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 86,
+              "fps": 12
+            },
+            {
+              "id": 2,
+              "name": "Fireworks",
+              "unique_id": "8E140170-5209-4AAF-825C-241A73D2B6DA",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 125,
+              "fps": 19
+            },
+            {
+              "id": 3,
+              "name": "Bright Twinkle",
+              "unique_id": "5D50E9BC-E391-44BB-98EA-683CD74635CB",
+              "descriptor_type": "rgbw_raw",
+              "leds_per_frame": 210,
+              "frames_number": 200,
+              "fps": 12
+            }
+          ],
+          "available_frames": 4260,
+          "max_capacity": 4786,
+          "max": 55,
+          "code": 1000
+        }
+      }
+    }
+  ]
+}

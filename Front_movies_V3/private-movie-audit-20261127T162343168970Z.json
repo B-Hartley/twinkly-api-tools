@@ -1,0 +1,1231 @@
+{
+  "controllers": [
+    {
+      "name": "BackR Bush Bottom",
+      "mac": "e831cd7153b1",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1889,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "BackR Bush Top",
+      "mac": "e831cd7018e9",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1889,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "BackL Bush",
+      "mac": "e868e722e3ed",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1889,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Bar",
+      "mac": "a8032a24ddb5",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 4115,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Front Left Bottom",
+      "mac": "244cabefd0ad",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1889,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Front Left Top",
+      "mac": "98f4ab3c0f0d",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1889,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Front Right",
+      "mac": "90380c69f3ed",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 600,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1053,
+        "max_capacity": 1691,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Icicles",
+      "mac": "98f4ab3bb06d",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 190,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 4613,
+        "max_capacity": 5285,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Landing",
+      "mac": "f008d1ebbc8d",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 4115,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Light Tree",
+      "mac": "943cc6189ff1",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 450,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1601,
+        "max_capacity": 2245,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Lounge",
+      "mac": "e8db840e0e55",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 4115,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Master Bedroom",
+      "mac": "40f520acd84d",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 4115,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Mid Right",
+      "mac": "e868e725d485",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 400,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 1889,
+        "max_capacity": 2536,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Office Left",
+      "mac": "e868e71f85a5",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 4115,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    },
+    {
+      "name": "Office Right",
+      "mac": "a8032a239df9",
+      "mode": "off",
+      "catalogue": {
+        "movies": [
+          {
+            "id": 0,
+            "name": "Candy Cane",
+            "unique_id": "2FC3E410-900C-407B-9002-CCD0E7D6D553",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 40,
+            "fps": 12
+          },
+          {
+            "id": 1,
+            "name": "Bright Twinkle",
+            "unique_id": "989382AF-D62C-443B-A8E7-7E03C79A67EC",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 200,
+            "fps": 12
+          },
+          {
+            "id": 2,
+            "name": "Vertical Flag",
+            "unique_id": "602070B2-44DA-4C16-8193-4118F3E0C88A",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 90,
+            "fps": 12
+          },
+          {
+            "id": 3,
+            "name": "Christmas Spiri",
+            "unique_id": "C090084C-70F7-472F-8E9F-8C9C4B900902",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 64,
+            "fps": 12
+          },
+          {
+            "id": 4,
+            "name": "Night Sky",
+            "unique_id": "9D88D440-DF24-4BD4-97D0-3C6A550BB55F",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 60,
+            "fps": 12
+          },
+          {
+            "id": 5,
+            "name": "UpDown",
+            "unique_id": "3A49105F-98E6-4711-A559-EAD1DA9F92F1",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 80,
+            "fps": 15
+          },
+          {
+            "id": 6,
+            "name": "Eclipse",
+            "unique_id": "A075C39E-18D5-469E-A4C1-DD2CCF3F7075",
+            "descriptor_type": "rgbw_raw",
+            "leds_per_frame": 210,
+            "frames_number": 86,
+            "fps": 12
+          }
+        ],
+        "available_frames": 4115,
+        "max_capacity": 4786,
+        "max": 55,
+        "code": 1000
+      }
+    }
+  ],
+  "movies": {
+    "bush-window-v2": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "window-chase": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "house-garden": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "bush-startup": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ],
+    "window-startup": [
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT",
+      "ABSENT"
+    ]
+  }
+}
