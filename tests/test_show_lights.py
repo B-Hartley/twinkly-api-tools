@@ -1,5 +1,6 @@
 """Behavioural tests of prepared scenes without Home Assistant or hardware."""
 import ast
+import importlib.util
 import asyncio
 from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
@@ -9,6 +10,9 @@ import unittest
 from unittest.mock import AsyncMock, Mock
 
 ROOT = Path(__file__).resolve().parents[1] / "custom_components/twinkly_area_state"
+spec = importlib.util.spec_from_file_location("show_parallel", ROOT / "parallel.py")
+parallel = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(parallel)
 light_source = ROOT / "light.py"
 light_ast = ast.parse(light_source.read_text())
 light_ns = {"asyncio": asyncio, "time": time, "HomeAssistantError": RuntimeError}
@@ -28,6 +32,7 @@ ShowLights = show_ns["ShowLights"]
 
 def make_group(names=("window", "bush"), lock=None):
     group = Group.__new__(Group)
+    group._batch = parallel.ControllerBatch()
     group.members = [dict(mac=str(index), name=name, role="master" if index == 0 else "slave", width=3, led_count=4) for index, name in enumerate(names)]
     group.master = group.members[0]
     group.lock = lock or asyncio.Lock()
