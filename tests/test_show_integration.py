@@ -304,7 +304,7 @@ class FullShowIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sim.group.movie_current_path.await_count, 15)
         selections = [data for _, action, data in sim.events if action == "controller_post"]
         self.assertEqual(len(selections), 30)
-        self.assertEqual([selection[2]["id"] for selection in selections], list(range(40, 55)) + list(range(80, 95)))
+        self.assertEqual([selection[2]["id"] for selection in selections], list(range(41, 55)) + [40] + list(range(81, 95)) + [80])
         # First narrated bushes light both physical halves together, with windows dark.
         self.assertTrue(any(sim.frame_at(9.0093, "front left top")))
         self.assertTrue(any(sim.frame_at(9.0093, "front left bottom")))
