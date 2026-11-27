@@ -96,6 +96,17 @@ class ShowLights:
                     self._movies[group] = {label: ids.copy() for label, ids in group.movies.items()}
                     if not self._movies[group] and plan.get("requires_stored_movies", False):
                         raise HomeAssistantError("The finale needs at least one stored movie present on every Front controller")
+                    required = plan.get("required_movies", [])
+                    missing = [name for name in required if "Movie: " + name not in self._movies[group]]
+                    ambiguous = [name for name in required
+                                 if any(label.startswith("Movie: " + name + " (") for label in self._movies[group])]
+                    if missing or ambiguous:
+                        details = []
+                        if missing:
+                            details.append("missing: " + ", ".join(missing))
+                        if ambiguous:
+                            details.append("ambiguous: " + ", ".join(ambiguous))
+                        raise HomeAssistantError("Required Front movie catalogue — " + "; ".join(details))
                     if self._movies[group]:
                         paths = await group.batch_members(group.movie_current_path)
                         self._paths[group] = dict(zip((m["mac"] for m in group.members), paths))
@@ -104,7 +115,7 @@ class ShowLights:
                 for group in self.groups:
                     await group.batch_members(group.login, [
                         member for member in group.members
-                        if group.expiry.get(member["mac"], 0) < time.monotonic() + duration + 15
+                        if group.expiry.get(member["mac"], 0) < time.monotonic() + duration + float(plan.get("prepare_hold_seconds", 0)) + 15
                     ])
                 # From this point cancellation must turn off every group whose
                 # mode or brightness we may have touched, even partial failures.
@@ -130,6 +141,18 @@ class ShowLights:
             except BaseException:
                 await self._stop_locked()
                 raise
+
+    def check_ready(self, duration=0):
+        """Check held ownership locally; Start must not redo controller I/O."""
+        if not self._prepared or set(self.groups) != self._owned:
+            raise HomeAssistantError("Prepared lighting session was released; prepare again")
+        for group in self.groups:
+            if (not group.active or group.error or not group.hold_idle or
+                    group.native_effect or not group.task or group.task.done() or group.any_on()):
+                raise HomeAssistantError("Prepared lighting stream changed; prepare again")
+            if any(group.expiry.get(member["mac"], 0) < time.monotonic() + duration + 15
+                   for member in group.members):
+                raise HomeAssistantError("Prepared controller session expired; prepare again")
 
     @staticmethod
     def _detach(group):

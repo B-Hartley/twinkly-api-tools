@@ -3,7 +3,7 @@
   "name": "Landing countdown sync test",
   "speaker": "media_player.sonos_move",
   "soundtrack": {
-    "file": "landing_countdown_test.mp3",
+    "file": "landing_countdown_british_v1.mp3",
     "duration": 10
   },
   "requires_stored_movies": false,
