@@ -411,12 +411,25 @@ class Group:
             return catalogue
         catalogues=await self.batch_members(read_catalogue)
         common=set.intersection(*(set(c) for c in catalogues))
-        self.movies={}
+        # Firmware stores at most 15 characters; use only the verified explicit alias.
+        def canonical(name):
+            return "Christmas Spirit" if name == "Christmas Spiri" else name
+        labels={}
+        counts={}
+        for c in catalogues:
+            for name in {canonical(item[1]) for item in c.values()}:
+                counts[name]=counts.get(name,0)+1
         for uid in sorted(common):
-            label="Movie: "+catalogues[0][uid][1]
-            if label in self.movies:
-                label+=" ("+uid+")"
-            self.movies[label]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+            names={canonical(c[uid][1]) for c in catalogues}
+            if len(names)==1:
+                labels.setdefault("Movie: "+names.pop(),[]).append(uid)
+        movies={}
+        for label,uids in labels.items():
+            for uid in uids:
+                key=label if len(uids)==1 else label+" ("+uid+")"
+                movies[key]={m["mac"]:c[uid][0] for m,c in zip(self.members,catalogues)}
+        self.movies=movies
+        self.movie_coverage=counts
         self.notify_registered()
 
     def notify_registered(self):
@@ -451,12 +464,33 @@ class Group:
         await self.batch_members(select,[m for m in self.members if m is not self.master],stop_on_error=True)
         await self.batch_members(select,[self.master],stop_on_error=True)
 
+    @staticmethod
+    def resolve_movie(effect, movies):
+        """Resolve exact names first, then a unique 15-character/UTF-8 prefix."""
+        if effect in movies:
+            return effect
+        if not isinstance(effect, str) or not effect.startswith("Movie: "):
+            return None
+        name=effect[7:]
+        if any(label.startswith(effect+" (") for label in movies):
+            return None
+        prefixes={name[:15],name.encode("utf-8")[:15].decode("utf-8",errors="ignore")}-{name}
+        # Known full name retained for existing dashboards and show definitions.
+        if name=="Christmas Spiri":
+            prefixes.add("Christmas Spirit")
+        candidates={"Movie: "+prefix for prefix in prefixes}
+        if any(label.startswith(candidate+" (") for candidate in candidates for label in movies):
+            return None
+        matches=candidates.intersection(movies)
+        return next(iter(matches)) if len(matches)==1 else None
+
     async def play_movie(self,effect,brightness):
         async with self.lock:
             self.guard()
             await self.validate()
             await self.refresh_movies()
-            if effect not in self.movies:
+            effect=self.resolve_movie(effect,self.movies)
+            if effect is None:
                 raise HomeAssistantError("Movie not present on every physical group member")
             paths=dict(zip((m["mac"] for m in self.members),await self.batch_members(self.movie_current_path)))
             if self.active or self.error:

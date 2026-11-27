@@ -356,3 +356,7 @@ replace_group_reference:
       example: REPLACE GROUP REFERENCE
       selector:
         text: {}
+
+refresh_movies:
+  name: Refresh stored movies
+  description: Read shared movie catalogues and update effect lists without reloading or changing playback. Stop active programmes or streaming first.

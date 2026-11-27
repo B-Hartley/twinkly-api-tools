@@ -886,6 +886,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                      title="Twinkly controller rescan",
                      notification_id=f"{DOMAIN}_rescan")
 
+    async def refresh_movies(call: ServiceCall):
+        from homeassistant.exceptions import HomeAssistantError
+        async with show._lifecycle_lock:
+            maintenance.guard()
+            if show.status in ("preparing", "ready", "starting", "running", "stopping"):
+                raise HomeAssistantError("Stop or cancel the programme before refreshing movies")
+            async with lock:
+                maintenance.guard()
+                groups = hass.data[DOMAIN][entry.entry_id].get("virtual_groups", [])
+                if not groups:
+                    raise HomeAssistantError("No discovered Twinkly groups")
+                if any(group.active for group in groups):
+                    raise HomeAssistantError("Stop streaming effects before refreshing movies")
+                reports = []
+                for group in groups:
+                    await group.validate()
+                    await group.refresh_movies()
+                    reports.append(f"{len(group.members)} controllers: " + (", ".join(sorted(group.movies)) or "no shared movies"))
+                async_create(hass, "\n\n".join(reports), title="Twinkly movie refresh", notification_id=f"{DOMAIN}_movies")
+
+    hass.services.async_register(DOMAIN, "refresh_movies", refresh_movies)
     hass.services.async_register(DOMAIN, "rescan_controllers", rescan_controllers)
     hass.services.async_register(DOMAIN, "verify_cloud_session", verify_cloud_session)
     hass.services.async_register(DOMAIN, "resume_movie", resume_movie)
@@ -947,7 +968,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "capture_groups", "replace_group_reference", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
                     "prepare_christmas_show", "prepare_countdown", "start_prepared_show", "start_countdown",
-                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers"):
+                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers", "refresh_movies"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
