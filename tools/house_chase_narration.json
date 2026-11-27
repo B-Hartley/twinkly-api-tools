@@ -1,0 +1,154 @@
+{
+  "voice": {
+    "provider": "HeyGen",
+    "name": "Willoughby - Distinguished & Patient",
+    "voice_id": "0c104eaa19e649b898057beef0094997",
+    "locale": "en-GB",
+    "catalogue_age": "old",
+    "catalogue_tags": [
+      "Deep"
+    ],
+    "synthetic": true,
+    "pitch_and_speed": "Natural; no pitch shifting or time stretching"
+  },
+  "narration": [
+    {
+      "id": "01_welcome",
+      "at": 0.5,
+      "until": 8.7,
+      "text": "Ho, ho, ho! Good evening, everyone. Father Christmas here, with a little magic for you."
+    },
+    {
+      "id": "02_bushes",
+      "at": 9,
+      "until": 18.7,
+      "text": "Bushes, wake up! One by one. Lovely Christmas colours, all around the garden."
+    },
+    {
+      "id": "03_windows",
+      "at": 19,
+      "until": 35.7,
+      "text": "Windows, it's your turn! Each little pane, a Christmas jewel. Round we go, one at a time."
+    },
+    {
+      "id": "04_tree",
+      "at": 36,
+      "until": 39.7,
+      "text": "Christmas tree, show us your sparkle!"
+    },
+    {
+      "id": "05_icicles",
+      "at": 40,
+      "until": 43.7,
+      "text": "Icicles, a touch of winter magic."
+    },
+    {
+      "id": "06_colours",
+      "at": 44,
+      "until": 51.7,
+      "text": "Splendid! Christmas colours and rainbows, together."
+    },
+    {
+      "id": "07_house_chase",
+      "at": 52,
+      "until": 61.7,
+      "text": "Hang on! A cheeky elf has dashed inside. After him, Twinkly! Through the rooms and up the stairs!"
+    },
+    {
+      "id": "08_escape",
+      "at": 66,
+      "until": 71.7,
+      "text": "He's nearly got away! Oh, you mischievous little fellow!"
+    },
+    {
+      "id": "09_crash",
+      "at": 72,
+      "until": 77.7,
+      "text": "Oh dear. The Christmas sparkle has frozen!"
+    },
+    {
+      "id": "10_recover",
+      "at": 78,
+      "until": 85.7,
+      "text": "Just a little snow in the works. A pinch of magic... there we are!"
+    },
+    {
+      "id": "11_countdown",
+      "at": 89,
+      "until": 93.7,
+      "text": "Right then. All together, count us in!"
+    },
+    {
+      "id": "12_five",
+      "at": 94,
+      "until": 94.92,
+      "text": "Five."
+    },
+    {
+      "id": "13_four",
+      "at": 95,
+      "until": 95.92,
+      "text": "Four."
+    },
+    {
+      "id": "14_three",
+      "at": 96,
+      "until": 96.92,
+      "text": "Three."
+    },
+    {
+      "id": "15_two",
+      "at": 97,
+      "until": 97.92,
+      "text": "Two."
+    },
+    {
+      "id": "16_one",
+      "at": 98,
+      "until": 98.92,
+      "text": "One!"
+    },
+    {
+      "id": "17_eclipse",
+      "at": 99,
+      "until": 103.7,
+      "text": "Eclipse."
+    },
+    {
+      "id": "18_updown",
+      "at": 104,
+      "until": 108.7,
+      "text": "Up Down."
+    },
+    {
+      "id": "19_bright_twinkle",
+      "at": 109,
+      "until": 113.7,
+      "text": "Bright Twinkle."
+    },
+    {
+      "id": "20_vertical_flag",
+      "at": 114,
+      "until": 118.7,
+      "text": "Vertical Flag."
+    },
+    {
+      "id": "21_night_sky",
+      "at": 119,
+      "until": 123.7,
+      "text": "Night Sky."
+    },
+    {
+      "id": "22_christmas_spirit",
+      "at": 124,
+      "until": 128.7,
+      "text": "Christmas Spirit!"
+    },
+    {
+      "id": "23_farewell",
+      "at": 129,
+      "until": 139.7,
+      "text": "From all of us at the North Pole, have a wonderful Christmas. Good night, everyone. Ho, ho, ho!"
+    }
+  ]
+}

@@ -901,17 +901,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     show=Show(hass,ctx)
     ctx["show"]=show
     show_schema=vol.Schema({
-        vol.Optional("audio",default=True): bool,
-        vol.Optional("audio_base",default=""): str,
-        vol.Optional("brightness_pct",default=2): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
-        vol.Optional("volume",default=.05): vol.All(vol.Coerce(float),vol.Range(min=0,max=1)),
-        vol.Optional("offset_ms",default=0): vol.All(vol.Coerce(int),vol.Range(min=-2000,max=2000)),
+        # Omitted Start fields must inherit the prepared session, not schema defaults.
+        vol.Optional("variant"): vol.In(("original", "house_chase")),
+        vol.Optional("audio"): bool,
+        vol.Optional("audio_base"): str,
+        vol.Optional("brightness_pct"): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
+        vol.Optional("house_brightness_pct"): vol.All(vol.Coerce(int),vol.Range(min=0,max=100)),
+        vol.Optional("volume"): vol.All(vol.Coerce(float),vol.Range(min=0,max=1)),
+        vol.Optional("offset_ms"): vol.All(vol.Coerce(int),vol.Range(min=-2000,max=2000)),
     })
+    hass.services.async_register(DOMAIN,"prepare_christmas_show",show.prepare,schema=show_schema)
+    hass.services.async_register(DOMAIN,"prepare_countdown",show.prepare_countdown,schema=show_schema)
+    hass.services.async_register(DOMAIN,"start_prepared_show",show.start_prepared,schema=vol.Schema({}))
     hass.services.async_register(DOMAIN,"start_christmas_show",show.start,schema=show_schema)
+    hass.services.async_register(DOMAIN,"start_countdown",show.start_countdown,schema=show_schema)
     hass.services.async_register(DOMAIN,"start_countdown_test",show.start_countdown,schema=show_schema)
     hass.services.async_register(DOMAIN,"stop_countdown_test",show.stop)
     hass.services.async_register(DOMAIN,"stop_christmas_show",show.stop)
-    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light"])
+    await hass.config_entries.async_forward_entry_setups(entry, ["button", "light", "sensor"])
     return True
 
 
@@ -919,11 +926,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.data[DOMAIN][entry.entry_id]["show"].stop()
     for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
         await group.stop()
-    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light"]):
+    if not await hass.config_entries.async_unload_platforms(entry, ["button", "light", "sensor"]):
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "replace_group_reference", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
+                    "prepare_christmas_show", "prepare_countdown", "start_prepared_show", "start_countdown",
                     "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
