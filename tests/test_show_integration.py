@@ -34,6 +34,9 @@ def load_definitions(filename, namespace, names=None):
 spec = importlib.util.spec_from_file_location("integration_panes", ROOT / "panes.py")
 PANES = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(PANES)
+parallel_spec = importlib.util.spec_from_file_location('integration_parallel', ROOT / 'parallel.py')
+PARALLEL = importlib.util.module_from_spec(parallel_spec)
+parallel_spec.loader.exec_module(PARALLEL)
 
 
 class Features(IntFlag):
@@ -130,6 +133,7 @@ class Simulation:
 
     def make_group(self, movie_count):
         group = self.light.Group.__new__(self.light.Group)
+        group._batch = PARALLEL.ControllerBatch()
         definitions = [
             ("office left", 210, 3), ("office right", 210, 3),
             ("master bedroom", 210, 3), ("landing", 210, 3),
