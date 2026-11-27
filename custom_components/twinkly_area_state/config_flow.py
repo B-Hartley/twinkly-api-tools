@@ -141,7 +141,7 @@ class TwinklyCloudOptionsFlow(config_entries.OptionsFlow):
     async def async_step_controllers(self,user_input=None):
         from homeassistant.helpers.aiohttp_client import async_get_clientsession
         from . import query
-        import asyncio
+        from .parallel import ControllerBatch
         errors={}
         raw=self.config_entry.data[CONF_DEVICES_JSON]
         if user_input is not None:
@@ -161,7 +161,8 @@ class TwinklyCloudOptionsFlow(config_entries.OptionsFlow):
                         except Exception:
                             pass
                         return f'{device["name"]}: unreachable'
-                    results=await asyncio.gather(*(check(d) for d in devices))
+                    results=await ControllerBatch().run(devices,check,
+                        failed_result=lambda result: result.endswith(': unreachable'))
                     return self.async_show_form(step_id="controllers",data_schema=self.controller_schema(raw),
                         description_placeholders={"results":"; ".join(results)})
                 self.hass.config_entries.async_update_entry(self.config_entry,data={
