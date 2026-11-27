@@ -960,17 +960,19 @@ async def async_setup_entry(hass,entry,async_add_entities):
                 group=(await read(m,"/xled/v1/application/group",token=token))["group"]
                 auth[m["ip"]]=(token,time.monotonic()+max(1,float(login.get("authentication_token_expires_in",14400))-30))
                 if group.get("mode") in ("master","slave"):
-                    observations.setdefault(str(group.get("uid","")).lower(),[]).append((m,gestalt,group))
-                elif group.get("mode")=="none":
+                    return str(group.get("uid","")).lower(),(m,gestalt,group)
+                if group.get("mode")=="none":
                     member=standalone_member(m,gestalt,group)
-                    observations["standalone:"+member["mac"]]=[(m,gestalt,group)]
-                else:
-                    _LOGGER.warning("%s: unsupported group role %s",m["name"],group.get("mode"))
+                    return "standalone:"+member["mac"],(m,gestalt,group)
+                _LOGGER.warning("%s: unsupported group role %s",m["name"],group.get("mode"))
             except (ValueError,KeyError,TypeError, OSError) as exc:
                 if communication_error(exc):
                     batch.fallback()
                 _LOGGER.warning("%s: virtual light discovery skipped: %s",m["name"],exc)
-        await batch.run(selected,discover)
+        for result in await batch.run(selected,discover):
+            if result is not None:
+                uid,item=result
+                observations.setdefault(uid,[]).append(item)
         data=await ctx["store"].async_load() or {}
         for uid,items in observations.items():
             try:
