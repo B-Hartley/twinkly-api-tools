@@ -59,9 +59,10 @@ preparation-time volume are restored at cleanup as before.
 
 ## Jyggy
 
-Preparation sends `button.jyggy_wake` in the background. The first driveway
-turn-on at **58.0 seconds** sends one `button.jyggy_flash_lights` command after
-that preparation wake succeeds, preserving the existing driveway behavior.
+Preparation sends `button.jyggy_wake` in the background. From **0.3.43**, V3
+sends a fresh wake at **28.0 seconds**. The first driveway turn-on at **58.0
+seconds** sends one `button.jyggy_flash_lights` command only after that fresh
+wake succeeds. The second wake/flash pair is unchanged.
 
 V3 also sends a fresh wake command at **174.4 seconds**, then flashes again at
 **204.4 seconds**, on “car” in Santa's final “leave that car alone” reminder.

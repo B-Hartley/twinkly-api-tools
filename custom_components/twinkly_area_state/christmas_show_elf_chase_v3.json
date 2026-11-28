@@ -246,6 +246,7 @@
   },
   "car": {
     "wake": "during Prepare",
+    "first_refresh_at": 28,
     "headlights_at": 58,
     "trigger": "first house:drive turn_on",
     "maximum_flashes": 2,
@@ -515,14 +516,14 @@
       "duration": 10,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front_left_bush"
           ],
@@ -591,14 +592,14 @@
           "brightness": 150
         },
         {
-          "at": 5.0,
+          "at": 5,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 5.0,
+          "at": 5,
           "targets": [
             "light.twinkly_back_right_bush"
           ],
@@ -751,14 +752,14 @@
       "duration": 17,
       "cues": [
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_front"
           ],
           "off": true
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_lounge_pane_1"
           ],
@@ -939,6 +940,14 @@
             255
           ],
           "brightness": 170
+        },
+        {
+          "at": 9,
+          "targets": [
+            "house:drive"
+          ],
+          "off": true,
+          "car_wake": "v3_first"
         },
         {
           "at": 9.2,
@@ -1195,7 +1204,7 @@
           "brightness": 170
         },
         {
-          "at": 0.0,
+          "at": 0,
           "targets": [
             "light.twinkly_office_left_pane_1",
             "light.twinkly_office_right_pane_2",
@@ -1218,7 +1227,7 @@
           "brightness": 210
         },
         {
-          "at": 3.0,
+          "at": 3,
           "targets": [
             "light.twinkly_office_left_pane_3",
             "light.twinkly_master_bedroom_left",
