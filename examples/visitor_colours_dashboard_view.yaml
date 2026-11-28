@@ -1,0 +1,81 @@
+title: Visitor Colour Match
+path: visitor-colours
+icon: mdi:palette
+type: sections
+max_columns: 2
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Visitor controls
+        icon: mdi:palette
+      - type: tile
+        entity: switch.twinkly_area_manager_visitor_colour_match
+        name: Enable colour matching
+        icon: mdi:palette
+      - type: tile
+        entity: select.twinkly_area_manager_visitor_announcement_speaker
+        name: Announcement speaker
+        features:
+          - type: select-options
+        features_position: bottom
+        grid_options:
+          columns: 12
+          rows: auto
+      - type: button
+        name: Match visitors now
+        icon: mdi:palette-swatch
+        tap_action:
+          action: perform-action
+          perform_action: twinkly_area_state.match_visitor_colours
+      - type: button
+        name: Test announcement
+        icon: mdi:volume-high
+        tap_action:
+          action: perform-action
+          perform_action: twinkly_area_state.test_visitor_speaker
+      - type: tile
+        entity: sensor.twinkly_christmas_show_status
+        name: Show status
+      - type: tile
+        entity: switch.twinkly_area_manager_maintenance_mode
+        name: Maintenance mode
+      - type: markdown
+        content: |
+          Enable matching, select the speaker and press the driveway Zigbee button.
+          A prepared or running show takes priority. Stop any native movie first.
+          Test announcement uses no camera image. Matching sends an image to the configured AI provider.
+  - type: grid
+    cards:
+      - type: heading
+        heading: Approach camera
+        icon: mdi:cctv
+      - type: picture-entity
+        entity: camera.approach
+        camera_view: live
+        show_name: false
+        show_state: false
+        grid_options:
+          columns: 12
+          rows: auto
+      - type: heading
+        heading: Bush lights
+        icon: mdi:string-lights
+      - type: tile
+        entity: light.twinkly_front_left_bush
+        name: Front left
+      - type: tile
+        entity: light.twinkly_front_right_left_bush
+        name: Front right L
+      - type: tile
+        entity: light.twinkly_front_right_right_bush
+        name: Front right R
+      - type: tile
+        entity: light.twinkly_mid_right
+        name: Mid right
+      - type: tile
+        entity: light.twinkly_back_right_bush
+        name: Back right
+      - type: tile
+        entity: light.twinkly_back_left_bush
+        name: Back left
