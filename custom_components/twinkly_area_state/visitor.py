@@ -13,7 +13,12 @@ CAMERA = "camera.approach"
 BUTTON = "event.drive_zigbee_button_2_button"
 AI = "ai_task.openai_ai_task"
 TTS = "tts.openai_tts"
-SPEAKER = "media_player.sonos_move"
+SPEAKERS = {
+    "Approach speaker": "media_player.approach_speaker",
+    "Doorbell speaker": "media_player.doorbell_speaker",
+    "Sonos Move": "media_player.sonos_move",
+}
+DEFAULT_SPEAKER = "Approach speaker"
 BUSHES = (
     "light.twinkly_front_left_bush",
     "light.twinkly_front_right_left_bush",
@@ -109,6 +114,7 @@ class VisitorColours:
         self.hass = hass
         self.ctx = ctx
         self.enabled = False
+        self.speaker = DEFAULT_SPEAKER
         self.generation = 0
         self.task = None
         self.last_press = float("-inf")
@@ -198,21 +204,44 @@ class VisitorColours:
                          "brightness_pct": 65}, blocking=True)
                 if not self.allowed(generation):
                     return
-                speaker = self.hass.states.get(SPEAKER)
-                if (speaker is None or speaker.state in ("unknown", "unavailable")
-                        or speaker.attributes.get("is_volume_muted")
-                        or len(speaker.attributes.get("group_members") or [SPEAKER]) > 1):
-                    return
-                # Sonos announcement overlay; capped volume does not replace its
-                # normal volume. TTS receives only an allowlisted sentence.
-                uri = f"media-source://tts/{TTS}?" + urlencode(
-                    {"message": announcement(chosen), "cache": "false"})
-                await self.hass.services.async_call("media_player", "play_media",
-                    {"entity_id": SPEAKER, "media_content_id": uri,
-                     "media_content_type": "music", "announce": True,
-                     "extra": {"volume": 35}}, blocking=True)
+                await self.speak(announcement(chosen))
         except (TimeoutError, HomeAssistantError):
             _LOGGER.warning("Visitor colour match skipped or incomplete; check AI, lights and speaker")
         except Exception:
             # Do not log raw AI output or attachment details.
             _LOGGER.warning("Visitor colour match failed")
+
+
+    async def speak(self, message):
+        """Send only to the explicitly selected destination; never fall back."""
+        target = SPEAKERS[self.speaker]
+        state = self.hass.states.get(target)
+        if (state is None or state.state in ("unknown", "unavailable")
+                or state.attributes.get("is_volume_muted")):
+            raise HomeAssistantError("Selected visitor speaker is unavailable or muted")
+        if target == SPEAKERS["Sonos Move"]:
+            if len(state.attributes.get("group_members") or [target]) > 1:
+                raise HomeAssistantError("Ungroup Sonos Move before announcing")
+            uri = f"media-source://tts/{TTS}?" + urlencode(
+                {"message": message, "cache": "false"})
+            await self.hass.services.async_call("media_player", "play_media",
+                {"entity_id": target, "media_content_id": uri,
+                 "media_content_type": "music", "announce": True,
+                 "extra": {"volume": 35}}, blocking=True)
+        else:
+            # UniFi Protect camera speakers support standard HA TTS.
+            # Leave their existing talkback volume unchanged.
+            await self.hass.services.async_call("tts", "speak",
+                {"entity_id": TTS, "media_player_entity_id": target,
+                 "message": message, "cache": False}, blocking=True)
+
+    async def test_speaker(self, call=None):
+        """An explicit audio-only test; does not send a camera image."""
+        show = self.ctx["show"]
+        async with show._lifecycle_lock:
+            show.guard()
+            if show.status in BUSY or (show.task and not show.task.done()):
+                raise HomeAssistantError("Stop the prepared or running show before testing")
+            if self.task is not None:
+                raise HomeAssistantError("Visitor matching is already in progress")
+            await self.speak("Hello! This is a test of the Christmas lights announcement.")
