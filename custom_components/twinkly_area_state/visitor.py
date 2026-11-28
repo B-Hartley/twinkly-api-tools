@@ -123,7 +123,8 @@ class VisitorColours:
         return (self.enabled and self.generation == generation
                 and show.status not in BUSY
                 and not (show.task and not show.task.done())
-                and not self.ctx["maintenance"].enabled)
+                and not self.ctx["maintenance"].enabled
+                and not getattr(self.ctx.get("mapping"), "enabled", False))
 
     @callback
     def button_event(self, event):
@@ -135,7 +136,7 @@ class VisitorColours:
         self.hass.async_create_task(self.run(), "Twinkly visitor button")
 
     async def run(self, call=None):
-        if not self.allowed(self.generation) or (self.task and not self.task.done()):
+        if not self.allowed(self.generation) or self.task is not None:
             return
         self.task = self.hass.async_create_task(self._run(self.generation), "Twinkly visitor colours")
         try:
