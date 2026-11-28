@@ -1,0 +1,2036 @@
+title: Christmas Lights
+views:
+  - title: Master Settings
+    path: master-settings
+    icon: mdi:tune-variant
+    type: sections
+    max_columns: 3
+    dense_section_placement: false
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Area Manager
+            heading_style: title
+            icon: mdi:shield-cog
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: switch.twinkly_area_manager_maintenance_mode
+                name: Maintenance Kill Switch
+                icon: mdi:network-off
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            content: |-
+              {% if is_state('switch.twinkly_area_manager_maintenance_mode','on') %}
+              🔴 **Maintenance active** — Area Manager communications suspended. Use the Twinkly app.
+              {% elif is_state('switch.twinkly_area_manager_maintenance_mode','off') %}
+              🟢 **Normal operation** — Area Manager communications enabled. Christmas show and virtual lights available.
+              {% else %}
+              🟠 **Area Manager unavailable**
+              {% endif %}
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            content: Maintenance mode suspends Area Manager communications. The visitor master switch only controls visitor-button activity; it does not disable a prepared Christmas show or ordinary light controls.
+            grid_options:
+              columns: 12
+              rows: auto
+      - type: grid
+        cards:
+          - type: heading
+            heading: Visitor master schedule
+            heading_style: title
+            icon: mdi:calendar-clock
+          - type: tile
+            entity: switch.twinkly_area_manager_visitor_master_enable
+            name: Master visitor enable
+            icon: mdi:power
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            content: |-
+              {% set p = 'select.twinkly_area_manager_visitor_' %}
+              {% set ms, me = states(p ~ 'morning_start'), states(p ~ 'morning_end') %}
+              {% set es, ee = states(p ~ 'evening_start'), states(p ~ 'evening_end') %}
+              {% set t = now().strftime('%H:%M') %}
+              {% set valid = ms not in ['unknown','unavailable'] and me not in ['unknown','unavailable'] and es not in ['unknown','unavailable'] and ee not in ['unknown','unavailable'] %}
+              {% set morning = ms != me and ((ms <= t < me) if ms < me else (t >= ms or t < me)) %}
+              {% set evening = es != ee and ((es <= t < ee) if es < ee else (t >= es or t < ee)) %}
+              {% if not is_state('switch.twinkly_area_manager_maintenance_mode', 'off') %}
+              **Unavailable / maintenance mode**
+              {% elif not is_state('switch.twinkly_area_manager_visitor_master_enable','on') %}
+              **Visitor button disabled**
+              {% elif not valid %}
+              **Operating hours unavailable**
+              {% elif states('sensor.twinkly_christmas_show_status') in ['preparing','ready','starting','running','stopping'] %}
+              **Christmas programme has priority**
+              {% elif morning or evening %}
+              **Within operating hours** — visitor button enabled.
+              {% else %}
+              **Outside operating hours** — visitor button inactive.
+              {% endif %}
+
+              Morning: {{ ms }}–{{ me }} · Evening: {{ es }}–{{ ee }}
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: entities
+            title: Master operating hours
+            entities:
+              - entity: select.twinkly_area_manager_visitor_morning_start
+                name: Morning from
+              - entity: select.twinkly_area_manager_visitor_morning_end
+                name: Morning until
+              - entity: select.twinkly_area_manager_visitor_evening_start
+                name: Evening from
+              - entity: select.twinkly_area_manager_visitor_evening_end
+                name: Evening until
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            content: Equal start and finish disables that period. The schedule gates visitor AI and fallback lighting, not the main Christmas show or the power state of lights.
+            grid_options:
+              columns: 12
+              rows: auto
+      - type: grid
+        cards:
+          - type: heading
+            heading: Button & fallback
+            heading_style: title
+            icon: mdi:gesture-tap-button
+          - type: tile
+            entity: switch.twinkly_area_manager_visitor_button_flourish
+            name: Random flourish and next movie
+            icon: mdi:string-lights
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: Test full button sequence
+            icon: mdi:gesture-tap-button
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.visitor_button
+            grid_options:
+              columns: 12
+              rows: auto
+            visibility:
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state_not:
+                  - preparing
+                  - ready
+                  - starting
+                  - running
+                  - stopping
+                  - unknown
+                  - unavailable
+              - condition: state
+                entity: switch.twinkly_area_manager_visitor_master_enable
+                state: 'on'
+          - type: markdown
+            content: A prepared Christmas programme takes priority. Otherwise, during master operating hours the button tries eligible AI matching first. If matching is disabled, in cooldown or unsuccessful, it runs a random seven-second flourish then advances the stored Front movie. The full-sequence test respects these same restrictions.
+            grid_options:
+              columns: 12
+              rows: auto
+  - title: Show Settings
+    path: show-control
+    icon: mdi:movie-open-play
+    type: sections
+    max_columns: 3
+    dense_section_placement: true
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Show status & GO
+            heading_style: title
+            icon: mdi:pine-tree
+          - type: markdown
+            content: |-
+              {% set s = states('sensor.twinkly_christmas_show_status') %}
+              {% set programme = state_attr('sensor.twinkly_christmas_show_status', 'programme') %}
+              {% set variant = state_attr('sensor.twinkly_christmas_show_status', 'variant') %}
+              {% set titles = {'original': 'V1 · Santa’s Christmas Magic', 'house_chase': 'V2 · Father Christmas and the Cheeky Elf', 'elf_chase_v3': 'V3 · The Elf, the Car and the Fairy Lights'} %}
+              {% set title = 'Countdown · Landing' if programme == 'countdown' else titles.get(variant, 'Christmas show') %}
+              {% if not is_state('switch.twinkly_area_manager_maintenance_mode','off') %}
+
+              ## Maintenance mode / unavailable
+
+              Turn off maintenance mode to prepare or start a programme.
+
+              {% elif s in ['unknown', 'unavailable'] %}
+              ## Show controls need the update
+              Install the latest **Twinkly Area Manager update** and restart Home Assistant. Normal light controls are available on the **Lights** tab.
+              {% elif s == 'ready' %}
+              ## Ready for GO
+              **{{ title }}** is prepared and Twinkly is dark. For audio programmes, Sonos is paused at the beginning. House, drive and door lights can stay as normal while you wait.
+
+              Press **GO** below, or your Zigbee button once its automation is installed. Preparation expires after **15 minutes**. To choose another programme or preset, cancel and prepare again.
+              {% elif s == 'preparing' %}
+              ## Preparing your programme
+              Checking and preparing the display, including silently loading Sonos if audio is enabled. House lighting stays normal. GO will appear when preparation is complete.
+              {% elif s in ['starting', 'running'] %}
+              ## {{ 'Starting' if s == 'starting' else 'Show running' }}
+              **{{ title }}**
+
+              Use **Stop / cancel** to end the programme and restore the house lights.
+              {% elif s == 'stopping' %}
+              ## Stopping and restoring
+              Releasing the soundtrack and restoring the house lights. Please wait.
+              {% elif s == 'finished' %}
+              ## Programme finished
+              {% if programme == 'show' %}The final movie continues on Front. **Stop / cancel** will turn it off.{% else %}The countdown is complete.{% endif %}
+              {% elif s == 'expired' %}
+              ## Preparation expired
+              Prepare your chosen programme again when you are ready.
+              {% elif s == 'error' %}
+              ## The programme needs attention
+              Read the message below. Use **Stop / cancel** to clear any remaining session before preparing again.
+              {% else %}
+              ## Ready to prepare
+              Choose **V1, V2, V3 or Countdown** below, then press **Prepare selected programme**. Preparation does not start the show. Wait for **Ready**, then press **GO**.
+              {% endif %}
+              {% set error = state_attr('sensor.twinkly_christmas_show_status', 'last_error') %}
+              {% if error and s in ['error', 'expired'] %}
+              **Message:** {{ error }}
+              {% endif %}
+              {% set warnings = state_attr('sensor.twinkly_christmas_show_status', 'house_light_warnings') or [] %}
+              {% if warnings and s in ['ready', 'running', 'error'] %}
+              **House-light notes:**
+              {% for warning in warnings %}
+              - {{ warning }}
+              {% endfor %}
+              {% endif %}
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: GO — start prepared programme
+            icon: mdi:play-circle
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 64px
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.start_prepared_show
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 3
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state: ready
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+          - type: button
+            name: Stop / cancel programme
+            icon: mdi:stop-circle-outline
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.stop_christmas_show
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state:
+                  - preparing
+                  - ready
+                  - starting
+                  - running
+                  - finished
+                  - error
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+          - type: tile
+            entity: binary_sensor.zig_button_binary_input
+            name: Zigbee GO button
+            icon: mdi:gesture-tap-button
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: more-info
+            grid_options:
+              columns: 12
+              rows: 1
+          - type: markdown
+            content: The physical button starts the prepared programme after its separate Home Assistant automation is added. Dashboard buttons work immediately after the integration update.
+            grid_options:
+              columns: 12
+              rows: auto
+      - type: grid
+        cards:
+          - type: heading
+            heading: Programme & preparation
+            heading_style: title
+            icon: mdi:playlist-play
+          - type: tile
+            entity: input_select.christmas_show_programme
+            name: Programme
+            icon: mdi:playlist-play
+            features:
+              - type: select-options
+            tap_action:
+              action: none
+            icon_tap_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: markdown
+            content: |-
+              {% set p = states('input_select.christmas_show_programme') %}
+              {% set descriptions = {'V1': 'Santa’s Christmas Magic — the original show.', 'V2': 'Father Christmas and the Cheeky Elf — the existing house chase.', 'V3': 'The Elf, the Car and the Fairy Lights — Jyggy, a slower room-by-room pursuit and the big finale.', 'Countdown': 'The standalone Landing countdown test.'} %}
+              **{{ p }}** · {{ descriptions.get(p, 'Choose a programme in the dropdown.') }}
+
+              The same choice is used by preparation and audio rehearsal. Once prepared, GO always starts the loaded programme; cancel it before choosing another.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: Prepare selected programme
+            icon: mdi:movie-open-play
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: prepare
+                preset: performance
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - idle
+                  - paused
+                  - standby
+                  - 'off'
+          - type: markdown
+            content: |-
+              **Performance:** fairy lights **100%**, house lights **100%**, Sonos at its **current volume** shown on the slider.
+
+              V2 and V3 wake Jyggy during preparation and flash the headlights with the driveway cue. House lights stay normal until GO. V1 and Countdown do not use the house or car.
+            grid_options:
+              columns: 12
+              rows: auto
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state:
+              - idle
+              - finished
+              - expired
+              - error
+      - type: grid
+        cards:
+          - type: heading
+            heading: Lighting rehearsal
+            heading_style: title
+            icon: mdi:test-tube
+          - type: markdown
+            content: |-
+              Uses the same programme dropdown.
+
+              **Quiet rehearsal:** fairy lights **2%**, Sonos **5%**. Countdown uses **20%** digit brightness. V2 and V3 keep house lights at **100%** and include Jyggy’s wake and headlight flash.
+
+              These lighting rehearsals still wait for **GO**. Use **Audio rehearsal** below to listen without operating the lights or car.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: Prepare selected · quiet rehearsal
+            icon: mdi:volume-low
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: prepare
+                preset: quiet
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - idle
+                  - paused
+                  - standby
+                  - 'off'
+          - type: button
+            name: Prepare selected · silent rehearsal
+            icon: mdi:volume-off
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: prepare
+                preset: silent
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: markdown
+            content: Silent rehearsal uses the same dim fairy-light preset with no Sonos playback. V2 and V3 still use the house lights and Jyggy.
+            grid_options:
+              columns: 12
+              rows: auto
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state:
+              - idle
+              - finished
+              - expired
+              - error
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Audio rehearsal & show volume
+            heading_style: title
+            icon: mdi:speaker-wireless
+          - type: markdown
+            content: |-
+              {% if states('media_player.sonos_move') in ['unknown', 'unavailable'] %}
+              Sonos Move is unavailable. Wake or reconnect it to rehearse or prepare audio.
+              {% elif is_state('media_player.sonos_move', 'playing') and states('sensor.twinkly_christmas_show_status') in ['idle', 'finished', 'expired', 'error'] %}
+              Stop the audio rehearsal or pause Sonos before preparing a programme.
+              {% endif %}
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: tile
+            entity: media_player.sonos_move
+            name: Show volume · Sonos Move
+            icon: mdi:speaker-wireless
+            features:
+              - type: media-player-volume-slider
+                show_mute_button: false
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: more-info
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state_not:
+                  - preparing
+                  - starting
+                  - stopping
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: button
+            name: Audio rehearsal · selected programme
+            icon: mdi:play-circle
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: audio_rehearsal
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state:
+                  - idle
+                  - finished
+                  - expired
+                  - error
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - idle
+                  - paused
+                  - standby
+                  - 'off'
+          - type: button
+            name: Stop audio rehearsal
+            icon: mdi:stop-circle
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: script.christmas_programme_control
+              data:
+                command: stop_audio
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state:
+                  - idle
+                  - finished
+                  - expired
+                  - error
+              - condition: state
+                entity: media_player.sonos_move
+                state:
+                  - playing
+                  - paused
+          - type: markdown
+            content: |-
+              {% set volume = state_attr('media_player.sonos_move', 'volume_level') %}
+              **Current show volume:** {{ (volume * 100) | round(0) | int ~ '%' if volume is number else 'unavailable' }}.
+
+              The slider controls Sonos directly. Audio rehearsal plays the selected programme at that level; adjust it while listening, stop the audio, then prepare the show. Performance preparation captures this exact setting. Quiet lighting rehearsal uses its separate 5% preset. Stop audio rehearsal only stops one of the four Christmas soundtracks; it leaves unrelated Sonos audio alone.
+
+              Audio rehearsal does not prepare or start the lighting show. It leaves the fairy lights, house lights and Jyggy alone. Sonos must be ungrouped and unmuted.
+            grid_options:
+              columns: 12
+              rows: auto
+      - type: grid
+        cards:
+          - type: heading
+            heading: Finale movies
+            heading_style: title
+            icon: mdi:filmstrip
+          - type: button
+            name: Refresh Front movies
+            icon: mdi:refresh
+            show_name: true
+            show_icon: true
+            icon_height: 32px
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.refresh_movies
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: markdown
+            content: |-
+              **Finale order**
+
+              {% set effects = state_attr('light.twinkly_front','effect_list') or [] %}
+              {% set names = ['Eclipse','UpDown','Bright Twinkle','Vertical Flag','Night Sky','Christmas Spirit'] %}
+              {% set ns = namespace(missing=[]) %}
+
+              {% for name in names %}
+              {% if 'Movie: ' ~ name in effects or 'Movie: ' ~ name[:15] in effects %}
+              🟢 {{ loop.index }}. {{ name }}
+              {% else %}
+              🔴 {{ loop.index }}. {{ name }}
+              {% set ns.missing = ns.missing + [name] %}
+              {% endif %}
+
+              {% endfor %}
+              {% if not ns.missing %}
+              **All six required movies available.**
+              {% else %}
+              **Missing:** {{ ns.missing | join(', ') }}
+              {% endif %}
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: tile
+            entity: light.twinkly_front
+            name: Movie brightness
+            icon: mdi:brightness-6
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 12
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: button
+            name: Eclipse
+            icon: mdi:moon-waning-crescent
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: 'Movie: Eclipse'
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: UpDown
+            icon: mdi:arrow-up-down
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: 'Movie: UpDown'
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: Bright Twinkle
+            icon: mdi:star-four-points
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: 'Movie: Bright Twinkle'
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: Vertical Flag
+            icon: mdi:flag
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: 'Movie: Vertical Flag'
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: Night Sky
+            icon: mdi:weather-night
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: 'Movie: Night Sky'
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: Christmas Spirit
+            icon: mdi:pine-tree
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: 'Movie: Christmas Spirit'
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: Front off
+            icon: mdi:string-lights-off
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_off
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+  - title: AI Settings
+    path: visitor-colours
+    icon: mdi:robot-outline
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: AI visitor matching
+            heading_style: title
+            icon: mdi:palette
+          - type: tile
+            entity: switch.twinkly_area_manager_visitor_colour_match
+            name: Enable AI visitor matching
+            icon: mdi:palette
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            content: >-
+              **Daylight:** OpenAI AI Task picks one or two standout colours from visitors' clothing, accessories or dogs, and illuminates the bushes to match.
+              **Night vision:** when colours are unreliable, AI counts the people and dogs instead. One festive bush per person, one light-blue bush per dog, up to six in total. Unused bushes turn off. Larger groups light all six.
+              An uncertain or empty scene falls through to the normal random flourish and next movie when enabled. Both modes use the same AI request, master schedule, additional AI time window, cooldown and selected speaker. No second AI call is needed. The camera image is sent to the configured AI provider only on an eligible attempt.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: entities
+            title: AI timing & cooldown
+            entities:
+              - entity: select.twinkly_area_manager_visitor_cooldown_minutes
+                name: Minimum minutes between AI attempts
+              - entity: select.twinkly_area_manager_visitor_start_time
+                name: Additional AI window from
+              - entity: select.twinkly_area_manager_visitor_end_time
+                name: Additional AI window until
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            content: Set the two additional AI times equal to allow matching throughout both master periods. Cooldown limits attempts, including unsuccessful ones.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: Test AI visitor matching
+            icon: mdi:palette-swatch
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.match_visitor_colours
+            grid_options:
+              columns: 12
+              rows: auto
+            visibility:
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state_not:
+                  - preparing
+                  - ready
+                  - starting
+                  - running
+                  - stopping
+                  - unknown
+                  - unavailable
+              - condition: state
+                entity: switch.twinkly_area_manager_visitor_master_enable
+                state: 'on'
+              - condition: state
+                entity: switch.twinkly_area_manager_visitor_colour_match
+                state: 'on'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Voice & camera
+            heading_style: title
+            icon: mdi:volume-high
+          - type: tile
+            entity: select.twinkly_area_manager_visitor_announcement_speaker
+            name: Announcement speaker
+            features:
+              - type: select-options
+            features_position: bottom
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: Test announcement
+            icon: mdi:volume-high
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.test_visitor_speaker
+            grid_options:
+              columns: 12
+              rows: auto
+            visibility:
+              - condition: state
+                entity: switch.twinkly_area_manager_maintenance_mode
+                state: 'off'
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state_not:
+                  - preparing
+                  - ready
+                  - starting
+                  - running
+                  - stopping
+                  - unknown
+                  - unavailable
+          - type: markdown
+            content: Approach / Doorbell use their configured speaker volume. Sonos Move uses a temporary 35% announcement volume. Test announcement uses no camera and is independent of the master schedule.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: heading
+            heading: Approach camera
+            icon: mdi:cctv
+          - type: picture-entity
+            entity: camera.approach
+            camera_view: live
+            show_name: false
+            show_state: false
+            grid_options:
+              columns: 12
+              rows: auto
+    dense_section_placement: false
+  - title: Lights
+    path: christmas
+    icon: mdi:string-lights
+    type: sections
+    max_columns: 4
+    dense_section_placement: false
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Show owns the display
+            heading_style: title
+            icon: mdi:movie-open-play
+          - type: markdown
+            content: The Twinkly display is reserved by the prepared or running programme. Use **Show Settings** for GO or Stop / cancel. House lights stay adjustable while Ready.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: GO — start prepared programme
+            icon: mdi:play-circle
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 64px
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.start_prepared_show
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 3
+            visibility:
+              - condition: state
+                entity: sensor.twinkly_christmas_show_status
+                state: ready
+          - type: button
+            name: Stop / cancel programme
+            icon: mdi:stop-circle-outline
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: twinkly_area_state.stop_christmas_show
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Front display
+            heading_style: title
+            icon: mdi:string-lights
+          - type: tile
+            entity: light.twinkly_front
+            name: Front display
+            icon: mdi:string-lights
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 12
+              rows: 3
+            features:
+              - type: light-brightness
+              - type: light-effect
+                effects:
+                  - Solid
+                  - Static rainbow
+                  - Static rainbow reversed
+                  - Window Chase
+                  - House and Garden Chase
+                  - Bush and Window Chase V2
+                  - 'Movie: Eclipse'
+                  - 'Movie: UpDown'
+                  - 'Movie: Bright Twinkle'
+                  - 'Movie: Vertical Flag'
+                  - 'Movie: Night Sky'
+                  - 'Movie: Christmas Spirit'
+          - type: button
+            name: Twinkly off
+            icon: mdi:string-lights-off
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_off
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: All outside off
+            icon: mdi:outdoor-lamp
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_off
+              target:
+                entity_id:
+                  - light.twinkly_front
+                  - light.drive_lights
+                  - light.front_door_lights
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: markdown
+            content: Tap a light’s icon to switch it. Tap the card for colour, effects and full controls. Twinkly manual controls hide while a programme is prepared or running.
+            grid_options:
+              columns: 12
+              rows: auto
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Manual Twinkly effects
+            heading_style: title
+            icon: mdi:creation
+          - type: markdown
+            content: Manual effects use the current Front brightness. These controls return after the show has stopped or finished.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: button
+            name: Window chase
+            icon: mdi:window-open-variant
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: Window Chase
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: House + garden chase
+            icon: mdi:home-lightbulb
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: House and Garden Chase
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: Bush / window chase
+            icon: mdi:pine-tree-variant
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: Bush and Window Chase V2
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: button
+            name: Static rainbow
+            icon: mdi:looks
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: Static rainbow
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: button
+            name: Reverse rainbow
+            icon: mdi:swap-horizontal
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_on
+              data:
+                effect: Static rainbow reversed
+              target:
+                entity_id: light.twinkly_front
+            hold_action:
+              action: none
+            grid_options:
+              columns: 6
+              rows: 2
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Garden · complete bushes
+            heading_style: title
+            icon: mdi:pine-tree
+          - type: tile
+            entity: light.twinkly_front_left_bush
+            name: Front left bush
+            icon: mdi:pine-tree
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_front_right_left_bush
+            name: Front right · left
+            icon: mdi:pine-tree
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_front_right_right_bush
+            name: Front right · right
+            icon: mdi:pine-tree
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_mid_right
+            name: Middle right bush
+            icon: mdi:pine-tree
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_back_right_bush
+            name: Back right bush
+            icon: mdi:pine-tree
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_back_left_bush
+            name: Back left bush
+            icon: mdi:pine-tree
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_light_tree
+            name: Light tree
+            icon: mdi:pine-tree
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_icicles
+            name: Icicles
+            icon: mdi:weather-snowy
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Whole windows
+            heading_style: title
+            icon: mdi:window-closed-variant
+          - type: tile
+            entity: light.twinkly_office_left
+            name: Office left
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_office_right
+            name: Office right
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_lounge
+            name: Lounge
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_bar
+            name: Bar
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_landing
+            name: Landing
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_master_bedroom
+            name: Master bedroom
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Office panes
+            heading_style: title
+            icon: mdi:desk
+          - type: heading
+            heading: Office left
+            heading_style: title
+            icon: mdi:window-closed-variant
+          - type: tile
+            entity: light.twinkly_office_left_pane_1
+            name: Left 1
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_office_left_pane_2
+            name: Left 2
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_office_left_pane_3
+            name: Left 3
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: heading
+            heading: Office right
+            heading_style: title
+            icon: mdi:window-closed-variant
+          - type: tile
+            entity: light.twinkly_office_right_pane_1
+            name: Right 1
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_office_right_pane_2
+            name: Right 2
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_office_right_pane_3
+            name: Right 3
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Downstairs panes
+            heading_style: title
+            icon: mdi:home-floor-0
+          - type: heading
+            heading: Lounge · three panes
+            heading_style: title
+            icon: mdi:sofa
+          - type: tile
+            entity: light.twinkly_lounge_pane_1
+            name: Pane 1
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_lounge_pane_2
+            name: Pane 2
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_lounge_pane_3
+            name: Pane 3
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 4
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: heading
+            heading: Bar · four panes
+            heading_style: title
+            icon: mdi:glass-cocktail
+          - type: tile
+            entity: light.twinkly_bar_pane_1
+            name: Pane 1
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_bar_pane_2
+            name: Pane 2
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_bar_pane_3
+            name: Pane 3
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_bar_pane_4
+            name: Pane 4
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Upstairs panes
+            heading_style: title
+            icon: mdi:home-floor-1
+          - type: heading
+            heading: Landing · two panes
+            heading_style: title
+            icon: mdi:stairs
+          - type: tile
+            entity: light.twinkly_landing_pane_1
+            name: Landing 1
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_landing_pane_2
+            name: Landing 2
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: heading
+            heading: Master bedroom · two panes
+            heading_style: title
+            icon: mdi:bed-king
+          - type: tile
+            entity: light.twinkly_master_bedroom_left
+            name: Left
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.twinkly_master_bedroom_right
+            name: Right
+            icon: mdi:window-closed-variant
+            color: amber
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - preparing
+              - ready
+              - starting
+              - running
+              - stopping
+          - condition: state
+            entity: switch.twinkly_area_manager_maintenance_mode
+            state: 'off'
+      - type: grid
+        cards:
+          - type: heading
+            heading: House lights
+            heading_style: title
+            icon: mdi:home-lightbulb
+          - type: markdown
+            content: House lights remain available while the show is Ready. Their current settings are captured when you press GO, then restored afterwards.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: tile
+            entity: light.lounge
+            name: Lounge
+            icon: mdi:sofa
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.hall
+            name: Hall
+            icon: mdi:door-open
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.hall_stairs_lightstrip
+            name: Hall stairs strip
+            icon: mdi:led-strip-variant
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.downstairs_toilet
+            name: Downstairs loo
+            icon: mdi:toilet
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.bar
+            name: Bar
+            icon: mdi:glass-cocktail
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.office
+            name: Office
+            icon: mdi:desk
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.landing
+            name: Landing
+            icon: mdi:stairs
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.master_bedroom
+            name: Master bedroom
+            icon: mdi:bed-king
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: button
+            name: House lights off
+            icon: mdi:home-lightbulb-outline
+            show_name: true
+            show_icon: true
+            show_state: false
+            icon_height: 38px
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_off
+              target:
+                entity_id:
+                  - light.lounge
+                  - light.hall
+                  - light.hall_stairs_lightstrip
+                  - light.downstairs_toilet
+                  - light.bar
+                  - light.office
+                  - light.landing
+                  - light.master_bedroom
+            hold_action:
+              action: none
+            grid_options:
+              columns: 12
+              rows: 2
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - starting
+              - running
+              - stopping
+      - type: grid
+        cards:
+          - type: heading
+            heading: Drive and front door
+            heading_style: title
+            icon: mdi:outdoor-lamp
+          - type: tile
+            entity: light.drive_lights
+            name: Drive · both
+            icon: mdi:outdoor-lamp
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.front_door_lights
+            name: Front door · both
+            icon: mdi:coach-lamp
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.drive_1
+            name: Drive 1
+            icon: mdi:outdoor-lamp
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.drive_2
+            name: Drive 2
+            icon: mdi:outdoor-lamp
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.front_door_1
+            name: Door 1
+            icon: mdi:coach-lamp
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.front_door_2
+            name: Door 2
+            icon: mdi:coach-lamp
+            color: orange
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            grid_options:
+              columns: 6
+              rows: 2
+            features:
+              - type: light-brightness
+        visibility:
+          - condition: state
+            entity: sensor.twinkly_christmas_show_status
+            state_not:
+              - starting
+              - running
+              - stopping
