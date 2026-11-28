@@ -118,13 +118,20 @@ class VisitorTests(unittest.TestCase):
         self.assertIsNone(v.next_movie([], None))
 
     def test_press(self):
-        old = SimpleNamespace(state="old")
-        new = SimpleNamespace(state="new", attributes={"event_type": "single_press"})
-        self.assertTrue(v.is_press(old, new))
-        self.assertFalse(v.is_press(None, new))
-        self.assertFalse(v.is_press(new, new))
+        now = v.datetime.now(v.timezone.utc)
+        stamp = now.isoformat()
+        old = SimpleNamespace(state="unknown")
+        new = SimpleNamespace(state=stamp, attributes={"event_type": "single_press"})
+        self.assertEqual(v.BUTTON, "event.zig_button_button")
+        self.assertTrue(v.is_press(old, new, now))
+        self.assertFalse(v.is_press(None, new, now))
+        self.assertFalse(v.is_press(new, new, now))
+        self.assertFalse(v.is_press(old, SimpleNamespace(state="unavailable"), now))
+        restored = SimpleNamespace(state="2020-01-01T00:00:00+00:00",
+                                   attributes={"event_type": "single_press"})
+        self.assertFalse(v.is_press(old, restored, now))
         new.attributes["event_type"] = "release"
-        self.assertFalse(v.is_press(old, new))
+        self.assertFalse(v.is_press(old, new, now))
 
     def test_guards(self):
         show = SimpleNamespace(status="idle", task=None)

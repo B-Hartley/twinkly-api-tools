@@ -1,0 +1,24 @@
+# Replace the existing Christmas Show - Zigbee Go Button automation.
+# The integration handles idle visitor/fallback presses on the same event.
+# Disable any legacy Christmas Button automation that duplicates this action.
+alias: Christmas Show - Zigbee Go Button
+description: Start the prepared Christmas programme using the driveway Zig Button.
+triggers:
+  - trigger: state
+    entity_id: event.zig_button_button
+conditions:
+  - condition: state
+    entity_id: sensor.twinkly_christmas_show_status
+    state: ready
+  - condition: state
+    entity_id: switch.twinkly_area_manager_maintenance_mode
+    state: 'off'
+  - condition: template
+    value_template: >-
+      {{ trigger.from_state is not none and trigger.to_state is not none
+         and trigger.from_state.state != trigger.to_state.state
+         and trigger.to_state.attributes.get('event_type') == 'single_press'
+         and 0 <= (as_timestamp(now()) - as_timestamp(trigger.to_state.state, 0)) <= 10 }}
+actions:
+  - action: twinkly_area_state.start_prepared_show
+mode: single

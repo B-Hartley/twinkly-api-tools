@@ -265,8 +265,8 @@ views:
                 entity: switch.twinkly_area_manager_maintenance_mode
                 state: 'off'
           - type: tile
-            entity: binary_sensor.zig_button_binary_input
-            name: Zigbee GO button
+            entity: event.zig_button_button
+            name: Christmas Zig Button
             icon: mdi:gesture-tap-button
             tap_action:
               action: more-info
@@ -276,7 +276,7 @@ views:
               columns: 12
               rows: 1
           - type: markdown
-            content: The physical button starts the prepared programme after its separate Home Assistant automation is added. Dashboard buttons work immediately after the integration update.
+            content: The physical Zig Button (event.zig_button_button) starts a prepared programme through the separate GO automation. Otherwise the integration handles AI matching or fallback. Use the matching GO automation example in GitHub; do not create duplicate idle-button automations.
             grid_options:
               columns: 12
               rows: auto
