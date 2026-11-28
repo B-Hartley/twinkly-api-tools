@@ -10,6 +10,24 @@ sections:
         heading: Visitor controls
         icon: mdi:palette
       - type: tile
+        entity: switch.twinkly_area_manager_visitor_master_enable
+        name: Master visitor enable
+        icon: mdi:power
+      - type: entities
+        title: Master operating hours
+        entities:
+          - entity: select.twinkly_area_manager_visitor_morning_start
+            name: Morning from
+          - entity: select.twinkly_area_manager_visitor_morning_end
+            name: Morning until
+          - entity: select.twinkly_area_manager_visitor_evening_start
+            name: Evening from
+          - entity: select.twinkly_area_manager_visitor_evening_end
+            name: Evening until
+        grid_options:
+          columns: 12
+          rows: auto
+      - type: tile
         entity: switch.twinkly_area_manager_visitor_colour_match
         name: Enable colour matching
         icon: mdi:palette
@@ -63,7 +81,7 @@ sections:
       - type: markdown
         content: |
           Enable matching, select the speaker and press the driveway Zigbee button.
-          A prepared or running show takes priority. Outside the AI window or during cooldown, the button runs a short random flourish and advances the Front movie.
+          A prepared or running show takes priority. Outside the master morning/evening hours, visitor button actions do nothing. Inside those hours, outside the additional AI window or during cooldown, the button runs a short flourish and advances the Front movie. Equal master start/end disables that period; equal AI start/end permits AI throughout master hours.
           Test announcement uses no camera image. Matching sends an image to the configured AI provider.
   - type: grid
     cards:
