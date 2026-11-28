@@ -1,4 +1,5 @@
 """Pure visitor palette and event tests, without contacting Home Assistant."""
+import asyncio
 import importlib.util
 from pathlib import Path
 import sys
@@ -54,6 +55,22 @@ class VisitorTests(unittest.TestCase):
         self.assertIn("the yellow scarf and the blue dog harness", v.announcement(chosen))
         self.assertNotIn("colour_3", v.structure())
 
+    def test_window(self):
+        self.assertTrue(v.in_window("16:00", "16:00", "21:00"))
+        self.assertFalse(v.in_window("21:00", "16:00", "21:00"))
+        self.assertTrue(v.in_window("00:30", "22:00", "02:00"))
+        self.assertFalse(v.in_window("12:00", "22:00", "02:00"))
+        self.assertTrue(v.in_window("12:00", "00:00", "00:00"))
+
+    def test_cooldown_and_movies(self):
+        self.assertTrue(v.cooldown_ready(100, None, 10))
+        self.assertFalse(v.cooldown_ready(699, 100, 10))
+        self.assertTrue(v.cooldown_ready(700, 100, 10))
+        self.assertTrue(v.cooldown_ready(100, 100, 0))
+        self.assertEqual(v.next_movie(["Movie: B", "Movie: A"], "Movie: A"), "Movie: B")
+        self.assertEqual(v.next_movie(["Movie: B", "Movie: A"], "Movie: B"), "Movie: A")
+        self.assertIsNone(v.next_movie([], None))
+
     def test_press(self):
         old = SimpleNamespace(state="old")
         new = SimpleNamespace(state="new", attributes={"event_type": "single_press"})
@@ -78,6 +95,73 @@ class VisitorTests(unittest.TestCase):
         maintenance.enabled = False
         visitor.set_enabled(False)
         self.assertFalse(visitor.allowed(1))
+
+class RoutingTests(unittest.IsolatedAsyncioTestCase):
+    def make_visitor(self):
+        show = SimpleNamespace(status="idle", task=None)
+        maintenance = SimpleNamespace(enabled=False)
+        visitor = v.VisitorColours(None, {"show": show, "maintenance": maintenance})
+        visitor.eligible = lambda: True
+        visitor._run = AsyncMock(return_value=True)
+        visitor.flourish = AsyncMock()
+        return visitor
+
+    async def test_match_or_fallback(self):
+        visitor = self.make_visitor()
+        await visitor._route(True)
+        visitor._run.assert_awaited_once()
+        visitor.flourish.assert_not_awaited()
+        self.assertIsNotNone(visitor.last_attempt)
+        visitor.eligible = lambda: False
+        await visitor._route(True)
+        visitor.flourish.assert_awaited_once()
+
+    async def test_failure_and_switch(self):
+        visitor = self.make_visitor()
+        visitor._run.return_value = False
+        await visitor._route(True)
+        visitor.flourish.assert_awaited_once()
+        visitor.flourish.reset_mock()
+        visitor.fallback_enabled = False
+        await visitor._route(True)
+        visitor.flourish.assert_not_awaited()
+
+    async def test_manual_match_no_fallback(self):
+        visitor = self.make_visitor()
+        visitor._run.return_value = False
+        await visitor._route(False)
+        visitor.flourish.assert_not_awaited()
+
+    async def test_flourish_advances_actual_movie(self):
+        visitor = self.make_visitor()
+        group = SimpleNamespace(lock=asyncio.Lock(), guard=lambda: None,
+            validate=AsyncMock(), refresh_movies=AsyncMock(),
+            movies={"Movie: A": {}, "Movie: B": {}}, native_effect="Movie: A",
+            active=True, effects={"one": "Window Chase"}, play_movie=AsyncMock())
+        entity = SimpleNamespace(group=group, entity_id="light.front",
+                                 effect_list=["Window Chase"])
+        show = visitor.ctx["show"]
+        show._lifecycle_lock = asyncio.Lock()
+        show.guard = lambda: None
+        def resolve(plan):
+            plan["targets"] = ["light.front"]
+            return {"light.front": entity}
+        show.resolve = resolve
+        visitor.hass = SimpleNamespace(services=SimpleNamespace(async_call=AsyncMock()))
+        with patch.object(v.asyncio, "sleep", AsyncMock()):
+            await v.VisitorColours.flourish(visitor)
+        group.play_movie.assert_awaited_once_with("Movie: B", round(255 * .65))
+        self.assertEqual(visitor.last_movie, "Movie: B")
+
+    async def test_persist_attempt(self):
+        visitor = self.make_visitor()
+        visitor.store = SimpleNamespace(async_save=AsyncMock(),
+            async_load=AsyncMock(return_value={"last_attempt": 100}))
+        await visitor.load()
+        self.assertEqual(visitor.last_attempt, 100)
+        await visitor._route(True)
+        visitor.store.async_save.assert_awaited_once_with({"last_attempt": visitor.last_attempt})
+
 
 class SpeakerTests(unittest.IsolatedAsyncioTestCase):
     def make_visitor(self):
