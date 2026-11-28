@@ -3,7 +3,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 from .const import DOMAIN
-from .visitor import DEFAULT_SPEAKER, SPEAKERS, DEFAULT_COOLDOWN, DEFAULT_START, DEFAULT_END
+from .visitor import DEFAULT_SPEAKER, SPEAKERS, DEFAULT_COOLDOWN, DEFAULT_START, DEFAULT_END, MASTER_WINDOWS
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -14,7 +14,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         VisitorSetting(entry.entry_id, visitor, "cooldown", "Visitor cooldown minutes",
                        [str(m) for m in range(61)], str(DEFAULT_COOLDOWN)),
         VisitorSetting(entry.entry_id, visitor, "start_time", "Visitor start time", times, DEFAULT_START),
-        VisitorSetting(entry.entry_id, visitor, "end_time", "Visitor end time", times, DEFAULT_END)])
+        VisitorSetting(entry.entry_id, visitor, "end_time", "Visitor end time", times, DEFAULT_END),
+        *[VisitorSetting(entry.entry_id, visitor, key, "Visitor " + key.replace("_", " "),
+                         times, value) for key, value in MASTER_WINDOWS.items()]])
 
 
 class VisitorSpeaker(SelectEntity, RestoreEntity):
