@@ -99,8 +99,7 @@ The AI time restriction applies to AI only; the fallback is independently
 switchable. The fallback switch defaults on and is restored after restart.
 Both paths respect maintenance and the show lifecycle lock.
 
-The original GO automation may log a no-ready-programme error if it has no
-ready-state condition; set its condition to show status ready. Do not add
+Replace the existing GO automation with [the verified Zig Button example](../examples/christmas_zigbee_go_automation.yaml). It listens to the same event as visitor handling and only starts a ready programme. Review any legacy Christmas Button automation for competing actions; disable it if redundant. The integration does not edit existing Home Assistant automations. The original GO automation may log a no-ready-programme error if it has no ready-state condition. Do not add
 a second automation invoking visitor_button for the physical button, because
 the integration already listens for it. The manual dashboard test invokes
 visitor_button without a physical press.
