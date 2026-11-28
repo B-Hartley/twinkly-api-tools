@@ -186,12 +186,13 @@ class VisitorColours:
     def allowed(self, generation):
         return self.enabled and self.generation == generation and self.idle()
 
-    def eligible(self):
-        if not self.allowed(self.generation):
-            return False
+    def within_hours(self):
         now = datetime.now(ZoneInfo(self.hass.config.time_zone))
-        return (in_window(now.strftime("%H:%M"), self.start_time, self.end_time)
-                and cooldown_ready(now.timestamp(), self.last_attempt, self.cooldown))
+        return in_window(now.strftime("%H:%M"), self.start_time, self.end_time)
+
+    def eligible(self):
+        return (self.allowed(self.generation) and self.within_hours()
+                and cooldown_ready(datetime.now(timezone.utc).timestamp(), self.last_attempt, self.cooldown))
 
     @callback
     def button_event(self, event):
@@ -264,14 +265,14 @@ class VisitorColours:
                                       "media_content_type": "image/jpeg"}]},
                     blocking=True, return_response=True)
             chosen = palette(result.get("data") if isinstance(result, dict) else None)
-            if not chosen or not self.allowed(generation):
+            if not chosen or not self.allowed(generation) or not self.within_hours():
                 return
             show = self.ctx["show"]
             # Use the existing show lifecycle lock so preparation cannot race
             # our light writes. AI latency never holds that lock.
             async with show._lifecycle_lock:
-                if not self.allowed(generation):
-                    return
+                if not self.allowed(generation) or not self.within_hours():
+                    return False
                 show.guard()
                 plan = {"targets": list(BUSHES), "sections": []}
                 entities = show.resolve(plan)
@@ -319,7 +320,8 @@ class VisitorColours:
                 previous = group.native_effect or self.last_movie
                 movie = next_movie(group.movies, previous)
                 options = [effect for effect in CHASES if effect in entity.effect_list]
-                options.append("Solid")
+                if not options:
+                    options = ["Solid"]
                 choices = [effect for effect in options if effect != self.last_flourish] or options
                 effect = random.choice(choices)
                 self.last_flourish = effect
@@ -330,7 +332,7 @@ class VisitorColours:
                     {"entity_id": target, "effect": effect, "rgb_color": list(colour),
                      "brightness_pct": 65}, blocking=True)
                 await asyncio.sleep(FLOURISH_SECONDS)
-                if not self.idle() or not self.fallback_enabled:
+                if not self.idle():
                     return
                 # Avoid overwriting a later manual light selection.
                 if not group.active or any(value != effect for value in group.effects.values()):
