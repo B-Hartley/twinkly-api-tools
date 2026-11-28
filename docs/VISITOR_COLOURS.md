@@ -1,4 +1,4 @@
-# Visitor colour match (0.3.39)
+# Visitor colour match (0.3.40)
 
 The new **Visitor colour match** switch defaults off after every reload/restart.
 Enable it only during the intended activity. It listens to
@@ -80,7 +80,7 @@ A prepared Christmas programme retains priority via the existing GO automation.
 During preparation, playback, maintenance or mapping, the visitor controller
 does nothing. Otherwise a button press attempts AI matching only when enabled,
 inside its local Home Assistant time window, and outside the cooldown. Defaults
-are 16:00–21:00 and 10 minutes. Change them on the dashboard (15-minute time
+are all day within the master hours and 10 minutes. Change them on the dashboard (15-minute time
 increments; 0–60 minute cooldown; 0 means no cooldown; equal start and end
 means all day). The end is exclusive and overnight windows are supported.
 Cooldown is measured from the last AI attempt, persisted across restart; it
@@ -105,3 +105,7 @@ ready-state condition; set its condition to show status ready. Do not add
 a second automation invoking visitor_button for the physical button, because
 the integration already listens for it. The manual dashboard test invokes
 visitor_button without a physical press.
+
+## Master operating schedule
+
+Master enable and two independent windows gate both AI matching and silent button fallbacks, including manual match/full-button tests. Defaults: morning 06:30–08:30, evening 16:30–18:30, local Home Assistant time. The settings restore after restart; the existing extra AI time restriction is retained on upgrades (set its endpoints equal to allow AI during both master periods). Equal master endpoints disable that period; overnight windows are supported. The master switch can disable all visitor button actions. A prepared Christmas show retains priority and is not subject to these hours. No automatic light switch-on is scheduled. Existing lights or stored movies are not forcibly switched off at a window boundary; this is an interaction schedule, not a house lighting timer. A flourish ending outside the window will not start a new movie. Explicit audio-only speaker testing remains independent.
