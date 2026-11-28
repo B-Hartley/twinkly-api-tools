@@ -367,7 +367,7 @@ refresh_movies:
 
 match_visitor_colours:
   name: Match visitor clothing colours
-  description: When Visitor colour match is enabled and the show is idle, analyse the Approach camera using Home Assistant AI Task, feature one or two standout colours from visitors or dogs on the six bush zones, and announce the items on the selected speaker. Skips uncertain images and native movies.
+  description: When Visitor colour match is enabled and the show is idle, analyse the Approach camera using Home Assistant AI Task, feature one or two standout colours, or use one bush per reliably counted person or dog if colours are unavailable, and announce the result on the selected speaker. Skips uncertain images and native movies.
 
 test_visitor_speaker:
   name: Test visitor announcement speaker
