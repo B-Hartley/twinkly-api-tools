@@ -32,12 +32,15 @@ class ElfChaseV3PlanTests(unittest.TestCase):
         explicit = [(round(at, 6), cue) for at, cue in self.events
                     if "car_wake" in cue or "car_flash" in cue]
         self.assertEqual(explicit, [
+            (28, {"at": 9, "targets": ["house:drive"], "off": True,
+                  "car_wake": "v3_first"}),
             (174.4, {"at": 1.4, "targets": ["house:drive"], "off": True,
                      "car_wake": "v3_farewell"}),
             (204.4, {"at": 7.4, "targets": ["house:drive"], "off": True,
                      "car_flash": "v3_farewell"}),
         ])
-        self.assertAlmostEqual(explicit[1][0] - explicit[0][0], 30)
+        self.assertAlmostEqual(58 - explicit[0][0], 30)
+        self.assertAlmostEqual(explicit[2][0] - explicit[1][0], 30)
         self.assertEqual(self.plan["car"]["maximum_flashes"], 2)
         self.assertTrue(self.plan["car"]["farewell"]["requires_refresh_wake"])
 
