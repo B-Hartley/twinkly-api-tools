@@ -68,8 +68,15 @@ PROMPT = (
     "first. Choose a second only if it is genuinely distinctive and a different "
     "colour; do not pad the selection. If there are only neutral items, select at "
     "most one clearly visible distinctive item (including a dog). "
-    "Return visible=false with none for all other fields if there is no eligible "
-    "visitor or dog, the image is infrared/monochrome, or colours are unreliable. "
+    "Independently count the distinct people and dogs clearly visible on the drive. "
+    "Count each once, excluding reflections, shadows, pictures and passers-by. "
+    "Set counts_reliable=true only if both counts are reliable; use zero for an "
+    "absent species and unknown for uncertain or out-of-range counts. Never guess. "
+    "In infrared/night-vision, monochrome, tinted or otherwise unreliable colour "
+    "images, set visible=false and all colour/item slots to none, BUT still report "
+    "reliable people and dog counts. Do not interpret IR shades as clothing colours. "
+    "Set visible=true only when genuine colours of eligible visitors or dogs are "
+    "reliable. If no visitors or dogs are present, report zero counts and no colours. "
     "Use only these colour words: " + ", ".join(COLOURS) +
     ", or none. Use an item from: " + ", ".join(sorted(GARMENTS)) +
     ", or none. For a dog's natural colour use dog, not dog coat. "
@@ -80,6 +87,14 @@ PROMPT = (
 def structure():
     fields = {"visible": {"description": "Reliable visible driveway visitor colours",
                           "required": True, "selector": {"boolean": {}}}}
+    fields["counts_reliable"] = {
+        "description": "Both driveway people and dog counts are reliable even in IR",
+        "required": True, "selector": {"boolean": {}}}
+    for kind in ("people", "dog"):
+        fields[f"{kind}_count"] = {
+            "description": f"Exact number of distinct {kind} visible on driveway, or unknown",
+            "required": True,
+            "selector": {"select": {"options": ["unknown", *[str(n) for n in range(31)]]}}}
     for i in range(1, 3):
         fields[f"colour_{i}"] = {
             "description": "Standout item colour, or none",
@@ -116,6 +131,60 @@ def announcement(chosen):
     labels = [f"the {c} {g}" for c, g in chosen]
     joined = labels[0] if len(labels) == 1 else ", ".join(labels[:-1]) + " and " + labels[-1]
     return "A little Christmas magic! I've lit the bushes to match " + joined + "."
+
+
+# Deliberately festive colours, not a claim about clothing in a night image.
+PEOPLE_COLOURS = ("red", "green", "yellow", "purple", "pink", "orange")
+DOG_COLOUR = "light blue"
+NUMBER_WORDS = ("zero", "one", "two", "three", "four", "five", "six")
+
+
+def reliable_counts(data):
+    if not isinstance(data, dict) or data.get("counts_reliable") is not True:
+        return None
+    counts = []
+    for key in ("people_count", "dog_count"):
+        value = data.get(key)
+        if type(value) is str and value in {str(n) for n in range(31)}:
+            value = int(value)
+        if type(value) is not int or not 0 <= value <= 30:
+            return None
+        counts.append(value)
+    return tuple(counts)
+
+
+def visitor_scene(data):
+    """Prefer real colours; otherwise count subjects, never invent a match.
+
+    Returns six colour names (None means turn that bush off) and a safe phrase,
+    or None if neither a genuine colour nor a reliable count is available.
+    """
+    chosen = palette(data)
+    if chosen:
+        return ([chosen[i % len(chosen)][0] for i in range(len(BUSHES))],
+                announcement(chosen))
+    counts = reliable_counts(data)
+    if counts is None or sum(counts) == 0:
+        return None
+    people, dogs = counts
+    total = people + dogs
+    if total > len(BUSHES):
+        return (list(PEOPLE_COLOURS[:len(BUSHES)]),
+                "A little Christmas magic! There are more of you than bushes, "
+                "so I've lit all six for your group!")
+    colours = list(PEOPLE_COLOURS[:people]) + [DOG_COLOUR] * dogs
+    colours += [None] * (len(BUSHES) - total)
+    bush = "bush" if total == 1 else "bushes"
+    intro = f"A little Christmas magic! I've lit {NUMBER_WORDS[total]} {bush}"
+    if people and dogs:
+        human = "one for you" if people == 1 else f"one for each of you {NUMBER_WORDS[people]}"
+        animal = "one for your dog" if dogs == 1 else f"one for each of your {NUMBER_WORDS[dogs]} dogs"
+        message = intro + ": " + human + ", and " + animal + "!"
+    elif people:
+        message = intro + (" just for you!" if people == 1 else ", one for each of you!")
+    else:
+        message = intro + (" just for the dog!" if dogs == 1 else ", one for each of the dogs!")
+    return colours, message
 
 
 def is_press(old, new):
@@ -287,9 +356,10 @@ class VisitorColours:
                      "attachments": [{"media_content_id": f"media-source://camera/{CAMERA}",
                                       "media_content_type": "image/jpeg"}]},
                     blocking=True, return_response=True)
-            chosen = palette(result.get("data") if isinstance(result, dict) else None)
-            if not chosen or not self.allowed(generation) or not self.within_hours():
-                return
+            scene = visitor_scene(result.get("data") if isinstance(result, dict) else None)
+            if not scene or not self.allowed(generation) or not self.within_hours():
+                return False
+            colours, message = scene
             show = self.ctx["show"]
             # Use the existing show lifecycle lock so preparation cannot race
             # our light writes. AI latency never holds that lock.
@@ -303,17 +373,21 @@ class VisitorColours:
                 # Front movie with virtual bush colours. Group.prepare_start
                 # performs the supported native-to-realtime transition.
                 for i, entity_id in enumerate(plan["targets"]):
-                    if not self.allowed(generation):
-                        return
+                    if not self.allowed(generation) or not self.within_hours():
+                        return False
                     show.guard()
-                    colour = chosen[i % len(chosen)][0]
-                    await self.hass.services.async_call("light", "turn_on",
-                        {"entity_id": entity_id, "rgb_color": list(COLOURS[colour]),
-                         "brightness_pct": 65}, blocking=True)
-                if not self.allowed(generation):
-                    return
+                    colour = colours[i]
+                    if colour is None:
+                        await self.hass.services.async_call("light", "turn_off",
+                            {"entity_id": entity_id}, blocking=True)
+                    else:
+                        await self.hass.services.async_call("light", "turn_on",
+                            {"entity_id": entity_id, "rgb_color": list(COLOURS[colour]),
+                             "brightness_pct": 65}, blocking=True)
+                if not self.allowed(generation) or not self.within_hours():
+                    return False
                 applied = True
-                await self.speak(announcement(chosen))
+                await self.speak(message)
         except (TimeoutError, HomeAssistantError):
             _LOGGER.warning("Visitor colour match skipped or incomplete; check AI, lights and speaker")
         except Exception:
