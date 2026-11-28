@@ -1,4 +1,5 @@
 """Pure visitor palette and event tests, without contacting Home Assistant."""
+import asyncio
 import importlib.util
 from pathlib import Path
 import sys
@@ -130,6 +131,27 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         visitor._run.return_value = False
         await visitor._route(False)
         visitor.flourish.assert_not_awaited()
+
+    async def test_flourish_advances_actual_movie(self):
+        visitor = self.make_visitor()
+        group = SimpleNamespace(lock=asyncio.Lock(), guard=lambda: None,
+            validate=AsyncMock(), refresh_movies=AsyncMock(),
+            movies={"Movie: A": {}, "Movie: B": {}}, native_effect="Movie: A",
+            active=True, effects={"one": "Window Chase"}, play_movie=AsyncMock())
+        entity = SimpleNamespace(group=group, entity_id="light.front",
+                                 effect_list=["Window Chase"])
+        show = visitor.ctx["show"]
+        show._lifecycle_lock = asyncio.Lock()
+        show.guard = lambda: None
+        def resolve(plan):
+            plan["targets"] = ["light.front"]
+            return {"light.front": entity}
+        show.resolve = resolve
+        visitor.hass = SimpleNamespace(services=SimpleNamespace(async_call=AsyncMock()))
+        with patch.object(v.asyncio, "sleep", AsyncMock()):
+            await v.VisitorColours.flourish(visitor)
+        group.play_movie.assert_awaited_once_with("Movie: B", round(255 * .65))
+        self.assertEqual(visitor.last_movie, "Movie: B")
 
     async def test_persist_attempt(self):
         visitor = self.make_visitor()
