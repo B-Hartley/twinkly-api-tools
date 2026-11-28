@@ -930,6 +930,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     maintenance = Maintenance(hass, entry, ctx)
     ctx["maintenance"] = maintenance
     await maintenance.load()
+    from .visitor import VisitorColours
+    visitor = VisitorColours(hass, ctx)
+    ctx["visitor"] = visitor
+    hass.services.async_register(DOMAIN, "match_visitor_colours", visitor.run, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, "test_visitor_speaker", visitor.test_speaker, schema=vol.Schema({}))
     show_schema=vol.Schema({
         # Omitted Start fields must inherit the prepared session, not schema defaults.
         vol.Optional("variant"): vol.In(SHOW_VARIANTS),
@@ -948,7 +953,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(DOMAIN,"start_countdown_test",show.start_countdown,schema=show_schema)
     hass.services.async_register(DOMAIN,"stop_countdown_test",show.stop)
     hass.services.async_register(DOMAIN,"stop_christmas_show",show.stop)
-    platforms = ["button", "sensor", "switch"]
+    platforms = ["button", "sensor", "switch", "select"]
     if not maintenance.enabled:
         platforms.append("light")
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
@@ -957,18 +962,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    await hass.data[DOMAIN][entry.entry_id]["visitor"].close()
     await hass.data[DOMAIN][entry.entry_id]["show"].stop()
     for group in hass.data[DOMAIN][entry.entry_id].get("virtual_groups", []):
         await group.stop()
     maintenance = hass.data[DOMAIN][entry.entry_id]["maintenance"]
-    platforms = ["button", "sensor", "switch"] + (["light"] if maintenance.light_loaded else [])
+    platforms = ["button", "sensor", "switch", "select"] + (["light"] if maintenance.light_loaded else [])
     if not await hass.config_entries.async_unload_platforms(entry, platforms):
         return False
     for service in ("save_state", "restore_state", "office_window_plan",
                     "capture_groups", "replace_group_reference", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
                     "prepare_christmas_show", "prepare_countdown", "start_prepared_show", "start_countdown",
-                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers", "refresh_movies"):
+                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers", "refresh_movies", "match_visitor_colours", "test_visitor_speaker"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True

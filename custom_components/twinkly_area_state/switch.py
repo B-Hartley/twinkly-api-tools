@@ -4,7 +4,9 @@ from homeassistant.helpers.entity import DeviceInfo
 from .const import DOMAIN
 
 async def async_setup_entry(hass,entry,async_add_entities):
-    async_add_entities([MaintenanceSwitch(entry.entry_id,hass.data[DOMAIN][entry.entry_id]["maintenance"])])
+    ctx = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([MaintenanceSwitch(entry.entry_id, ctx["maintenance"]),
+                        VisitorSwitch(entry.entry_id, ctx["visitor"])])
 
 class MaintenanceSwitch(SwitchEntity):
     _attr_has_entity_name=True
@@ -28,3 +30,27 @@ class MaintenanceSwitch(SwitchEntity):
             await self.maintenance.disable()
         finally:
             self.async_write_ha_state()
+
+
+class VisitorSwitch(SwitchEntity):
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_name = "Visitor colour match"
+    _attr_icon = "mdi:palette"
+
+    def __init__(self, entry_id, visitor):
+        self.visitor = visitor
+        self._attr_unique_id = entry_id + "_visitor_colour_match"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="Twinkly Area Manager")
+
+    @property
+    def is_on(self):
+        return self.visitor.enabled
+
+    async def async_turn_on(self, **kwargs):
+        self.visitor.set_enabled(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        self.visitor.set_enabled(False)
+        self.async_write_ha_state()
