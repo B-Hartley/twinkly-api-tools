@@ -1,11 +1,10 @@
-# Visitor colour match (0.3.41)
+# Visitor colour match (0.3.42)
 
 The new **Visitor colour match** switch defaults off after every reload/restart.
 Enable it only during the intended activity. It listens to
-`event.drive_zigbee_button_2_button`; only a recognized press triggers it,
+`event.zig_button_button`; only a recognized press triggers it,
 with a two-second debounce and no concurrent button sequences. A prepared or
-running Christmas show always has priority; no changes to the existing GO
-automation are required. The existing GO automation may still report that
+running Christmas show always has priority; the separate GO automation must also use `event.zig_button_button` and only start a ready programme. The existing GO automation may still report that
 nothing is prepared if it is unconditional.
 
 The switch is off by default because each request sends a fresh Approach
