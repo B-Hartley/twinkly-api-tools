@@ -21,7 +21,7 @@ not a calibrated region mask.
 
 The six bush zones are assigned alternating standout colours at 65% brightness.
 
-**Night mode:** One bush per visible person or dog, each person a festive colour, dogs light blue. Unused bush zones are switched off, so the number lit matches the announced count. A group larger than six lights all six bushes with a truthful group announcement. Counts are based on a single snapshot, not identification or tracking. No additional camera request or AI charge is needed for this branch of the same analysis.
+**Night mode:** One bush per visible person or dog, each person a festive colour, dogs light blue. Unused bush zones are switched off, so the number lit matches the announced count. A group larger than six lights all six bushes with a truthful group announcement. Counts are based on a single snapshot, not identification or tracking. No second camera request or AI analysis call is needed; the structured response includes both counts and colour information.
 Colours stay until another light command, including a later show. Black is
 represented by a dim charcoal RGB approximation, not literally black light.
 The switch controls future matching, not the current colour of the lights.
