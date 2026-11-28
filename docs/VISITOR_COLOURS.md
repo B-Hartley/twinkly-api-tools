@@ -1,4 +1,4 @@
-# Visitor colour match (0.3.40)
+# Visitor colour match (0.3.41)
 
 The new **Visitor colour match** switch defaults off after every reload/restart.
 Enable it only during the intended activity. It listens to
@@ -16,11 +16,12 @@ asked only for one or two standout colourful items worn or carried by visitors,
 including dogs, dog coats, hats, scarves and accessories, not identity or other
 personal characteristics; camera text is not trusted. A vivid accessory beats a
 large neutral coat; if only neutral colours are present, use at most one distinctive
-item (such as a brown dog). No reliable colours (including IR-only images) means
-no lighting or announcement. The driveway boundary is interpreted by the AI,
+item (such as a brown dog). When the image is infrared, monochrome or colours are unreliable, the same AI request can instead return reliable counts of people and dogs. If neither genuine colours nor reliable nonzero counts are available, the normal fallback applies. The driveway boundary is interpreted by the AI,
 not a calibrated region mask.
 
 The six bush zones are assigned alternating standout colours at 65% brightness.
+
+**Night mode:** One bush per visible person or dog, each person a festive colour, dogs light blue. Unused bush zones are switched off, so the number lit matches the announced count. A group larger than six lights all six bushes with a truthful group announcement. Counts are based on a single snapshot, not identification or tracking. No second camera request or AI analysis call is needed; the structured response includes both counts and colour information.
 Colours stay until another light command, including a later show. Black is
 represented by a dim charcoal RGB approximation, not literally black light.
 The switch controls future matching, not the current colour of the lights.
@@ -64,8 +65,7 @@ Check the generated entity ID in your entity registry. The manual action
    announcement. Verify the button's actual event_type in Developer Tools;
    if it is not recognized, update PRESS_TYPES.
 4. Try a bright scarf with a dull coat, a dog coat, two contrasting colourful items,
-   no visitors, and an IR-only image. Check that
-   empty or uncertain scenes do not change lights or speak.
+   no visitors, and an IR-only image with three people and one dog. Check that four bushes illuminate and the announcement matches. Empty or uncertain scenes must not produce a personalised announcement; the normal random fallback remains available.
 5. Turn the switch off during a request and confirm no new commands after
    any already-in-flight light command completes. Test maintenance mode and
    prepared-show precedence.

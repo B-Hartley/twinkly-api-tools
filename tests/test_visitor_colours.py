@@ -55,6 +55,43 @@ class VisitorTests(unittest.TestCase):
         self.assertIn("the yellow scarf and the blue dog harness", v.announcement(chosen))
         self.assertNotIn("colour_3", v.structure())
 
+    def test_night_count(self):
+        data = {"visible": False, "counts_reliable": True,
+                "people_count": "3", "dog_count": "1"}
+        colours, phrase = v.visitor_scene(data)
+        self.assertEqual(colours, ["red", "green", "yellow", "light blue", None, None])
+        self.assertIn("four bushes", phrase)
+        self.assertIn("each of you three", phrase)
+        self.assertIn("your dog", phrase)
+
+    def test_night_no_guess(self):
+        for data in (
+            {"visible": False, "counts_reliable": False, "people_count": "3", "dog_count": "1"},
+            {"visible": False, "counts_reliable": True, "people_count": "unknown", "dog_count": "1"},
+            {"visible": False, "counts_reliable": True, "people_count": "0", "dog_count": "0"},
+            {"visible": False, "counts_reliable": True, "people_count": True, "dog_count": 0},
+            {"visible": False, "counts_reliable": True, "people_count": 31, "dog_count": 0},
+        ):
+            self.assertIsNone(v.visitor_scene(data))
+
+    def test_night_capacity_and_singular(self):
+        for people, dogs in ((1, 0), (0, 1), (0, 2), (6, 0), (3, 3), (7, 1)):
+            colours, phrase = v.visitor_scene({"visible": False, "counts_reliable": True,
+                                               "people_count": people, "dog_count": dogs})
+            self.assertEqual(len(colours), 6)
+            self.assertEqual(sum(c is not None for c in colours), min(6, people + dogs))
+            if people + dogs > 6:
+                self.assertIn("all six", phrase)
+            elif people + dogs == 1:
+                self.assertIn("one bush", phrase)
+                self.assertNotIn("one bushes", phrase)
+
+    def test_colour_priority(self):
+        colours, phrase = v.visitor_scene({"visible": True, "colour_1": "red",
+            "garment_1": "coat", "counts_reliable": True, "people_count": "3", "dog_count": "1"})
+        self.assertEqual(colours, ["red"] * 6)
+        self.assertIn("red coat", phrase)
+
     def test_window(self):
         self.assertTrue(v.in_window("16:00", "16:00", "21:00"))
         self.assertFalse(v.in_window("21:00", "16:00", "21:00"))
@@ -119,6 +156,30 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         visitor._run = AsyncMock(return_value=True)
         visitor.flourish = AsyncMock()
         return visitor
+
+    async def test_night_scene_issues_exact_bush_commands(self):
+        show = SimpleNamespace(status="idle", task=None,
+                               _lifecycle_lock=asyncio.Lock(), guard=lambda: None,
+                               resolve=lambda plan: {})
+        calls = AsyncMock(return_value={"data": {"visible": False,
+            "counts_reliable": True, "people_count": "3", "dog_count": "1"}})
+        hass = SimpleNamespace(states=SimpleNamespace(get=lambda target: SimpleNamespace(state="idle")),
+            services=SimpleNamespace(async_call=calls, has_service=lambda *args: True))
+        visitor = v.VisitorColours(hass, {"show": show,
+            "maintenance": SimpleNamespace(enabled=False)})
+        visitor.master_open = lambda: True
+        visitor.within_hours = lambda: True
+        visitor.set_enabled(True)
+        visitor.speak = AsyncMock()
+        self.assertTrue(await visitor._run(visitor.generation))
+        commands = [call.args for call in calls.await_args_list]
+        self.assertEqual(commands[0][:2], ("ai_task", "generate_data"))
+        self.assertEqual(len(commands), 7)
+        for i, command in enumerate(commands[1:]):
+            self.assertEqual(command[:2], ("light", "turn_on" if i < 4 else "turn_off"))
+            self.assertEqual(command[2]["entity_id"], v.BUSHES[i])
+        self.assertEqual(commands[4][2]["rgb_color"], list(v.COLOURS["light blue"]))
+        self.assertIn("four bushes", visitor.speak.await_args.args[0])
 
     async def test_match_or_fallback(self):
         visitor = self.make_visitor()

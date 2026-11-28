@@ -82,7 +82,7 @@ sections:
         content: |
           Enable matching, select the speaker and press the driveway Zigbee button.
           A prepared or running show takes priority. Outside the master morning/evening hours, visitor button actions do nothing. Inside those hours, outside the additional AI window or during cooldown, the button runs a short flourish and advances the Front movie. Equal master start/end disables that period; equal AI start/end permits AI throughout master hours.
-          Test announcement uses no camera image. Matching sends an image to the configured AI provider.
+          In night vision, reliable visitor/dog counts light one bush per subject (maximum six). Test announcement uses no camera image. Matching sends an image to the configured AI provider.
   - type: grid
     cards:
       - type: heading
