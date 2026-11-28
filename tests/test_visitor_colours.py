@@ -157,6 +157,30 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         visitor.flourish = AsyncMock()
         return visitor
 
+    async def test_night_scene_issues_exact_bush_commands(self):
+        show = SimpleNamespace(status="idle", task=None,
+                               _lifecycle_lock=asyncio.Lock(), guard=lambda: None,
+                               resolve=lambda plan: {})
+        calls = AsyncMock(return_value={"data": {"visible": False,
+            "counts_reliable": True, "people_count": "3", "dog_count": "1"}})
+        hass = SimpleNamespace(states=SimpleNamespace(get=lambda target: SimpleNamespace(state="idle")),
+            services=SimpleNamespace(async_call=calls, has_service=lambda *args: True))
+        visitor = v.VisitorColours(hass, {"show": show,
+            "maintenance": SimpleNamespace(enabled=False)})
+        visitor.master_open = lambda: True
+        visitor.within_hours = lambda: True
+        visitor.set_enabled(True)
+        visitor.speak = AsyncMock()
+        self.assertTrue(await visitor._run(visitor.generation))
+        commands = [call.args for call in calls.await_args_list]
+        self.assertEqual(commands[0][:2], ("ai_task", "generate_data"))
+        self.assertEqual(len(commands), 7)
+        for i, command in enumerate(commands[1:]):
+            self.assertEqual(command[:2], ("light", "turn_on" if i < 4 else "turn_off"))
+            self.assertEqual(command[2]["entity_id"], v.BUSHES[i])
+        self.assertEqual(commands[4][2]["rgb_color"], list(v.COLOURS["light blue"]))
+        self.assertIn("four bushes", visitor.speak.await_args.args[0])
+
     async def test_match_or_fallback(self):
         visitor = self.make_visitor()
         await visitor._route(True)
