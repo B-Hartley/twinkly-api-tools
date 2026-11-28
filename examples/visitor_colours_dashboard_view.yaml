@@ -22,6 +22,26 @@ sections:
         grid_options:
           columns: 12
           rows: auto
+      - type: entities
+        title: Timing and fallback
+        entities:
+          - entity: select.twinkly_area_manager_visitor_cooldown_minutes
+            name: Minimum minutes between AI attempts
+          - entity: select.twinkly_area_manager_visitor_start_time
+            name: AI matching from
+          - entity: select.twinkly_area_manager_visitor_end_time
+            name: AI matching until
+          - entity: switch.twinkly_area_manager_visitor_button_flourish
+            name: Random flourish and next movie
+        grid_options:
+          columns: 12
+          rows: auto
+      - type: button
+        name: Test full button sequence
+        icon: mdi:gesture-tap-button
+        tap_action:
+          action: perform-action
+          perform_action: twinkly_area_state.visitor_button
       - type: button
         name: Match visitors now
         icon: mdi:palette-swatch
@@ -43,7 +63,7 @@ sections:
       - type: markdown
         content: |
           Enable matching, select the speaker and press the driveway Zigbee button.
-          A prepared or running show takes priority. Stop any native movie first.
+          A prepared or running show takes priority. Outside the AI window or during cooldown, the button runs a short random flourish and advances the Front movie.
           Test announcement uses no camera image. Matching sends an image to the configured AI provider.
   - type: grid
     cards:
