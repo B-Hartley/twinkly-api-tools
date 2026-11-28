@@ -375,4 +375,4 @@ test_visitor_speaker:
 
 visitor_button:
   name: Visitor button action
-  description: When no Christmas show is prepared or running, try the enabled and eligible AI match; otherwise run a short random Front chase and advance the available stored movie. Respects maintenance mode and the flourish switch.
+  description: When no Christmas show is prepared or running, try the enabled and eligible AI match; otherwise run a short random Front chase and advance the available stored movie. Respects the master morning/evening schedule, maintenance mode and the flourish switch.
