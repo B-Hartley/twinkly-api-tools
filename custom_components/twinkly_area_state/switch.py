@@ -8,7 +8,8 @@ async def async_setup_entry(hass,entry,async_add_entities):
     ctx = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([MaintenanceSwitch(entry.entry_id, ctx["maintenance"]),
                         VisitorSwitch(entry.entry_id, ctx["visitor"]),
-                        VisitorFallbackSwitch(entry.entry_id, ctx["visitor"])])
+                        VisitorFallbackSwitch(entry.entry_id, ctx["visitor"]),
+                        VisitorMasterSwitch(entry.entry_id, ctx["visitor"])])
 
 class MaintenanceSwitch(SwitchEntity):
     _attr_has_entity_name=True
@@ -84,4 +85,32 @@ class VisitorFallbackSwitch(SwitchEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs):
         self.visitor.fallback_enabled = False
+        self.async_write_ha_state()
+
+
+class VisitorMasterSwitch(VisitorFallbackSwitch):
+    _attr_name = "Visitor master enable"
+    _attr_icon = "mdi:power"
+
+    def __init__(self, entry_id, visitor):
+        super().__init__(entry_id, visitor)
+        self._attr_unique_id = entry_id + "_visitor_master_enable"
+
+    @property
+    def is_on(self):
+        return self.visitor.master_enabled
+
+    async def async_added_to_hass(self):
+        # Skip the fallback-specific restore hook.
+        await super(VisitorFallbackSwitch, self).async_added_to_hass()
+        previous = await self.async_get_last_state()
+        self.visitor.master_enabled = previous.state == "on" if previous and previous.state in ("on", "off") else True
+
+    async def async_turn_on(self, **kwargs):
+        self.visitor.master_enabled = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        self.visitor.master_enabled = False
+        self.visitor.generation += 1
         self.async_write_ha_state()
