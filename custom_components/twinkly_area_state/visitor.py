@@ -13,7 +13,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 CAMERA = "camera.approach"
-BUTTON = "event.drive_zigbee_button_2_button"
+BUTTON = "event.zig_button_button"
 AI = "ai_task.openai_ai_task"
 TTS = "tts.openai_tts"
 SPEAKERS = {
@@ -187,11 +187,19 @@ def visitor_scene(data):
     return colours, message
 
 
-def is_press(old, new):
+def is_press(old, new, now=None):
     """Event entities change their timestamp per event, not on startup."""
     if old is None or new is None or old.state == new.state:
         return False
-    if old.state in ("unknown", "unavailable") or new.state in ("unknown", "unavailable"):
+    if new.state in ("unknown", "unavailable"):
+        return False
+    # Accept the first real press after startup but never replay a restored event.
+    try:
+        stamp = datetime.fromisoformat(new.state)
+        age = ((now or datetime.now(timezone.utc)) - stamp).total_seconds()
+    except (TypeError, ValueError):
+        return False
+    if not 0 <= age <= 10:
         return False
     kind = new.attributes.get("event_type")
     if not isinstance(kind, str):
