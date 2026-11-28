@@ -55,6 +55,43 @@ class VisitorTests(unittest.TestCase):
         self.assertIn("the yellow scarf and the blue dog harness", v.announcement(chosen))
         self.assertNotIn("colour_3", v.structure())
 
+    def test_night_count(self):
+        data = {"visible": False, "counts_reliable": True,
+                "people_count": "3", "dog_count": "1"}
+        colours, phrase = v.visitor_scene(data)
+        self.assertEqual(colours, ["red", "green", "yellow", "light blue", None, None])
+        self.assertIn("four bushes", phrase)
+        self.assertIn("each of you three", phrase)
+        self.assertIn("your dog", phrase)
+
+    def test_night_no_guess(self):
+        for data in (
+            {"visible": False, "counts_reliable": False, "people_count": "3", "dog_count": "1"},
+            {"visible": False, "counts_reliable": True, "people_count": "unknown", "dog_count": "1"},
+            {"visible": False, "counts_reliable": True, "people_count": "0", "dog_count": "0"},
+            {"visible": False, "counts_reliable": True, "people_count": True, "dog_count": 0},
+            {"visible": False, "counts_reliable": True, "people_count": 31, "dog_count": 0},
+        ):
+            self.assertIsNone(v.visitor_scene(data))
+
+    def test_night_capacity_and_singular(self):
+        for people, dogs in ((1, 0), (0, 1), (0, 2), (6, 0), (3, 3), (7, 1)):
+            colours, phrase = v.visitor_scene({"visible": False, "counts_reliable": True,
+                                               "people_count": people, "dog_count": dogs})
+            self.assertEqual(len(colours), 6)
+            self.assertEqual(sum(c is not None for c in colours), min(6, people + dogs))
+            if people + dogs > 6:
+                self.assertIn("all six", phrase)
+            elif people + dogs == 1:
+                self.assertIn("one bush", phrase)
+                self.assertNotIn("one bushes", phrase)
+
+    def test_colour_priority(self):
+        colours, phrase = v.visitor_scene({"visible": True, "colour_1": "red",
+            "garment_1": "coat", "counts_reliable": True, "people_count": "3", "dog_count": "1"})
+        self.assertEqual(colours, ["red"] * 6)
+        self.assertIn("red coat", phrase)
+
     def test_window(self):
         self.assertTrue(v.in_window("16:00", "16:00", "21:00"))
         self.assertFalse(v.in_window("21:00", "16:00", "21:00"))
