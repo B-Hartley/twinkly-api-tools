@@ -12,13 +12,15 @@ The switch is off by default because each request sends a fresh Approach
 camera image to the configured Home Assistant OpenAI AI Task provider.
 No image files are written by this feature. Provider processing/retention
 and charges follow the existing AI integration's settings. The model is
-asked only for clothing colours and garment types, not identity or other
-personal characteristics; camera text is not trusted. It returns up to three
-allowlisted colours. No reliable colours (including IR-only images) means
+asked only for one or two standout colourful items worn or carried by visitors,
+including dogs, dog coats, hats, scarves and accessories, not identity or other
+personal characteristics; camera text is not trusted. A vivid accessory beats a
+large neutral coat; if only neutral colours are present, use at most one distinctive
+item (such as a brown dog). No reliable colours (including IR-only images) means
 no lighting or announcement. The driveway boundary is interpreted by the AI,
 not a calibrated region mask.
 
-The six bush zones are assigned alternating dominant colours at 65% brightness.
+The six bush zones are assigned alternating standout colours at 65% brightness.
 Colours stay until another light command, including a later show. Black is
 represented by a dim charcoal RGB approximation, not literally black light.
 The switch controls future matching, not the current colour of the lights.
@@ -63,7 +65,8 @@ Check the generated entity ID in your entity registry. The manual action
    and press the physical button. Check all six bush zones and the selected speaker
    announcement. Verify the button's actual event_type in Developer Tools;
    if it is not recognized, update PRESS_TYPES.
-4. Try two contrasting coats, no visitors, and an IR-only image. Check that
+4. Try a bright scarf with a dull coat, a dog coat, two contrasting colourful items,
+   no visitors, and an IR-only image. Check that
    empty or uncertain scenes do not change lights or speak.
 5. Turn the switch off during a request and confirm no new commands after
    any already-in-flight light command completes. Test maintenance mode and
