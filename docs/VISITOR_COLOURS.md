@@ -27,10 +27,20 @@ cannot be undone. Existing native movie playback blocks matching to avoid
 unexpectedly changing the other lights in a shared physical group. Stop the
 movie and use the virtual lights before enabling the feature.
 
-The Sonos Move announcement uses OpenAI TTS with the Sonos announcement
-overlay at 35% temporary volume. It skips unavailable, muted or grouped
-speakers. A failed light command prevents the announcement but may leave
-earlier bushes changed. No retry is attempted on AI failure.
+Choose **Approach speaker**, **Doorbell speaker** or **Sonos Move** from
+the new announcement speaker select. The Approach speaker is the default;
+the last selection is restored after restart. Camera speakers use standard
+Home Assistant TTS at their configured volume. Sonos uses its announcement
+overlay at 35% temporary volume. An unavailable or muted selected speaker
+never falls back to another device. A failed light command prevents the
+announcement but may leave earlier bushes changed. No retry is attempted on AI failure.
+
+The [dedicated dashboard view](../examples/visitor_colours_dashboard_view.yaml)
+includes the enable switch, speaker selector, camera, manual match and
+audio-only test actions, show status and six bush controls. Paste the view
+into the existing Christmas Lights dashboard's views list (indent as
+appropriate). The audio-only test does not need the enable switch on, does
+not analyse an image, and refuses to interrupt an active or prepared show.
 
 ## Dashboard tile
 
@@ -50,7 +60,7 @@ Check the generated entity ID in your entity registry. The manual action
    still starts a prepared show.
 2. Stop the show and any native movie. Enable the switch.
 3. In colour-camera conditions stand in the driveway wearing a known red coat
-   and press the physical button. Check all six bush zones and the Sonos
+   and press the physical button. Check all six bush zones and the selected speaker
    announcement. Verify the button's actual event_type in Developer Tools;
    if it is not recognized, update PRESS_TYPES.
 4. Try two contrasting coats, no visitors, and an IR-only image. Check that
