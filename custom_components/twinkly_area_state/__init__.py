@@ -931,10 +931,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ctx["maintenance"] = maintenance
     await maintenance.load()
     from .visitor import VisitorColours
-    visitor = VisitorColours(hass, ctx)
+    visitor = VisitorColours(hass, ctx, Store(hass, 1, f"{DOMAIN}.visitor.{entry.entry_id}"))
+    await visitor.load()
     ctx["visitor"] = visitor
     hass.services.async_register(DOMAIN, "match_visitor_colours", visitor.run, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, "test_visitor_speaker", visitor.test_speaker, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, "visitor_button", visitor.dispatch, schema=vol.Schema({}))
     show_schema=vol.Schema({
         # Omitted Start fields must inherit the prepared session, not schema defaults.
         vol.Optional("variant"): vol.In(SHOW_VARIANTS),
@@ -974,7 +976,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "capture_groups", "replace_group_reference", "capture_3d_maps", "verify_archives",
                     "capture_layout_diagnostics", "resume_movie", "import_3d_maps", "verify_cloud_session",
                     "prepare_christmas_show", "prepare_countdown", "start_prepared_show", "start_countdown",
-                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers", "refresh_movies", "match_visitor_colours", "test_visitor_speaker"):
+                    "start_christmas_show", "stop_christmas_show", "start_countdown_test", "stop_countdown_test", "rescan_controllers", "refresh_movies", "match_visitor_colours", "test_visitor_speaker", "visitor_button"):
         hass.services.async_remove(DOMAIN, service)
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
