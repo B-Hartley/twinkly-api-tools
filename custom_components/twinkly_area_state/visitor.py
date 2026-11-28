@@ -23,8 +23,10 @@ SPEAKERS = {
 }
 DEFAULT_SPEAKER = "Approach speaker"
 DEFAULT_COOLDOWN = 10
-DEFAULT_START = "16:00"
-DEFAULT_END = "21:00"
+DEFAULT_START = "00:00"
+DEFAULT_END = "00:00"
+MASTER_WINDOWS = {"morning_start": "06:30", "morning_end": "08:30",
+                  "evening_start": "16:30", "evening_end": "18:30"}
 FRONT = "light.twinkly_front"
 FLOURISH_SECONDS = 7
 CHASES = ("Window Chase", "House and Garden Chase", "Bush and Window Chase V2")
@@ -135,6 +137,12 @@ def in_window(now, start, end):
     return start == end or (start <= now < end if start < end else now >= start or now < end)
 
 
+def master_window(now, morning_start, morning_end, evening_start, evening_end):
+    """Either window permits operation; equal endpoints disable that window."""
+    return any(start != end and in_window(now, start, end)
+               for start, end in ((morning_start, morning_end), (evening_start, evening_end)))
+
+
 def cooldown_ready(now, last, minutes):
     return last is None or minutes == 0 or now - last >= minutes * 60
 
@@ -156,6 +164,9 @@ class VisitorColours:
         self.start_time = DEFAULT_START
         self.end_time = DEFAULT_END
         self.fallback_enabled = True
+        self.master_enabled = True
+        for key, value in MASTER_WINDOWS.items():
+            setattr(self, key, value)
         self.last_attempt = None
         self.last_movie = None
         self.last_flourish = None
@@ -183,8 +194,18 @@ class VisitorColours:
                 and not self.ctx["maintenance"].enabled
                 and not getattr(self.ctx.get("mapping"), "enabled", False))
 
+    def master_open(self):
+        if not self.master_enabled:
+            return False
+        now = datetime.now(ZoneInfo(self.hass.config.time_zone)).strftime("%H:%M")
+        return master_window(now, self.morning_start, self.morning_end,
+                             self.evening_start, self.evening_end)
+
+    def permitted(self):
+        return self.idle() and self.master_open()
+
     def allowed(self, generation):
-        return self.enabled and self.generation == generation and self.idle()
+        return self.enabled and self.generation == generation and self.permitted()
 
     def within_hours(self):
         now = datetime.now(ZoneInfo(self.hass.config.time_zone))
@@ -198,7 +219,7 @@ class VisitorColours:
     def button_event(self, event):
         # The existing GO automation owns a prepared programme. Ignore
         # duplicate/repeated presses while processing either visitor path.
-        if (not self.idle()
+        if (not self.permitted()
                 or not is_press(event.data.get("old_state"), event.data.get("new_state"))
                 or monotonic() - self.last_press < 2):
             return
@@ -212,7 +233,7 @@ class VisitorColours:
         await self._launch(False)
 
     async def _launch(self, fallback):
-        if not self.idle() or self.task is not None:
+        if not self.permitted() or self.task is not None:
             return
         self.task = self.hass.async_create_task(
             self._route(fallback), "Twinkly visitor button sequence")
@@ -222,6 +243,8 @@ class VisitorColours:
             self.task = None
 
     async def _route(self, fallback):
+        if not self.permitted():
+            return
         matched = False
         if self.eligible():
             # Limit attempts, not only successful announcements. This also
@@ -232,11 +255,11 @@ class VisitorColours:
                     await self.store.async_save({"last_attempt": self.last_attempt})
                 except Exception:
                     _LOGGER.warning("Visitor cooldown could not be persisted; skipping AI")
-                    if fallback and self.fallback_enabled and self.idle():
+                    if fallback and self.fallback_enabled and self.permitted():
                         await self.flourish()
                     return
             matched = await self._run(self.generation)
-        if not matched and fallback and self.fallback_enabled and self.idle():
+        if not matched and fallback and self.fallback_enabled and self.permitted():
             await self.flourish()
 
     async def close(self):
@@ -249,7 +272,7 @@ class VisitorColours:
     async def _run(self, generation):
         applied = False
         try:
-            if not self.allowed(generation):
+            if not self.allowed(generation) or not self.within_hours():
                 return False
             if not self.hass.services.has_service("ai_task", "generate_data"):
                 raise HomeAssistantError("Home Assistant AI Task is not available")
@@ -303,7 +326,7 @@ class VisitorColours:
         """Brief mapped chase, then the next shared stored movie on Front."""
         show = self.ctx["show"]
         async with show._lifecycle_lock:
-            if not self.idle() or not self.fallback_enabled:
+            if not self.permitted() or not self.fallback_enabled:
                 return
             try:
                 show.guard()
@@ -326,7 +349,7 @@ class VisitorColours:
                 effect = random.choice(choices)
                 self.last_flourish = effect
                 colour = random.choice([COLOURS[name] for name in ("red", "green", "white", "blue", "purple", "yellow")])
-                if not self.idle() or not self.fallback_enabled:
+                if not self.permitted() or not self.fallback_enabled:
                     return
                 await self.hass.services.async_call("light", "turn_on",
                     {"entity_id": target, "effect": effect, "rgb_color": list(colour),
@@ -336,6 +359,12 @@ class VisitorColours:
                     return
                 # Avoid overwriting a later manual light selection.
                 if not group.active or any(value != effect for value in group.effects.values()):
+                    return
+                if not self.master_open():
+                    # Do not start a movie after closing. Stop only the still
+                    # active flourish that this sequence selected.
+                    await self.hass.services.async_call("light", "turn_off",
+                        {"entity_id": target}, blocking=True)
                     return
                 if movie:
                     await group.play_movie(movie, round(255 * .65))
