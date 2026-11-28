@@ -1,6 +1,9 @@
 """Opt-in, button-triggered clothing palette; no polling or image storage."""
 import asyncio
 import logging
+import random
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from time import monotonic
 from urllib.parse import urlencode
 
@@ -19,6 +22,12 @@ SPEAKERS = {
     "Sonos Move": "media_player.sonos_move",
 }
 DEFAULT_SPEAKER = "Approach speaker"
+DEFAULT_COOLDOWN = 10
+DEFAULT_START = "16:00"
+DEFAULT_END = "21:00"
+FRONT = "light.twinkly_front"
+FLOURISH_SECONDS = 7
+CHASES = ("Window Chase", "House and Garden Chase", "Bush and Window Chase V2")
 BUSHES = (
     "light.twinkly_front_left_bush",
     "light.twinkly_front_right_left_bush",
@@ -121,12 +130,36 @@ def is_press(old, new):
         len(kinds) == 1 and kind == kinds[0])
 
 
+def in_window(now, start, end):
+    """Local HH:MM; equal endpoints mean all day, end exclusive."""
+    return start == end or (start <= now < end if start < end else now >= start or now < end)
+
+
+def cooldown_ready(now, last, minutes):
+    return last is None or minutes == 0 or now - last >= minutes * 60
+
+
+def next_movie(movies, previous):
+    available = sorted(movies, key=str.casefold)
+    if not available:
+        return None
+    return available[(available.index(previous) + 1) % len(available)] if previous in available else available[0]
+
+
 class VisitorColours:
-    def __init__(self, hass, ctx):
+    def __init__(self, hass, ctx, store=None):
         self.hass = hass
         self.ctx = ctx
         self.enabled = False
         self.speaker = DEFAULT_SPEAKER
+        self.cooldown = DEFAULT_COOLDOWN
+        self.start_time = DEFAULT_START
+        self.end_time = DEFAULT_END
+        self.fallback_enabled = True
+        self.last_attempt = None
+        self.last_movie = None
+        self.last_flourish = None
+        self.store = store
         self.generation = 0
         self.task = None
         self.last_press = float("-inf")
@@ -136,31 +169,74 @@ class VisitorColours:
         self.enabled = enabled
         self.generation += 1
 
-    def allowed(self, generation):
+    async def load(self):
+        if self.store:
+            data = await self.store.async_load() or {}
+            last = data.get("last_attempt")
+            if type(last) in (int, float):
+                self.last_attempt = last
+
+    def idle(self):
         show = self.ctx["show"]
-        return (self.enabled and self.generation == generation
-                and show.status not in BUSY
+        return (show.status not in BUSY
                 and not (show.task and not show.task.done())
                 and not self.ctx["maintenance"].enabled
                 and not getattr(self.ctx.get("mapping"), "enabled", False))
 
+    def allowed(self, generation):
+        return self.enabled and self.generation == generation and self.idle()
+
+    def eligible(self):
+        if not self.allowed(self.generation):
+            return False
+        now = datetime.now(ZoneInfo(self.hass.config.time_zone))
+        return (in_window(now.strftime("%H:%M"), self.start_time, self.end_time)
+                and cooldown_ready(now.timestamp(), self.last_attempt, self.cooldown))
+
     @callback
     def button_event(self, event):
-        if (not self.allowed(self.generation)
+        # The existing GO automation owns a prepared programme. Ignore
+        # duplicate/repeated presses while processing either visitor path.
+        if (not self.idle()
                 or not is_press(event.data.get("old_state"), event.data.get("new_state"))
-                or monotonic() - self.last_press < 8):
+                or monotonic() - self.last_press < 2):
             return
         self.last_press = monotonic()
-        self.hass.async_create_task(self.run(), "Twinkly visitor button")
+        self.hass.async_create_task(self.dispatch(), "Twinkly visitor button")
+
+    async def dispatch(self, call=None):
+        await self._launch(True)
 
     async def run(self, call=None):
-        if not self.allowed(self.generation) or self.task is not None:
+        await self._launch(False)
+
+    async def _launch(self, fallback):
+        if not self.idle() or self.task is not None:
             return
-        self.task = self.hass.async_create_task(self._run(self.generation), "Twinkly visitor colours")
+        self.task = self.hass.async_create_task(
+            self._route(fallback), "Twinkly visitor button sequence")
         try:
             await self.task
         finally:
             self.task = None
+
+    async def _route(self, fallback):
+        matched = False
+        if self.eligible():
+            # Limit attempts, not only successful announcements. This also
+            # avoids sending repeated camera images on AI/no-visitor failure.
+            self.last_attempt = datetime.now(timezone.utc).timestamp()
+            if self.store:
+                try:
+                    await self.store.async_save({"last_attempt": self.last_attempt})
+                except Exception:
+                    _LOGGER.warning("Visitor cooldown could not be persisted; skipping AI")
+                    if fallback and self.fallback_enabled and self.idle():
+                        await self.flourish()
+                    return
+            matched = await self._run(self.generation)
+        if not matched and fallback and self.fallback_enabled and self.idle():
+            await self.flourish()
 
     async def close(self):
         self.unsubscribe()
@@ -170,7 +246,10 @@ class VisitorColours:
             await asyncio.gather(self.task, return_exceptions=True)
 
     async def _run(self, generation):
+        applied = False
         try:
+            if not self.allowed(generation):
+                return False
             if not self.hass.services.has_service("ai_task", "generate_data"):
                 raise HomeAssistantError("Home Assistant AI Task is not available")
             camera = self.hass.states.get(CAMERA)
@@ -196,16 +275,9 @@ class VisitorColours:
                 show.guard()
                 plan = {"targets": list(BUSHES), "sections": []}
                 entities = show.resolve(plan)
-                # A native group movie cannot be recoloured one bush at a time.
-                # Refuse instead of unexpectedly blacking out other lights.
-                groups = set()
-                for entity in entities.values():
-                    if hasattr(entity, "parts"):
-                        groups.update(g for g, _ in entity.parts)
-                    else:
-                        groups.add(entity.group)
-                if any(g.native_effect for g in groups):
-                    raise HomeAssistantError("Stop the native Twinkly movie before matching clothing")
+                # A button-triggered match deliberately replaces the current
+                # Front movie with virtual bush colours. Group.prepare_start
+                # performs the supported native-to-realtime transition.
                 for i, entity_id in enumerate(plan["targets"]):
                     if not self.allowed(generation):
                         return
@@ -216,13 +288,62 @@ class VisitorColours:
                          "brightness_pct": 65}, blocking=True)
                 if not self.allowed(generation):
                     return
+                applied = True
                 await self.speak(announcement(chosen))
         except (TimeoutError, HomeAssistantError):
             _LOGGER.warning("Visitor colour match skipped or incomplete; check AI, lights and speaker")
         except Exception:
             # Do not log raw AI output or attachment details.
             _LOGGER.warning("Visitor colour match failed")
+        return applied
 
+
+    async def flourish(self):
+        """Brief mapped chase, then the next shared stored movie on Front."""
+        show = self.ctx["show"]
+        async with show._lifecycle_lock:
+            if not self.idle() or not self.fallback_enabled:
+                return
+            try:
+                show.guard()
+                plan = {"targets": [FRONT], "sections": []}
+                entities = show.resolve(plan)
+                entity = entities[plan["targets"][0]]
+                group = entity.group
+                target = entity.entity_id
+                # Preflight the actual shared movie catalogue before changing lights.
+                async with group.lock:
+                    group.guard()
+                    await group.validate()
+                    await group.refresh_movies()
+                previous = group.native_effect or self.last_movie
+                movie = next_movie(group.movies, previous)
+                options = [effect for effect in CHASES if effect in entity.effect_list]
+                options.append("Solid")
+                choices = [effect for effect in options if effect != self.last_flourish] or options
+                effect = random.choice(choices)
+                self.last_flourish = effect
+                colour = random.choice([COLOURS[name] for name in ("red", "green", "white", "blue", "purple", "yellow")])
+                if not self.idle() or not self.fallback_enabled:
+                    return
+                await self.hass.services.async_call("light", "turn_on",
+                    {"entity_id": target, "effect": effect, "rgb_color": list(colour),
+                     "brightness_pct": 65}, blocking=True)
+                await asyncio.sleep(FLOURISH_SECONDS)
+                if not self.idle() or not self.fallback_enabled:
+                    return
+                # Avoid overwriting a later manual light selection.
+                if not group.active or any(value != effect for value in group.effects.values()):
+                    return
+                if movie:
+                    await group.play_movie(movie, round(255 * .65))
+                    self.last_movie = movie
+                else:
+                    await self.hass.services.async_call("light", "turn_on",
+                        {"entity_id": target, "effect": "Solid", "rgb_color": list(colour),
+                         "brightness_pct": 65}, blocking=True)
+            except Exception:
+                _LOGGER.warning("Visitor button flourish or movie transition failed")
 
     async def speak(self, message):
         """Send only to the explicitly selected destination; never fall back."""
