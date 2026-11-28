@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 PATH = Path(__file__).resolve().parents[1] / "custom_components/twinkly_area_state/visitor.py"
 
@@ -62,6 +62,42 @@ class VisitorTests(unittest.TestCase):
         maintenance.enabled = False
         visitor.set_enabled(False)
         self.assertFalse(visitor.allowed(1))
+
+class SpeakerTests(unittest.IsolatedAsyncioTestCase):
+    def make_visitor(self):
+        state = SimpleNamespace(state="idle", attributes={})
+        calls = AsyncMock()
+        hass = SimpleNamespace(states=SimpleNamespace(get=lambda target: state),
+                               services=SimpleNamespace(async_call=calls))
+        return v.VisitorColours(hass, {}), calls
+
+    async def test_camera_destinations(self):
+        visitor, calls = self.make_visitor()
+        self.assertEqual(visitor.speaker, "Approach speaker")
+        for name in ("Approach speaker", "Doorbell speaker"):
+            visitor.speaker = name
+            await visitor.speak("Test")
+            calls.assert_awaited_with("tts", "speak",
+                {"entity_id": v.TTS, "media_player_entity_id": v.SPEAKERS[name],
+                 "message": "Test", "cache": False}, blocking=True)
+
+    async def test_sonos_overlay(self):
+        visitor, calls = self.make_visitor()
+        visitor.speaker = "Sonos Move"
+        await visitor.speak("Test")
+        args, kwargs = calls.await_args
+        self.assertEqual(args[:2], ("media_player", "play_media"))
+        self.assertEqual(args[2]["entity_id"], v.SPEAKERS["Sonos Move"])
+        self.assertTrue(args[2]["announce"])
+        self.assertEqual(args[2]["extra"]["volume"], 35)
+
+    async def test_unavailable_no_fallback(self):
+        visitor, calls = self.make_visitor()
+        visitor.hass.states.get = lambda target: None
+        with self.assertRaises(RuntimeError):
+            await visitor.speak("Test")
+        calls.assert_not_awaited()
+
 
 if __name__ == "__main__":
     unittest.main()
