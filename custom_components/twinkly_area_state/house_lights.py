@@ -19,6 +19,7 @@ _COLOUR_MODES = frozenset(("hs", "xy", "rgb", "rgbw", "rgbww"))
 _DIMMABLE_MODES = _COLOUR_MODES | {"brightness", "color_temp", "white"}
 _TRANSITION = 32
 _CAR_FAREWELL_CUE = "v3_farewell"
+_CAR_FIRST_CUE = "v3_first"
 
 # These are Hue groups, not the similarly named Twinkly window entities. The
 # Hall stairs strip is a separate Hue group member in this installation.
@@ -128,7 +129,9 @@ class HouseLights:
         if any(key in cue for key in ("effect", "stored_movie", "movie_index", "movie_name")):
             raise HomeAssistantError("House cues cannot select Twinkly effects or stored movies")
         car_actions = [key for key in ("car_wake", "car_flash") if key in cue]
-        if car_actions and (len(car_actions) != 1 or cue[car_actions[0]] != _CAR_FAREWELL_CUE or
+        if car_actions and (len(car_actions) != 1 or
+                            (cue[car_actions[0]] != _CAR_FAREWELL_CUE and
+                             not (car_actions[0] == "car_wake" and cue["car_wake"] == _CAR_FIRST_CUE)) or
                             targets != ["house:drive"] or cue.get("off") is not True):
             raise HomeAssistantError("Explicit car cues require one named V3 farewell action on drive-off")
 
@@ -233,7 +236,7 @@ class HouseLights:
                  (self._car_task.done() and not self._car_task.cancelled())))
 
     def _car_explicit_cues(self, cues, level):
-        """Consume the one V3 refresh/flash pair without waiting or late retries."""
+        """Consume V3 refresh/flash cues without waiting or late retries."""
         if self._plan.get("variant") != "elf_chase_v3":
             return
         for cue in cues:
@@ -246,6 +249,13 @@ class HouseLights:
                 # A skipped/failed cue is consumed too: replay must not produce
                 # a late headlight burst after the narration has moved on.
                 self._car_cues_seen.add(key)
+                if action == "car_wake" and cue[action] == _CAR_FIRST_CUE:
+                    # The first flash must use this fresh wake, not the stale
+                    # preparation-time command. Never queue behind a busy car.
+                    self._car_initial_wake_task = None
+                    if self._car_can_start(level):
+                        self._car_initial_wake_task = self._start_car_button("button.jyggy_wake")
+                    continue
                 if not self._car_can_start(level):
                     continue
                 if action == "car_wake":
