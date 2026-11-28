@@ -32,11 +32,27 @@ class VisitorTests(unittest.TestCase):
 
     def test_dedupe_and_sanitize(self):
         chosen = v.palette({"visible": True, "colour_1": "red", "garment_1": "coat",
-                            "colour_2": "red", "garment_2": "hat",
-                            "colour_3": "blue", "garment_3": "arbitrary text"})
+                            "colour_2": "blue", "garment_2": "arbitrary text",
+                            "colour_3": "yellow", "garment_3": "hat"})
         self.assertEqual(chosen, [("red", "coat"), ("blue", "clothing")])
         self.assertEqual(v.announcement(chosen),
                          "A little Christmas magic! I've lit the bushes to match the red coat and the blue clothing.")
+
+    def test_standout_colours(self):
+        self.assertEqual(v.palette({"visible": True, "colour_1": "black",
+            "garment_1": "coat", "colour_2": "pink", "garment_2": "dog coat"}),
+            [("pink", "dog coat")])
+        self.assertEqual(v.palette({"visible": True, "colour_1": "brown",
+            "garment_1": "dog", "colour_2": "grey", "garment_2": "coat"}),
+            [("brown", "dog")])
+        self.assertEqual(v.palette({"visible": True, "colour_1": "red",
+            "garment_1": "hat", "colour_2": "red", "garment_2": "scarf"}),
+            [("red", "hat")])
+        chosen = v.palette({"visible": True, "colour_1": "yellow",
+            "garment_1": "scarf", "colour_2": "blue", "garment_2": "dog harness"})
+        self.assertEqual(chosen, [("yellow", "scarf"), ("blue", "dog harness")])
+        self.assertIn("the yellow scarf and the blue dog harness", v.announcement(chosen))
+        self.assertNotIn("colour_3", v.structure())
 
     def test_press(self):
         old = SimpleNamespace(state="old")
