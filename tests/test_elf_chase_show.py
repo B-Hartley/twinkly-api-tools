@@ -55,7 +55,7 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([action for _, action, _ in sim.events if action in ("play_media", "media_play")],
                          ["play_media", "media_play"])
         self.assertEqual([data["entity_id"] for _, action, data in sim.events if action == "press"],
-                         ["button.jyggy_wake", "button.jyggy_flash_lights",
+                         ["button.jyggy_wake", "button.jyggy_wake", "button.jyggy_flash_lights",
                           "button.jyggy_wake", "button.jyggy_flash_lights"])
 
         # Refresh wake is 30 seconds before the farewell flash. The original
@@ -69,8 +69,10 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(car_at[1], 204.4)
         wakes = [at - started_at for at, action, data in sim.events
                  if action == "press" and data["entity_id"] == "button.jyggy_wake"]
-        self.assertAlmostEqual(wakes[1], 174.4)
-        self.assertAlmostEqual(car_at[1] - wakes[1], 30)
+        self.assertAlmostEqual(wakes[1], 28)
+        self.assertAlmostEqual(car_at[0] - wakes[1], 30)
+        self.assertAlmostEqual(wakes[2], 174.4)
+        self.assertAlmostEqual(car_at[1] - wakes[2], 30)
         selected = []
         for _, _, movie, _ in sim.snapshots:
             if movie and (not selected or movie != selected[-1]):
@@ -99,7 +101,7 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(sim.now - started_at, 174.4)
         self.assertEqual(sim.show.status, "idle")
         self.assertEqual([data["entity_id"] for _, action, data in sim.events if action == "press"],
-                         ["button.jyggy_wake", "button.jyggy_flash_lights"])
+                         ["button.jyggy_wake", "button.jyggy_wake", "button.jyggy_flash_lights"])
         self.assert_house_restored(sim)
 
     async def test_failed_refresh_wake_keeps_full_show_running_but_omits_farewell_flash(self):
@@ -112,7 +114,7 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
             await service(domain, action, data, **kwargs)
             if domain == "button" and data["entity_id"] == "button.jyggy_wake":
                 wake_count += 1
-                if wake_count == 2:
+                if wake_count == 3:
                     raise RuntimeError("Simulated refresh wake failure")
 
         sim.hass.services.async_call = fail_refresh
@@ -120,7 +122,7 @@ class ElfChaseShowTests(unittest.IsolatedAsyncioTestCase):
         await sim.go()
         self.assertEqual(sim.show.status, "finished", sim.show.last_error)
         self.assertEqual([data["entity_id"] for _, action, data in sim.events if action == "press"],
-                         ["button.jyggy_wake", "button.jyggy_flash_lights", "button.jyggy_wake"])
+                         ["button.jyggy_wake", "button.jyggy_wake", "button.jyggy_flash_lights", "button.jyggy_wake"])
         self.assertEqual(sim.group.native_effect, "Movie: Christmas Spirit")
         self.assert_house_restored(sim)
 
