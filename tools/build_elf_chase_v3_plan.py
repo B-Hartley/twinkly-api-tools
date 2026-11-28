@@ -76,8 +76,9 @@ def build():
         cue(45 + wave * 1.5, WINDOWS[wave::4], effect="Static rainbow", brightness=210)
 
     # Drive first turns on during the headlights line, after the car setup.
-    # Existing HouseLights wakes Jyggy at Prepare and flashes once here when
-    # the wake command succeeded and house brightness is 100 percent.
+    # Wake at Prepare, then refresh 30 seconds before the first flash.
+    # The driveway flash requires the fresh wake to succeed.
+    cue(28, ["house:drive"], off=True, car_wake="v3_first")
     off(52)
     solid(52, [TREE], GOLD, 80)
     elf(58, "house:drive")
@@ -157,7 +158,7 @@ def build():
         "routes": {"house_chase": HOUSE_ROUTE, "fairy_pursuit": FAIRY_WINDOWS},
         "chase": {"seconds_per_room": 4, "elf_colour": GOLD, "fairy_colour": ICE,
                   "runs": RUNS, "hide_at": 134, "find_at": 142},
-        "car": {"wake": "during Prepare", "headlights_at": 58,
+        "car": {"wake": "during Prepare", "first_refresh_at": 28, "headlights_at": 58,
                 "trigger": "first house:drive turn_on", "maximum_flashes": 2,
                 "farewell": {"id": "v3_farewell", "wake_at": 174.4,
                              "headlights_at": 204.4, "requires_refresh_wake": True}},
