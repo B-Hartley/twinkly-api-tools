@@ -62,6 +62,15 @@ class VisitorTests(unittest.TestCase):
         self.assertFalse(v.in_window("12:00", "22:00", "02:00"))
         self.assertTrue(v.in_window("12:00", "00:00", "00:00"))
 
+    def test_master_windows(self):
+        hours = ("06:30", "08:30", "16:30", "18:30")
+        for t in ("06:30", "08:29", "16:30", "18:29"):
+            self.assertTrue(v.master_window(t, *hours))
+        for t in ("06:29", "08:30", "12:00", "18:30", "23:00"):
+            self.assertFalse(v.master_window(t, *hours))
+        self.assertFalse(v.master_window("07:00", "06:30", "06:30", "16:30", "18:30"))
+        self.assertTrue(v.master_window("01:00", "06:30", "08:30", "23:00", "02:00"))
+
     def test_cooldown_and_movies(self):
         self.assertTrue(v.cooldown_ready(100, None, 10))
         self.assertFalse(v.cooldown_ready(699, 100, 10))
@@ -84,9 +93,13 @@ class VisitorTests(unittest.TestCase):
         show = SimpleNamespace(status="idle", task=None)
         maintenance = SimpleNamespace(enabled=False)
         visitor = v.VisitorColours(None, {"show": show, "maintenance": maintenance})
+        visitor.master_open = lambda: visitor.master_enabled
         self.assertFalse(visitor.allowed(0))
         visitor.set_enabled(True)
         self.assertTrue(visitor.allowed(1))
+        visitor.master_enabled = False
+        self.assertFalse(visitor.allowed(1))
+        visitor.master_enabled = True
         show.status = "ready"
         self.assertFalse(visitor.allowed(1))
         show.status = "idle"
@@ -101,6 +114,7 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         show = SimpleNamespace(status="idle", task=None)
         maintenance = SimpleNamespace(enabled=False)
         visitor = v.VisitorColours(None, {"show": show, "maintenance": maintenance})
+        visitor.master_open = lambda: visitor.master_enabled
         visitor.eligible = lambda: True
         visitor._run = AsyncMock(return_value=True)
         visitor.flourish = AsyncMock()
@@ -115,6 +129,14 @@ class RoutingTests(unittest.IsolatedAsyncioTestCase):
         visitor.eligible = lambda: False
         await visitor._route(True)
         visitor.flourish.assert_awaited_once()
+
+    async def test_master_closed_blocks_both_paths(self):
+        visitor = self.make_visitor()
+        visitor.master_enabled = False
+        await visitor._route(True)
+        visitor._run.assert_not_awaited()
+        visitor.flourish.assert_not_awaited()
+        self.assertIsNone(visitor.last_attempt)
 
     async def test_failure_and_switch(self):
         visitor = self.make_visitor()
